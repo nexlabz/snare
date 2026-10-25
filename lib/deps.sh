@@ -82,6 +82,23 @@ def load(want=None):
 def vkey(v):
     return [(0, int(t)) if t.isdigit() else (1, t) for t in re.findall(r"\d+|[A-Za-z]+", v or "")]
 
+def pep440_eq(a, b):
+    """1.107 == 1.107.0 to pip: release segments compare zero-padded."""
+    ka, kb = vkey(a), vkey(b)
+    while ka and ka[-1] == (0, 0): ka = ka[:-1]
+    while kb and kb[-1] == (0, 0): kb = kb[:-1]
+    return ka == kb
+
+# What each package manager installs as ONE exact version. Anything else — a
+# partial version (npm's `0.7` is 0.7.x), a range, a tag, cargo's `1.2.3`
+# (which means ^1.2.3) — goes to the resolver.
+SEMVER = re.compile(r"^v?\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$")
+def exact(eco, ver):
+    if eco in ("npm", "go"): return bool(SEMVER.match(ver))
+    if eco == "pypi": return bool(re.match(r"^\d+(\.\d+)*((a|b|rc)\d+)?(\.post\d+)?(\.dev\d+)?$", ver))
+    if eco == "crates.io": return bool(re.match(r"^=\s*\d+\.\d+\.\d+", ver))
+    return bool(re.match(r"^\d+(\.\d+){2,}$", ver))
+
 def matches(spec, ver):
     """True when this version is known-malicious; None when unversioned and
     only some versions are bad (the caller decides)."""
@@ -97,7 +114,8 @@ def matches(spec, ver):
             if fixed.startswith("<="):
                 if vkey(v) <= vkey(fixed[2:]): return True
             elif vkey(v) < vkey(fixed): return True
-        elif v in {x.lstrip("v") for x in part.split(",")}:
+        elif v in {x.lstrip("v") for x in part.split(",")} \
+                or any(pep440_eq(v, x.lstrip("v")) for x in part.split(",") if x):
             return True
     return False
 
@@ -460,12 +478,12 @@ if mode == "pkgs":
     idx = load(want)
     if idx is None: print("NOLIST"); sys.exit(4)
     rc = 0
-    EXACTV = re.compile(r"^v?\d[\w.+-]*$")
     for eco, name, ver in trip:
         ver = "" if ver == "-" else ver
         e = idx.get((eco, norm(eco, name)))
         if not e: continue
-        if ver and not EXACTV.match(ver) and e[0] != "*":
+        if eco == "crates.io" and ver.startswith("="): ver = ver.lstrip("= ")
+        elif ver and not exact(eco, ver) and e[0] != "*":
             # a range or a tag: the caller resolves what it would install
             print("SOME\t%s\t%s\t%s\t%s\t%s" % (eco, name, ver, e[1], e[0])); rc = max(rc, 5) if rc != 1 else 1
             continue
@@ -531,7 +549,19 @@ _deps_gate_file(){ # $1=requirements or lock file
 # the package manager resolves it. Empty when it cannot tell.
 _deps_resolve_latest(){ # $1=eco $2=name $3=spec (may be empty)
   case "$1" in
-    npm)  npm view "$2${3:+@$3}" version 2>/dev/null | tail -1 | sed -E "s/.*'([^']+)'.*/\1/; s/^[^ ]+@//" ;;
+    npm)
+      # As npm picks: the `latest` tag when it satisfies the spec, else the
+      # highest version that does. (Highest-only let a malicious version
+      # tagged `latest` inside the range be misjudged.)
+      local latest sat; latest="$(npm view "$2" dist-tags.latest 2>/dev/null | tail -1)"
+      [ -z "${3:-}" ] && { echo "$latest"; return 0; }
+      sat="$(npm view "$2@$3" version --json 2>/dev/null)" || return 0
+      printf '%s' "$sat" | python3 -c '
+import json, sys
+d = json.load(sys.stdin); v = d if isinstance(d, list) else [d]
+l = sys.argv[1]
+if l in v: print(l)
+elif v: print(v[-1])' "$latest" 2>/dev/null ;;
     pypi)
       local rel; rel="$(curl -fsS --max-time 8 "https://pypi.org/pypi/$2/json" 2>/dev/null)" || return 0
       if [ -z "${3:-}" ]; then

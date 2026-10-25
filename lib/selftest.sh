@@ -1434,12 +1434,14 @@ CMDS
 
   # review round: ranges, tags and aliases resolve; path-invoked tools,
   # launchers and a glued -rfile are read; empty fields do not shift columns
-  _deps_resolve_latest(){ [ "$3" = "^0.7.0" ] && echo 0.7.29; [ "$3" = latest ] && echo 0.7.30; :; }
+  _deps_resolve_latest(){ case "$3" in "^0.7.0"|0.7) echo 0.7.29 ;; latest) echo 0.7.30 ;; esac; }
   local rr="" c2
   printf 'litellm==1.107.0\n' > "$D/req2.txt"
   while IFS= read -r c2; do [ -n "$c2" ] && ! _gate_decide "$c2" "$D" >/dev/null 2>&1 || rr="$rr | $c2"; done <<'CMDS'
 npm i ua-hijack@^0.7.0
 npm i x@npm:evil-pkg@1.0.0
+npm i ua-hijack@0.7
+pip install litellm==1.107
 ./venv/bin/pip install litellm==1.107.0
 mise exec -- pip install litellm==1.107.0
 pip install -rreq2.txt

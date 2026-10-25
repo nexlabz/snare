@@ -75,6 +75,12 @@ crates.io together. snare read none of that.
 - **Package tools run by path** (`./venv/bin/pip install …`) or through a
   launcher (`mise exec -- pip …`) skipped the package check. Both are read
   now, and so is pip's glued `-rfile`.
+- **Partial versions counted as exact.** npm's `x@0.7` means the newest
+  0.7.x, cargo's `x@1.2.3` means `^1.2.3`, and pip's `==1.107` equals
+  1.107.0. Each now goes to the resolver, or compares the way pip does.
+  npm ranges resolve as npm resolves them: the `latest` tag when it fits,
+  otherwise the highest version that does. An alias is unwrapped before the
+  path and URL checks.
 - **An empty field shifted every column after it,** because bash's `read`
   collapses consecutive tabs. `snare deps fix` would have failed to move a
   malicious `.pth` aside, and `respond` misread a blocked clone. A gate

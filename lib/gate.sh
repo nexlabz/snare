@@ -331,11 +331,13 @@ def pkg_specs(prog, args):
             res.append(x); j += 1
         return res
     def npm_one(x):
+        # The alias first: alias@npm:real@1.0 installs `real`, and the path,
+        # URL and tarball tests have to look at what is really installed.
+        if x.startswith("npm:"): x = x[4:]
+        if "@npm:" in x: x = x.split("@npm:", 1)[1]
         if x.startswith((".", "/", "~", "git+", "github:", "file:", "link:", "workspace:", "http:", "https:")) \
            or "://" in x or x.endswith((".tgz", ".tar.gz")) or ("/" in x and not x.startswith("@")):
             return
-        if x.startswith("npm:"): x = x[4:]
-        if "@npm:" in x: x = x.split("@npm:", 1)[1]     # alias@npm:real@1.0 installs `real`
         i = x.find("@", 1) if x.startswith("@") else x.find("@")
         emit("npm", x if i < 0 else x[:i], "" if i < 0 else x[i + 1:])
     def pip_one(x):
