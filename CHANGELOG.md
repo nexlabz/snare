@@ -81,6 +81,14 @@ crates.io together. snare read none of that.
   npm ranges resolve as npm resolves them: the `latest` tag when it fits,
   otherwise the highest version that does. An alias is unwrapped before the
   path and URL checks.
+- **Removing a Python package ran its payload.** `snare deps fix` used to
+  run the environment's own `pip uninstall`, which starts that Python, and a
+  malicious `.pth` runs at startup, first. snare now moves the files listed
+  in the package's `RECORD` into quarantine itself, refusing any path
+  outside site-packages, and runs nothing from that environment. Every
+  Python snare starts for these checks uses `-S`, so it does not run the
+  startup files it is looking for. Cargo's `=1.2` (every 1.2.x) and
+  `=1.2.3, <2` are no longer read as one exact version.
 - **An empty field shifted every column after it,** because bash's `read`
   collapses consecutive tabs. `snare deps fix` would have failed to move a
   malicious `.pth` aside, and `respond` misread a blocked clone. A gate

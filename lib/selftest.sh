@@ -1449,11 +1449,25 @@ CMDS
   _gate_decide "npm i ua-hijack@latest" "$D" >/dev/null 2>&1 || rr="$rr | (latest=0.7.30 wrongly stopped)"
   unset -f _deps_resolve_latest; . "$SNARE_ROOT/lib/deps.sh"
   INTEL_DIR="$SNARE_HOME/intel"; INTEL_LIST="$INTEL_DIR/malicious.tsv.gz"; INTEL_META="$INTEL_DIR/intel.json"
-  [ "$(python3 -c "$(_deps_py)" pick - ">=1.100,<1.107.1" 1.106.0 1.107.0 1.108.0 1.107.1rc1)" = 1.107.0 ] || rr="$rr | pick"
+  [ "$(python3 -S -c "$(_deps_py)" pick - ">=1.100,<1.107.1" 1.106.0 1.107.0 1.108.0 1.107.1rc1)" = 1.107.0 ] || rr="$rr | pick"
   mkdir -p "$D/sp/.venv/lib/python3.12/site-packages"; printf 'home=/usr\n' > "$D/sp/.venv/pyvenv.cfg"
   printf 'import os, base64; exec(base64.b64decode("eA=="))\n' > "$D/sp/.venv/lib/python3.12/site-packages/cook.pth"
-  local k v w; IFS="$(printf '\t')" read -r k _ _ v w _ < <(python3 -c "$(_deps_py)" scan "$INTEL_LIST" "$D/sp" --installed)
+  local k v w; IFS="$(printf '\t')" read -r k _ _ v w _ < <(python3 -S -c "$(_deps_py)" scan "$INTEL_LIST" "$D/sp" --installed)
   [ "$k" = startup ] && [ -f "${w%:*}" ] || rr="$rr | startup columns ($w)"
+  # quarantine moves a package's files out without starting its environment
+  local sp2="$D/qv/.venv/lib/python3.12/site-packages"; mkdir -p "$sp2/litellm-1.107.0.dist-info" "$sp2/litellm" "$D/qv/.venv/bin"
+  printf 'touch %s/ENV-PYTHON-RAN\n' "$D" > "$D/qv/.venv/bin/python"; chmod +x "$D/qv/.venv/bin/python"
+  printf 'x\n' > "$sp2/litellm/__init__.py"; printf 'import os\n' > "$sp2/cook.pth"
+  printf 'Name: litellm\nVersion: 1.107.0\n' > "$sp2/litellm-1.107.0.dist-info/METADATA"
+  printf 'litellm/__init__.py,,\ncook.pth,,\n../../../../outside.txt,,\nlitellm-1.107.0.dist-info/METADATA,,\n' > "$sp2/litellm-1.107.0.dist-info/RECORD"
+  printf 'keep\n' > "$D/qv/outside.txt"
+  python3 -S -c "$(_deps_py)" quarantine - "$sp2" litellm 1.107.0 "$D/quar" >/dev/null 2>&1
+  [ ! -e "$sp2/cook.pth" ] && [ ! -e "$sp2/litellm" ] && [ -f "$D/quar/cook.pth" ] && [ -f "$D/qv/outside.txt" ] \
+    && [ ! -e "$D/ENV-PYTHON-RAN" ] || rr="$rr | quarantine"
+  _deps_resolve_latest(){ :; }
+  _gate_decide "cargo add evil_crate@=1.2" "$D" >/dev/null 2>&1 && rr="$rr | cargo =1.2"
+  unset -f _deps_resolve_latest; . "$SNARE_ROOT/lib/deps.sh"
+  INTEL_DIR="$SNARE_HOME/intel"; INTEL_LIST="$INTEL_DIR/malicious.tsv.gz"; INTEL_META="$INTEL_DIR/intel.json"
   [ -z "$rr" ] && _st_ok "ranges, tags, aliases, tools by path, launchers and -rfile are all checked; columns hold" \
               || _st_bad "ranges, tags, aliases, tools by path, launchers and -rfile are all checked —$rr"
 
