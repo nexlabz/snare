@@ -89,6 +89,12 @@ crates.io together. snare read none of that.
   Python snare starts for these checks uses `-S`, so it does not run the
   startup files it is looking for. Cargo's `=1.2` (every 1.2.x) and
   `=1.2.3, <2` are no longer read as one exact version.
+- **A repository could run code through snare's own Python.** `python3 -c`
+  puts the current directory first on the import path, and snare runs from
+  inside the repository it is checking, the gate's hook included. A
+  `json.py` or `re.py` planted at a repo's root would have run on snare's
+  first import. Every Python snare starts now runs isolated (`-I`); the
+  selftest plants seven stdlib-named modules and checks none is imported.
 - **An empty field shifted every column after it,** because bash's `read`
   collapses consecutive tabs. `snare deps fix` would have failed to move a
   malicious `.pth` aside, and `respond` misread a blocked clone. A gate

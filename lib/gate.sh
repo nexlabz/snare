@@ -156,7 +156,7 @@ def split_commands(text):
 
     One pass, tracking quotes. Separators — ; & | ( ) and newline — count only
     OUTSIDE quotes. An earlier version split lines first and parsed quotes
-    second, so a quoted string spanning lines (python3 -c "…") was torn into
+    second, so a quoted string spanning lines (python3 -I -c "…") was torn into
     fragments that were read as commands of their own. Returns the commands,
     plus the text of every $( ), backtick, <( ) and >( ) — all of which the
     shell executes. Heredoc bodies are consumed here: kept only when a shell
@@ -1178,7 +1178,7 @@ _gate_tree(){
   [ -d "$dir" ] || return 0
   lit="$(mktemp "${SNARE_GATE_TMP:-${TMPDIR:-/tmp}}/snareioc.XXXXXX")" || return 2
   ioc_literals > "$lit"
-  out="$(python3 -c "$(_gate_routes_py)" "$dir" "$lit" "$(ioc_regexes)" \
+  out="$(python3 -I -c "$(_gate_routes_py)" "$dir" "$lit" "$(ioc_regexes)" \
           "$GATE_CACHE" "$GATE_ALLOW" "$SNARE_VERSION" "${2:+1}" "$SNARE_ROOT" 2>&1)"; rc=$?
   rm -f "$lit"
   # Lockfiles against the known-malware list — every ecosystem, same format,
@@ -1340,7 +1340,7 @@ _gate_pending_add(){ # $1=kind $2=where $3=command $4=dir $5=ref|url
 # $1 = command, $2 = cwd. Prints the verdict on stdout. 0 allow, 1 block.
 _gate_decide(){
   local cmd="$1" cwd="$2" actions kind a b c d rc what seen_top="" out=() blocked=0 cant=0 pkgs=()
-  actions="$(python3 -c "$(_gate_py)" "$cmd" "$cwd" "$SNARE_ROOT" 2>/dev/null)" || {
+  actions="$(python3 -I -c "$(_gate_py)" "$cmd" "$cwd" "$SNARE_ROOT" 2>/dev/null)" || {
     out+=("could not parse the command, so it was not checked")
     cant=1; }
   while IFS="$(printf '\t')" read -r kind a b c d; do
@@ -1563,7 +1563,7 @@ _gate_allow_scan(){
   fi
   local i out fps=" " any=0 path line what ex fp
   for i in "${!trees[@]}"; do
-    out="$(python3 -c "$(_gate_routes_py)" "${trees[$i]}" "$lit" "$(ioc_regexes)" /dev/null /dev/null "$SNARE_VERSION" 1 "$SNARE_ROOT" 2>/dev/null)"
+    out="$(python3 -I -c "$(_gate_routes_py)" "${trees[$i]}" "$lit" "$(ioc_regexes)" /dev/null /dev/null "$SNARE_VERSION" 1 "$SNARE_ROOT" 2>/dev/null)"
     out="$out"$'\n'"$(_deps_gate_tree "${trees[$i]}" /dev/null 2>/dev/null)"
     while IFS="$(printf '\t')" read -r path line what ex fp; do
       [ -z "$path" ] || [ -z "$fp" ] || [ "$fp" = "-" ] && continue
@@ -1644,7 +1644,7 @@ _gate_hook(){
   fi
   # Keep the known-malware list fresh without ever making a command wait.
   snare_intel_nudge 2>/dev/null || true
-  { IFS= read -r -d '' cmd; IFS= read -r -d '' cwd; } < <(python3 -c '
+  { IFS= read -r -d '' cmd; IFS= read -r -d '' cwd; } < <(python3 -I -c '
 import json, sys
 try:
     d = json.load(sys.stdin)

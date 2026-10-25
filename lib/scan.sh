@@ -118,7 +118,7 @@ cmd_scan_repo(){
     hdr "2. Auto-execution vectors (run without you typing anything)"
     while IFS= read -r pj; do
       [ -z "$pj" ] && continue
-      local h; h="$(python3 -c '
+      local h; h="$(python3 -I -c '
 import json,re,sys
 try: d=json.load(open(sys.argv[1]))
 except Exception: sys.exit(0)
@@ -165,7 +165,7 @@ for k,v in s.items():
     local t tv
     while IFS= read -r t; do
       [ -z "$t" ] && continue
-      tv="$(python3 -c "$(_scan_tasks_py)" "$t" 2>/dev/null)"
+      tv="$(python3 -I -c "$(_scan_tasks_py)" "$t" 2>/dev/null)"
       case "${tv%%	*}" in
         FOLDEROPEN)
           _hit "$t uses runOn:folderOpen — executes on opening the repo in VS Code"
@@ -193,7 +193,7 @@ for k,v in s.items():
     local ac ah
     while IFS= read -r ac; do
       [ -z "$ac" ] && continue
-      ah="$(python3 -c "$(_scan_hooks_py)" "$ac" 2>/dev/null)"
+      ah="$(python3 -I -c "$(_scan_hooks_py)" "$ac" 2>/dev/null)"
       [ -z "$ah" ] && continue
       if echo "$ah" | _qmatch "^HIGH"; then
         _hit "$ac — an agent hook runs a dropper, on its own, every session:"
@@ -736,7 +736,7 @@ _scan_ref(){ # $1=repo $2=ref $3=pattern -> prints findings
     [ -z "$f" ] && continue
     body="$(gh api "repos/$R/contents/$f?ref=$REF" --jq '.content' 2>/dev/null | base64 -d 2>/dev/null)"
     [ -z "$body" ] && continue
-    local hooks; hooks="$(echo "$body" | python3 -c '
+    local hooks; hooks="$(echo "$body" | python3 -I -c '
 import json,re,sys
 try: d=json.load(sys.stdin)
 except Exception: sys.exit(0)

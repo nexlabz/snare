@@ -35,7 +35,7 @@ snare_intel_refresh(){
     rm -rf "$tmp"; return 1
   fi
   local want got
-  want="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["sha256"])' "$tmp/intel.json" 2>/dev/null)"
+  want="$(python3 -I -c 'import json,sys;print(json.load(open(sys.argv[1]))["sha256"])' "$tmp/intel.json" 2>/dev/null)"
   got="$(shasum -a 256 "$tmp/malicious.tsv.gz" 2>/dev/null | cut -d' ' -f1)"
   [ -n "$got" ] || got="$(sha256sum "$tmp/malicious.tsv.gz" 2>/dev/null | cut -d' ' -f1)"
   if [ -z "$want" ] || [ "$want" != "$got" ]; then rm -rf "$tmp"; return 1; fi
@@ -52,9 +52,13 @@ snare_intel_nudge(){
   ( "$SNARE_ROOT/bin/snare" _intel-refresh >/dev/null 2>&1 & ) >/dev/null 2>&1
 }
 
-# Every Python snare runs here runs with -S. A .pth file in site-packages runs
-# at interpreter start — that is the payload this file looks for — so snare
-# must not start an interpreter that would execute it while checking for it.
+# Every Python snare starts runs with -I -S. -S: a .pth file in site-packages
+# runs at interpreter start — the payload this file looks for — so snare must
+# not start an interpreter that would execute it while checking for it. -I:
+# `python -c` otherwise puts the CURRENT directory first on the import path,
+# and snare runs from inside the repository it checks — a planted json.py or
+# re.py at its root would run on the first import. (-I applies everywhere in
+# snare for that reason, the gate's own classifier included.)
 _deps_py(){
   cat <<'PYDEPS'
 import gzip, hashlib, json, os, re, subprocess, sys
@@ -359,7 +363,7 @@ def collect(root, installed, system, found=None):
         for py in ("python3", "python"):
             try:
                 # -S: do not run that interpreter's own .pth files to find them
-                r = subprocess.run([py, "-S", "-c", "import site,sys,json;print(json.dumps(site.getsitepackages()+[site.getusersitepackages()]))"],
+                r = subprocess.run([py, "-I", "-S", "-c", "import site,sys,json;print(json.dumps(site.getsitepackages()+[site.getusersitepackages()]))"],
                                    capture_output=True, text=True, timeout=10)
                 for sp in json.loads(r.stdout or "[]"):
                     if os.path.isdir(sp): pkgs.extend(installed_python(sp)); startup.extend(startup_files(sp))
@@ -580,12 +584,12 @@ PYDEPS
 # other. Exit 0 clean, 1 findings, 4 no list on this machine.
 _deps_gate_tree(){ # $1=dir $2=allow file $3=cache file (optional)
   [ -s "$INTEL_LIST" ] || return 4
-  python3 -S -c "$(_deps_py)" gate "$INTEL_LIST" "$1" "--allow=${2:-}" ${3:+"--cache=$3"}
+  python3 -I -S -c "$(_deps_py)" gate "$INTEL_LIST" "$1" "--allow=${2:-}" ${3:+"--cache=$3"}
 }
 
 _deps_gate_file(){ # $1=requirements or lock file
   [ -s "$INTEL_LIST" ] || return 0
-  python3 -S -c "$(_deps_py)" gatefile "$INTEL_LIST" "$1" "$GATE_ALLOW"
+  python3 -I -S -c "$(_deps_py)" gatefile "$INTEL_LIST" "$1" "$GATE_ALLOW"
 }
 
 # What would this install line actually install — no version, a range, or a
@@ -600,7 +604,7 @@ _deps_resolve_latest(){ # $1=eco $2=name $3=spec (may be empty)
       local latest sat; latest="$(npm view "$2" dist-tags.latest 2>/dev/null | tail -1)"
       [ -z "${3:-}" ] && { echo "$latest"; return 0; }
       sat="$(npm view "$2@$3" version --json 2>/dev/null)" || return 0
-      printf '%s' "$sat" | python3 -c '
+      printf '%s' "$sat" | python3 -I -c '
 import json, sys
 d = json.load(sys.stdin); v = d if isinstance(d, list) else [d]
 l = sys.argv[1]
@@ -609,15 +613,15 @@ elif v: print(v[-1])' "$latest" 2>/dev/null ;;
     pypi)
       local rel; rel="$(curl -fsS --max-time 8 "https://pypi.org/pypi/$2/json" 2>/dev/null)" || return 0
       if [ -z "${3:-}" ]; then
-        printf '%s' "$rel" | python3 -c 'import json,sys;print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null
+        printf '%s' "$rel" | python3 -I -c 'import json,sys;print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null
       else
         # shellcheck disable=SC2046
-        python3 -S -c "$(_deps_py)" pick - "$3" $(printf '%s' "$rel" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(" ".join(k for k,f in d["releases"].items() if f and not all(x.get("yanked") for x in f)))' 2>/dev/null) 2>/dev/null
+        python3 -I -S -c "$(_deps_py)" pick - "$3" $(printf '%s' "$rel" | python3 -I -c 'import json,sys;d=json.load(sys.stdin);print(" ".join(k for k,f in d["releases"].items() if f and not all(x.get("yanked") for x in f)))' 2>/dev/null) 2>/dev/null
       fi ;;
     crates.io)
       [ -z "${3:-}" ] || return 0      # a cargo range: pin it instead
       curl -fsS --max-time 8 -A "snare (github.com/nexlabz/snare)" "https://crates.io/api/v1/crates/$2" 2>/dev/null \
-        | python3 -c 'import json,sys;print(json.load(sys.stdin)["crate"]["max_stable_version"])' 2>/dev/null ;;
+        | python3 -I -c 'import json,sys;print(json.load(sys.stdin)["crate"]["max_stable_version"])' 2>/dev/null ;;
   esac
 }
 
@@ -626,7 +630,7 @@ elif v: print(v[-1])' "$latest" 2>/dev/null ;;
 _deps_gate_pkgs(){ # eco name version, repeated
   [ -s "$INTEL_LIST" ] || return 0     # no list yet: the other checks still run; doctor says so
   local out rc kind eco name ver ids spec latest worst=0
-  out="$(python3 -S -c "$(_deps_py)" pkgs "$INTEL_LIST" "$@" 2>/dev/null)"; rc=$?
+  out="$(python3 -I -S -c "$(_deps_py)" pkgs "$INTEL_LIST" "$@" 2>/dev/null)"; rc=$?
   [ "$rc" = 0 ] && return 0
   while IFS="$(printf '\t')" read -r kind eco name ver ids spec; do
     [ "$ver" = - ] && ver=""
@@ -635,7 +639,7 @@ _deps_gate_pkgs(){ # eco name version, repeated
             worst=1 ;;
       SOME) latest="$(_deps_resolve_latest "$eco" "$name" "$ver")"
             if [ -n "$latest" ]; then
-              if python3 -S -c "$(_deps_py)" pkgs "$INTEL_LIST" "$eco" "$name" "$latest" >/dev/null 2>&1; then
+              if python3 -I -S -c "$(_deps_py)" pkgs "$INTEL_LIST" "$eco" "$name" "$latest" >/dev/null 2>&1; then
                 : # the version that would install is not a bad one
               else
                 echo "  $name ($eco): the version that would install now, $latest, is known malware — https://osv.dev/vulnerability/${ids%%,*}"
@@ -667,7 +671,7 @@ cmd_deps(){
 
 _deps_status(){
   local age; if age="$(snare_intel_age)"; then
-    local n; n="$(python3 -c 'import json,sys;m=json.load(open(sys.argv[1]));print("%d entries — %s" % (m["entries"], ", ".join("%s %d" % kv for kv in sorted(m["by_ecosystem"].items(), key=lambda x:-x[1]))))' "$INTEL_META" 2>/dev/null)"
+    local n; n="$(python3 -I -c 'import json,sys;m=json.load(open(sys.argv[1]));print("%d entries — %s" % (m["entries"], ", ".join("%s %d" % kv for kv in sorted(m["by_ecosystem"].items(), key=lambda x:-x[1]))))' "$INTEL_META" 2>/dev/null)"
     grn "  known-malware list: updated $((age / 3600))h ago — ${n:-?}"
   else
     ylw "  known-malware list: not downloaded yet — run: snare deps update"
@@ -690,7 +694,7 @@ _deps_scan(){
   _deps_need_list || return 2
   hdr "snare deps — known-malicious packages${system:+ (this machine too)}"
   local out rc
-  out="$(python3 -S -c "$(_deps_py)" scan "$INTEL_LIST" "$dir" --installed $system 2>/dev/null)"; rc=$?
+  out="$(python3 -I -S -c "$(_deps_py)" scan "$INTEL_LIST" "$dir" --installed $system 2>/dev/null)"; rc=$?
   if [ "$rc" = 0 ]; then
     grn "  none found in $(cd "$dir" && pwd)${system:+, its environments, or the global installs on this machine}"
     dim "  (lockfiles and installed packages for npm, pnpm, yarn, bun, PyPI, crates.io, Go, RubyGems, Packagist, NuGet)"
@@ -718,13 +722,13 @@ _deps_scan(){
 _deps_safe_version(){ # $1=eco $2=name
   local cands
   case "$1" in
-    npm)  cands="$(npm view "$2" versions --json 2>/dev/null | python3 -c 'import json,sys;v=json.load(sys.stdin);print(" ".join(v if isinstance(v,list) else [v]))' 2>/dev/null)" ;;
-    pypi) cands="$(curl -fsS --max-time 10 "https://pypi.org/pypi/$2/json" 2>/dev/null | python3 -c 'import json,sys;d=json.load(sys.stdin);print(" ".join(k for k,f in d["releases"].items() if f and not all(x.get("yanked") for x in f)))' 2>/dev/null)" ;;
+    npm)  cands="$(npm view "$2" versions --json 2>/dev/null | python3 -I -c 'import json,sys;v=json.load(sys.stdin);print(" ".join(v if isinstance(v,list) else [v]))' 2>/dev/null)" ;;
+    pypi) cands="$(curl -fsS --max-time 10 "https://pypi.org/pypi/$2/json" 2>/dev/null | python3 -I -c 'import json,sys;d=json.load(sys.stdin);print(" ".join(k for k,f in d["releases"].items() if f and not all(x.get("yanked") for x in f)))' 2>/dev/null)" ;;
     *) return 1 ;;
   esac
   [ -n "$cands" ] || return 1
   # shellcheck disable=SC2086
-  python3 -S -c "$(_deps_py)" safe "$INTEL_LIST" "$1" "$2" $cands 2>/dev/null
+  python3 -I -S -c "$(_deps_py)" safe "$INTEL_LIST" "$1" "$2" $cands 2>/dev/null
 }
 
 _deps_fix(){
@@ -733,7 +737,7 @@ _deps_fix(){
   _gate_person_only "snare deps fix" || return 1
   _deps_need_list || return 2
   dir="$(cd "$dir" && pwd -P)" || return 2
-  local out; out="$(python3 -S -c "$(_deps_py)" scan "$INTEL_LIST" "$dir" --installed $system 2>/dev/null)"
+  local out; out="$(python3 -I -S -c "$(_deps_py)" scan "$INTEL_LIST" "$dir" --installed $system 2>/dev/null)"
   [ -n "$out" ] || { grn "  nothing to fix — no known-malicious packages found"; return 0; }
   hdr "snare deps fix — $dir"
   dim "  For each one: remove it, or replace it with the newest version that is not"
@@ -777,7 +781,7 @@ _deps_fix(){
             # the package's .pth payload runs first. snare moves its files
             # out itself, without running anything from that environment.
             local sp="${where#installed in }"
-            rm_=(python3 -S -c "$(_deps_py)" quarantine - "$sp" "$name" "$ver" "$SNARE_BACKUPS/quarantine-$name-$(date +%s)")
+            rm_=(python3 -I -S -c "$(_deps_py)" quarantine - "$sp" "$name" "$ver" "$SNARE_BACKUPS/quarantine-$name-$(date +%s)")
             [ -n "$safe" ] && dim "     afterwards, to put a clean version back:  pip install --only-binary :all: '$name==$safe'" ;;
           *)
             echo "     fix: change the pin in ${where%%:*} to a version that is not listed${safe:+ — e.g. $name==$safe}"
@@ -816,7 +820,7 @@ _deps_fix(){
   echo
   if [ "$ran" = 1 ]; then
     dim "  Checking again…"
-    python3 -S -c "$(_deps_py)" scan "$INTEL_LIST" "$dir" --installed $system >/dev/null 2>&1 \
+    python3 -I -S -c "$(_deps_py)" scan "$INTEL_LIST" "$dir" --installed $system >/dev/null 2>&1 \
       && grn "  clean now" || ylw "  some are still present — run 'snare deps scan' to see which"
   fi
   if [ "$installed" = 1 ]; then

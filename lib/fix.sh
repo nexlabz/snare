@@ -261,7 +261,7 @@ _fix_clean_tree(){
 
   # ---- 1. editor auto-execution, surgically ------------------------------
   if [ -f .vscode/tasks.json ] && grep -q folderOpen .vscode/tasks.json 2>/dev/null; then
-    verdict="$(python3 -c "$(_fix_tasks_prog)" .vscode/tasks.json 2>/dev/null)"
+    verdict="$(python3 -I -c "$(_fix_tasks_prog)" .vscode/tasks.json 2>/dev/null)"
     case "${verdict%%$'\t'*}" in
       STRIPPED)
         git add .vscode/tasks.json 2>/dev/null
@@ -314,7 +314,7 @@ _fix_clean_tree(){
 
     # Strip it, and keep the file if anything real
     #     survives. This is the case the old code never reached.
-    verdict="$(python3 -c "$(_fix_strip_prog file)" "$f" 2>/dev/null)"
+    verdict="$(python3 -I -c "$(_fix_strip_prog file)" "$f" 2>/dev/null)"
     case "$verdict" in
       STRIPPED)
         git add "$f" 2>/dev/null
@@ -589,7 +589,7 @@ cmd_fix(){
     left="$(git rev-list --objects --all 2>/dev/null | awk '{print $1}' \
             | git cat-file --batch-check='%(objectname) %(objecttype) %(objectsize)' 2>/dev/null \
             | awk '$2=="blob" && $3<400000 {print $1}' \
-            | python3 -c "$(_fix_strip_prog verify)" 2>/dev/null)"
+            | python3 -I -c "$(_fix_strip_prog verify)" 2>/dev/null)"
     echo "  blobs still carrying a hidden payload: ${left:-unknown}"
     [ "${left:-1}" != "0" ] && die "purge incomplete — not pushing"
     git remote add origin "https://github.com/$repo.git" 2>/dev/null || \

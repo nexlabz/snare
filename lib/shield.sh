@@ -173,7 +173,7 @@ _shield_uninstall(){
     ylw "  not installed in $rc"; return 0
   fi
   # Remove exactly the delimited block, nothing else.
-  python3 - "$rc" "$SHIELD_BEGIN" "$SHIELD_END" <<'PY'
+  python3 -I - "$rc" "$SHIELD_BEGIN" "$SHIELD_END" <<'PY'
 import sys
 rc, begin, end = sys.argv[1], sys.argv[2], sys.argv[3]
 lines = open(rc).read().split('\n')
