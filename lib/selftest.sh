@@ -1432,6 +1432,29 @@ CMDS
   if [ "$r1$r2$r3" = 101 ]; then _st_ok "an unpinned install is stopped only when the version it would get is listed (or cannot be told)"
   else _st_bad "an unpinned install is stopped only when the version it would get is listed (r=$r1$r2$r3)"; fi
 
+  # review round: ranges, tags and aliases resolve; path-invoked tools,
+  # launchers and a glued -rfile are read; empty fields do not shift columns
+  _deps_resolve_latest(){ [ "$3" = "^0.7.0" ] && echo 0.7.29; [ "$3" = latest ] && echo 0.7.30; :; }
+  local rr="" c2
+  printf 'litellm==1.107.0\n' > "$D/req2.txt"
+  while IFS= read -r c2; do [ -n "$c2" ] && ! _gate_decide "$c2" "$D" >/dev/null 2>&1 || rr="$rr | $c2"; done <<'CMDS'
+npm i ua-hijack@^0.7.0
+npm i x@npm:evil-pkg@1.0.0
+./venv/bin/pip install litellm==1.107.0
+mise exec -- pip install litellm==1.107.0
+pip install -rreq2.txt
+CMDS
+  _gate_decide "npm i ua-hijack@latest" "$D" >/dev/null 2>&1 || rr="$rr | (latest=0.7.30 wrongly stopped)"
+  unset -f _deps_resolve_latest; . "$SNARE_ROOT/lib/deps.sh"
+  INTEL_DIR="$SNARE_HOME/intel"; INTEL_LIST="$INTEL_DIR/malicious.tsv.gz"; INTEL_META="$INTEL_DIR/intel.json"
+  [ "$(python3 -c "$(_deps_py)" pick - ">=1.100,<1.107.1" 1.106.0 1.107.0 1.108.0 1.107.1rc1)" = 1.107.0 ] || rr="$rr | pick"
+  mkdir -p "$D/sp/.venv/lib/python3.12/site-packages"; printf 'home=/usr\n' > "$D/sp/.venv/pyvenv.cfg"
+  printf 'import os, base64; exec(base64.b64decode("eA=="))\n' > "$D/sp/.venv/lib/python3.12/site-packages/cook.pth"
+  local k v w; IFS="$(printf '\t')" read -r k _ _ v w _ < <(python3 -c "$(_deps_py)" scan "$INTEL_LIST" "$D/sp" --installed)
+  [ "$k" = startup ] && [ -f "${w%:*}" ] || rr="$rr | startup columns ($w)"
+  [ -z "$rr" ] && _st_ok "ranges, tags, aliases, tools by path, launchers and -rfile are all checked; columns hold" \
+              || _st_bad "ranges, tags, aliases, tools by path, launchers and -rfile are all checked —$rr"
+
   # a repository's lockfile, and a requirements file on the command line
   mkdir -p "$D/web"; printf '{"lockfileVersion":3,"packages":{"node_modules/ua-hijack":{"version":"0.7.29"}}}\n' > "$D/web/package-lock.json"
   printf '{"name":"web"}\n' > "$D/web/package.json"

@@ -60,6 +60,9 @@ ENV = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 WRAPPERS = {"sudo", "time", "env", "nohup", "exec", "command", "builtin",
             "nice", "caffeinate", "stdbuf", "timeout", "gtimeout", "doas"}
 PM = {"npm", "pnpm", "yarn", "bun"}
+# Everything pkg_specs reads an install line for.
+PKGTOOLS = PM | {"npx", "bunx", "pnpx", "pip", "pip3", "python", "python3", "uv", "uvx",
+                 "pipx", "poetry", "pdm", "rye", "cargo", "go", "gem", "composer"}
 RUNNERS = {"npx", "bunx", "pnpx", "node", "deno", "next", "vite", "nuxt",
            "tsx", "ts-node", "turbo", "nx", "astro", "remix", "electron"}
 # npm-family subcommands that cannot execute repository code. Everything else
@@ -314,7 +317,11 @@ NPM_VAL = {"--prefix", "-C", "--dir", "--cwd", "--registry", "--tag", "-w", "--w
            "--filter", "-F", "--cache", "--userconfig", "--package", "-p", "--save-prefix"}
 def pkg_specs(prog, args):
     def emit(eco, name, ver=""):
-        if name: out.append("pkg\t%s\t%s\t%s" % (eco, name, ver if ver and EXACT.match(ver) else ""))
+        # The spec as written — an exact pin, a range, a tag — or "-". A range
+        # or tag is resolved the way the package manager would, then checked;
+        # matching exact pins only let `x@^0.7.0` reach a listed 0.7.29.
+        ver = re.sub(r"[\t\n]", "", ver or "").strip()
+        if name: out.append("pkg\t%s\t%s\t%s" % (eco, name, ver or "-"))
     def positional(a, vals):
         res, j = [], 0
         while j < len(a):
@@ -328,13 +335,17 @@ def pkg_specs(prog, args):
            or "://" in x or x.endswith((".tgz", ".tar.gz")) or ("/" in x and not x.startswith("@")):
             return
         if x.startswith("npm:"): x = x[4:]
+        if "@npm:" in x: x = x.split("@npm:", 1)[1]     # alias@npm:real@1.0 installs `real`
         i = x.find("@", 1) if x.startswith("@") else x.find("@")
         emit("npm", x if i < 0 else x[:i], "" if i < 0 else x[i + 1:])
     def pip_one(x):
         if x.startswith((".", "/", "~", "git+", "http:", "https:", "file:")) or "://" in x or x.endswith((".whl", ".tar.gz", ".zip")):
             return
-        m = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?\s*(?:===?\s*([^\s;,]+))?", x)
-        if m: emit("pypi", m.group(1), m.group(2) or "")
+        m = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?\s*([^;]*)", x)
+        if m:
+            spec = m.group(2).strip()
+            if re.fullmatch(r"===?\s*\S+", spec): spec = re.sub(r"^===?\s*", "", spec)
+            emit("pypi", m.group(1), spec)
     a = list(args)
     if prog in ("npx", "bunx", "pnpx"):
         p = positional(a, NPM_VAL)
@@ -369,6 +380,8 @@ def pkg_specs(prog, args):
                 out.append("reqfile\t%s" % resolve(rest[j], cur)); j += 2; continue
             if x.startswith(("--requirement=", "--constraint=")):
                 out.append("reqfile\t%s" % resolve(x.split("=", 1)[1], cur))
+            elif len(x) > 2 and x[:2] in ("-r", "-c") and not x.startswith("--"):
+                out.append("reqfile\t%s" % resolve(x[2:], cur))    # pip takes -rfile, glued
             elif x == "-e" or x == "--editable":
                 j += 2; continue
             elif x in PIP_VAL:
@@ -512,7 +525,7 @@ def handle(argv, depth=0):
     if prog in LAUNCHERS:
         for k, a in enumerate(args):
             b = os.path.basename(a)
-            if b in PM or b in RUNNERS or b in ("git", "gh") or b in SHELL_C:
+            if b in PM or b in RUNNERS or b in PKGTOOLS or b in ("git", "gh") or b in SHELL_C:
                 handle(args[k:], depth + 1); return
         unknown(); return
 
@@ -520,6 +533,10 @@ def handle(argv, depth=0):
     if prog in SHELL_C and PIPED[0] and not any(a.startswith("-") and "c" in a[1:] for a in args) \
             and not (args and not args[0].startswith("-")):
         cannot("a shell running whatever is piped into it (curl … | sh)"); return
+    # `./venv/bin/pip install x`, `/usr/local/bin/npm i x`: the path form
+    # goes down the script branch below and returned before the package check.
+    if prog in PKGTOOLS and raw != prog:
+        pkg_specs(prog, args)
     script = None
     if prog in SHELL_C and args and not args[0].startswith("-"):
         script = args[0]
@@ -1130,7 +1147,9 @@ for hd in hookdirs:
             code_scan(rel, hdata)
 
 for f in findings:
-    print("\t".join([f[0], str(f[1]), f[2], f[3], f[4]]))
+    # "-" for an empty excerpt: bash's `read` collapses consecutive tabs, and
+    # the fingerprint then landed in the excerpt's column — unapprovable.
+    print("\t".join([f[0], str(f[1]), f[2], f[3] or "-", f[4]]))
 if findings:
     sys.exit(1)
 if truncated:
@@ -1178,7 +1197,7 @@ _gate_tree(){
       [ -z "$path" ] && continue
       if [ "${line:-0}" -gt 0 ] 2>/dev/null; then echo "  $path:$line — $what"
       else echo "  $path — $what"; fi
-      [ -n "$ex" ] && echo "      ↳ $ex"
+      [ -n "$ex" ] && [ "$ex" != - ] && echo "      ↳ $ex"
     done <<< "$out"
     return 1
   fi
@@ -1311,8 +1330,9 @@ GATE_PENDING="$SNARE_LOGS/gate-pending"
 _gate_pending_add(){ # $1=kind $2=where $3=command $4=dir $5=ref|url
   mkdir -p "$SNARE_LOGS" 2>/dev/null
   [ -f "$GATE_PENDING" ] && grep -qF "$(printf '%s\t%s\t' "$1" "$2")" "$GATE_PENDING" 2>/dev/null && return 0
+  # "-" for an empty field: `read` collapses consecutive tabs.
   printf '%s\t%s\t%s\t%s\t%s\n' "$1" "$2" "$(printf '%s' "$3" | tr '\n\t' '  ' | cut -c1-200)" \
-    "${4:-}" "${5:-}" >> "$GATE_PENDING" 2>/dev/null
+    "${4:--}" "${5:--}" >> "$GATE_PENDING" 2>/dev/null
 }
 
 # $1 = command, $2 = cwd. Prints the verdict on stdout. 0 allow, 1 block.
@@ -1513,7 +1533,7 @@ _gate_allow_scan(){
       if [ -s "$GATE_PENDING" ]; then
         local k pd pr
         while IFS="$(printf '\t')" read -r k _ _ pd pr; do
-          [ "$k" = incoming ] && [ "$pd" = "$dir" ] && [ -n "$pr" ] && refs+=("$pr")
+          [ "$k" = incoming ] && [ "$pd" = "$dir" ] && [ -n "$pr" ] && [ "$pr" != - ] && refs+=("$pr")
         done < "$GATE_PENDING"
       fi
     fi
@@ -1546,7 +1566,7 @@ _gate_allow_scan(){
     while IFS="$(printf '\t')" read -r path line what ex fp; do
       [ -z "$path" ] || [ -z "$fp" ] || [ "$fp" = "-" ] && continue
       case "$fps" in *" $fp "*) continue ;; esac; fps="$fps$fp "
-      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "${labels[$i]}" "$path" "$line" "$what" "$ex" "$fp"; any=1
+      printf '%s\t%s\t%s\t%s\t%s\t%s\n' "${labels[$i]}" "$path" "$line" "$what" "${ex:--}" "$fp"; any=1
     done <<< "$out"
   done
   [ -n "$dir" ] && for i in $(seq 1 "$n"); do "${GATE_GIT[@]}" -C "$dir" worktree remove --force "$q/wt$i" >/dev/null 2>&1; done
@@ -1575,7 +1595,7 @@ _gate_allow(){ # $1 = dir or clone URL, $2 = ref (optional)
     n=$((n + 1)); echo
     if [ "${line:-0}" -gt 0 ] 2>/dev/null; then echo "  $n. $path:$line — $what"; else echo "  $n. $path — $what"; fi
     [ "$label" = "working copy" ] || dim "       (in $label — not on disk yet; this is what would arrive)"
-    [ -n "$ex" ] && echo "       ↳ $ex"
+    [ -n "$ex" ] && [ "$ex" != - ] && echo "       ↳ $ex"
     printf '     Allow this one? [y/N] '; IFS= read -r ans
     case "$ans" in
       y|Y|yes) _gate_allow_record "$fp" "$where" "$path" "$what"; added=$((added + 1)) ;;

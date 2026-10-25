@@ -151,6 +151,7 @@ _respond_gate(){
   keep="$(mktemp "${TMPDIR:-/tmp}/snarepend.XXXXXX")" || return 0
   while IFS="$(printf '\t')" read -r kind where cmd pdir pref <&4; do
     [ -z "$kind" ] && continue
+    [ "$pdir" = - ] && pdir=""; [ "$pref" = - ] && pref=""
     n=$((n + 1)); echo
     if [ "$kind" = incoming ]; then
       _respond_gate_incoming "$n" "$where" "$pdir" "$pref"; rc=$?
@@ -230,7 +231,7 @@ _respond_gate_incoming(){ # $1=n $2=label $3=dir $4=ref|url
   while IFS="$(printf '\t')" read -r _ path line what ex _; do
     [ -z "$path" ] && continue
     if [ "${line:-0}" -gt 0 ] 2>/dev/null; then echo "     $path:$line — $what"; else echo "     $path — $what"; fi
-    [ -n "$ex" ] && echo "         ↳ $ex"
+    [ -n "$ex" ] && [ "$ex" != - ] && echo "         ↳ $ex"
   done <<< "$out"
   echo
   echo "     a  it is mine and harmless — allow it (asks about each finding)"

@@ -405,9 +405,11 @@ if mode in ("scan", "gate"):
     hits = judge(pkgs, idx)
     if mode == "scan":
         for eco, name, ver, where, ids, spec in hits:
-            print("\t".join(["pkg", eco, name, ver, where, ids, "every version" if spec == "*" else "this version"]))
+            # "-" for an empty field: bash's `read` collapses consecutive tabs,
+            # so an empty column shifted every one after it.
+            print("\t".join(["pkg", eco, name, ver or "-", where, ids or "-", "every version" if spec == "*" else "this version"]))
         for _, p, n, what, ex in startup:
-            print("\t".join(["startup", "pypi", os.path.basename(p), "", "%s:%d" % (p, n), what, ex]))
+            print("\t".join(["startup", "pypi", os.path.basename(p), "-", "%s:%d" % (p, n), what, ex or "-"]))
         sys.exit(1 if hits or startup else 0)
     # gate: the route check's format, so `snare gate allow` can approve one
     allowed = set()
@@ -419,7 +421,7 @@ if mode in ("scan", "gate"):
         rp = where.split(":")[0]; line = where.split(":")[1] if ":" in where else "0"
         f = fp(where, what, root)
         if f in allowed: continue
-        print("\t".join([rp, line, what, "%s — https://osv.dev/vulnerability/%s" % ("every version is malicious" if spec == "*" else "this exact version", ids.split(",")[0]), f]))
+        print("\t".join([rp or "-", line, what, "%s — https://osv.dev/vulnerability/%s" % ("every version is malicious" if spec == "*" else "this exact version", ids.split(",")[0]), f]))
         n += 1
     if not n and key:
         try:
@@ -458,15 +460,43 @@ if mode == "pkgs":
     idx = load(want)
     if idx is None: print("NOLIST"); sys.exit(4)
     rc = 0
+    EXACTV = re.compile(r"^v?\d[\w.+-]*$")
     for eco, name, ver in trip:
+        ver = "" if ver == "-" else ver
         e = idx.get((eco, norm(eco, name)))
         if not e: continue
+        if ver and not EXACTV.match(ver) and e[0] != "*":
+            # a range or a tag: the caller resolves what it would install
+            print("SOME\t%s\t%s\t%s\t%s\t%s" % (eco, name, ver, e[1], e[0])); rc = max(rc, 5) if rc != 1 else 1
+            continue
         m = matches(e[0], ver)
         if m:
             print("BAD\t%s\t%s\t%s\t%s\t%s" % (eco, name, ver, e[1], "every version" if e[0] == "*" else "this version")); rc = 1
         elif m is None:
-            print("SOME\t%s\t%s\t\t%s\t%s" % (eco, name, e[1], e[0])); rc = max(rc, 5) if rc != 1 else 1
+            print("SOME\t%s\t%s\t-\t%s\t%s" % (eco, name, e[1], e[0])); rc = max(rc, 5) if rc != 1 else 1
     sys.exit(rc)
+
+if mode == "pick":
+    # spec candidate... -> the newest candidate a PEP 440-style spec allows
+    # (what pip would pick): comma-joined clauses of ==, !=, >=, <=, >, <, ~=.
+    spec, cands = args[0], args[1:]
+    def ok(v):
+        for cl in [c.strip() for c in spec.split(",") if c.strip()]:
+            m = re.match(r"^(~=|===|==|!=|>=|<=|>|<)\s*(.+)$", cl)
+            if not m: return False
+            op, w = m.groups(); a, b = vkey(v), vkey(w.rstrip(".*"))
+            if op in ("==", "===") and not (a == b or (w.endswith(".*") and a[:len(b)] == b)): return False
+            if op == "!=" and a == b: return False
+            if op == ">=" and a < b: return False
+            if op == "<=" and a > b: return False
+            if op == ">" and a <= b: return False
+            if op == "<" and a >= b: return False
+            if op == "~=" and not (a >= b and a[:len(b) - 1] == b[:len(b) - 1]): return False
+        return True
+    pre = re.compile(r"(a|b|rc|dev|alpha|beta|pre)\d*", re.I)
+    good = [c for c in cands if ok(c) and (pre.search(spec) or not pre.search(c))]
+    if good: print(sorted(good, key=vkey)[-1]); sys.exit(0)
+    sys.exit(1)
 
 if mode == "safe":
     # eco name candidate... -> the newest candidate that is not known-malicious
@@ -496,15 +526,24 @@ _deps_gate_file(){ # $1=requirements or lock file
   python3 -c "$(_deps_py)" gatefile "$INTEL_LIST" "$1" "$GATE_ALLOW"
 }
 
-# What would `<pm> install <name>` with no version actually install? Asked of
-# the registry the install itself was about to contact. Empty on failure.
-_deps_resolve_latest(){ # $1=eco $2=name
+# What would this install line actually install — no version, a range, or a
+# tag? Asked of the registry the install itself was about to contact, the way
+# the package manager resolves it. Empty when it cannot tell.
+_deps_resolve_latest(){ # $1=eco $2=name $3=spec (may be empty)
   case "$1" in
-    npm)  npm view "$2" version 2>/dev/null | tail -1 ;;
-    pypi) curl -fsS --max-time 8 "https://pypi.org/pypi/$2/json" 2>/dev/null \
-            | python3 -c 'import json,sys;print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null ;;
-    crates.io) curl -fsS --max-time 8 -A "snare (github.com/nexlabz/snare)" "https://crates.io/api/v1/crates/$2" 2>/dev/null \
-            | python3 -c 'import json,sys;print(json.load(sys.stdin)["crate"]["max_stable_version"])' 2>/dev/null ;;
+    npm)  npm view "$2${3:+@$3}" version 2>/dev/null | tail -1 | sed -E "s/.*'([^']+)'.*/\1/; s/^[^ ]+@//" ;;
+    pypi)
+      local rel; rel="$(curl -fsS --max-time 8 "https://pypi.org/pypi/$2/json" 2>/dev/null)" || return 0
+      if [ -z "${3:-}" ]; then
+        printf '%s' "$rel" | python3 -c 'import json,sys;print(json.load(sys.stdin)["info"]["version"])' 2>/dev/null
+      else
+        # shellcheck disable=SC2046
+        python3 -c "$(_deps_py)" pick - "$3" $(printf '%s' "$rel" | python3 -c 'import json,sys;d=json.load(sys.stdin);print(" ".join(k for k,f in d["releases"].items() if f and not all(x.get("yanked") for x in f)))' 2>/dev/null) 2>/dev/null
+      fi ;;
+    crates.io)
+      [ -z "${3:-}" ] || return 0      # a cargo range: pin it instead
+      curl -fsS --max-time 8 -A "snare (github.com/nexlabz/snare)" "https://crates.io/api/v1/crates/$2" 2>/dev/null \
+        | python3 -c 'import json,sys;print(json.load(sys.stdin)["crate"]["max_stable_version"])' 2>/dev/null ;;
   esac
 }
 
@@ -516,10 +555,11 @@ _deps_gate_pkgs(){ # eco name version, repeated
   out="$(python3 -c "$(_deps_py)" pkgs "$INTEL_LIST" "$@" 2>/dev/null)"; rc=$?
   [ "$rc" = 0 ] && return 0
   while IFS="$(printf '\t')" read -r kind eco name ver ids spec; do
+    [ "$ver" = - ] && ver=""
     case "$kind" in
       BAD)  echo "  $name${ver:+@$ver} ($eco) is known malware — ${spec}: https://osv.dev/vulnerability/${ids%%,*}"
             worst=1 ;;
-      SOME) latest="$(_deps_resolve_latest "$eco" "$name")"
+      SOME) latest="$(_deps_resolve_latest "$eco" "$name" "$ver")"
             if [ -n "$latest" ]; then
               if python3 -c "$(_deps_py)" pkgs "$INTEL_LIST" "$eco" "$name" "$latest" >/dev/null 2>&1; then
                 : # the version that would install is not a bad one
@@ -528,8 +568,8 @@ _deps_gate_pkgs(){ # eco name version, repeated
                 worst=1
               fi
             else
-              echo "  $name ($eco) has known-malicious versions, and snare could not ask the registry which"
-              echo "    version would install. Pin a version that is not one of them, e.g. $name@<version>."
+              echo "  $name${ver:+@$ver} ($eco) has known-malicious versions, and snare could not tell which"
+              echo "    version this would install. Pin an exact version that is not one of them."
               [ "$worst" = 1 ] || worst=2
             fi ;;
     esac
@@ -584,7 +624,7 @@ _deps_scan(){
   fi
   local kind eco name ver where ids spec n=0
   while IFS="$(printf '\t')" read -r kind eco name ver where ids spec; do
-    [ -z "$kind" ] && continue; n=$((n + 1))
+    [ -z "$kind" ] && continue; n=$((n + 1)); [ "$ver" = - ] && ver=""; [ "$spec" = - ] && spec=""
     if [ "$kind" = startup ]; then
       red "  $n. $where — $ids"; [ -n "$spec" ] && echo "       ↳ $spec"
     else
@@ -628,7 +668,9 @@ _deps_fix(){
   local kind eco name ver where ids spec ans safe n=0 ran=0 installed=0
   while IFS="$(printf '\t')" read -r kind eco name ver where ids spec <&3; do
     [ -z "$kind" ] && continue; n=$((n + 1)); echo
+    [ "$ver" = - ] && ver=""
     if [ "$kind" = startup ]; then
+      [ "$spec" = - ] && spec=""
       red "  $n. $where — $ids"; [ -n "$spec" ] && echo "       ↳ $spec"
       local f="${where%:*}"
       echo "     d  move it aside (to $SNARE_BACKUPS) — Python stops running it at once"

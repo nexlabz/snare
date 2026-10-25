@@ -65,6 +65,22 @@ crates.io together. snare read none of that.
   and the agent hook refreshes it in the background when it is a day old,
   never making a command wait.
 
+### Fixed — from automated review of the above, before release
+
+- **Version ranges, tags and aliases** such as `npm i x@^0.7.0`, `x@latest`,
+  `pip install 'x>=1.0'` and `alias@npm:real@1.0` were checked only as
+  "unpinned". They now resolve the way the package manager would, through
+  `npm view name@range`, or the newest PyPI release the spec allows, before
+  matching.
+- **Package tools run by path** (`./venv/bin/pip install …`) or through a
+  launcher (`mise exec -- pip …`) skipped the package check. Both are read
+  now, and so is pip's glued `-rfile`.
+- **An empty field shifted every column after it,** because bash's `read`
+  collapses consecutive tabs. `snare deps fix` would have failed to move a
+  malicious `.pth` aside, and `respond` misread a blocked clone. A gate
+  finding with an empty excerpt could not be approved. Empty fields are now
+  written as `-`.
+
 ### Fixed — a block on incoming code could not be approved
 
 Found while releasing 1.5.0. The gate stopped `git checkout main` and
