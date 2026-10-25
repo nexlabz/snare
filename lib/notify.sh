@@ -150,7 +150,7 @@ cmd_notify(){
     local sent=0
     while IFS=$'\t' read -r _who email name; do
       [ -z "$email" ] && continue
-      local _url; _url="$(python3 - "$email" "$name" "$repo" <<'PY'
+      local _url; _url="$(python3 -I - "$email" "$name" "$repo" <<'PY'
 import urllib.parse, sys
 email, name, repo = sys.argv[1], sys.argv[2] or "there", sys.argv[3]
 subject = f"Security: malware in {repo} - please check your machine"

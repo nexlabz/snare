@@ -435,6 +435,9 @@ cmd_update(){
   # here, so ask now rather than on some later command. (Asks only at a
   # terminal; does nothing in CI or under an agent.)
   [ -z "${SNARE_NO_AGENTS:-}" ] && "$SNARE_ROOT/bin/snare" agents offer || true
+  # The known-malware list, refreshed now so the new version starts current.
+  "$SNARE_ROOT/bin/snare" deps update >/dev/null 2>&1 \
+    && dim "  known-malware list updated — 'snare deps' checks your projects against it"
 
   # Updating the checkout does not update anything snare has installed
   # elsewhere. Those copies keep running old code, and in the shield's case an

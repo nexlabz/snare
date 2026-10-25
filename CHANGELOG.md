@@ -7,6 +7,134 @@ because that is the failure that matters most in a scanner.
 `snare version` shows your version and commit. `snare update --check` compares
 commits, not just version numbers.
 
+## [1.6.0] — 2026-10-25
+
+### Added — known-malicious package versions, in every ecosystem
+
+Supply-chain malware is no longer an npm problem. In October 2026 LiteLLM's
+release pipeline was hijacked and version 1.107.0 on PyPI shipped a `.pth`
+file that Python runs at every start. In May, TrapDoor hit npm, PyPI and
+crates.io together. snare read none of that.
+
+- **A known-malware list, the same for everyone.** `.github/workflows/intel.yml`
+  condenses [OpenSSF's malicious-packages](https://github.com/ossf/malicious-packages)
+  database, about 117,000 packages across npm, PyPI, crates.io, Go, RubyGems,
+  Packagist, NuGet and Maven, into one small file every six hours. It
+  publishes the file as the `intel` release's assets. Every snare downloads
+  that same file and matches it on its own machine, so nothing about anyone's
+  packages is sent anywhere. A download that fails its checksum is refused,
+  and the old list is kept. A build with implausibly few entries is never
+  published, because an empty list would read as "nothing is malicious".
+- **`snare deps [dir] [--system]`** reads lockfiles and installed packages
+  and names each known-malicious one, with where it is and its OSV advisory.
+  - npm, pnpm, yarn and bun lockfiles, plus `node_modules`
+  - `requirements*.txt`, `poetry.lock`, `uv.lock`, `pdm.lock`, `pylock.toml`
+    and `Pipfile.lock`, plus the site-packages of every virtualenv in the
+    project
+  - `Cargo.lock`, `go.sum`, `Gemfile.lock`, `composer.lock` and NuGet's
+    `packages.lock.json`
+  - with `--system`, also the user's Python, pipx, global npm and
+    `cargo install`
+- **`snare deps fix`** asks about each one: remove it, or replace it with the
+  newest version that is not listed. Replacements install with scripts off
+  (`npm --ignore-scripts`, `pip --only-binary :all:`), so they cannot run code
+  while installing. It points to `snare rotate` when something malicious was
+  actually installed. A package whose every version is malicious gets a
+  warning about lookalike names. It is person-only, like `snare gate allow`.
+- **The gate stops installs of a listed version.** This covers `npm`/`pnpm`/
+  `yarn`/`bun` `install`/`add`, `npx`, `dlx`, `pip`/`pip3`/`python -m pip`,
+  `uv add`, `uv pip`, `uvx`, `pipx`, `poetry`/`pdm`/`rye add`, `cargo add` and
+  `install`, `go get`/`install`/`run`, `gem install` and `composer require`.
+  It also checks a requirements file named with `-r`, and a repository's
+  lockfiles on `npm install`. For an unpinned install of a package with some
+  bad versions, it asks the registry which version would install, the same
+  request the install was about to make, and stops only if that version is
+  listed. A wrong list entry in a lockfile is approvable with
+  `snare gate allow`, tied to content as always.
+- **Files other languages run on their own** are now repository routes, like
+  `package.json` scripts:
+  - `setup.py` (on install), `conftest.py` (on test), `build.rs` (on build),
+    `sitecustomize.py` and `usercustomize.py` (at every Python start), and
+    `.pth` files (Python runs their import lines at every start): flagged
+    when a line downloads, or decodes and runs, code.
+  - `//go:generate` lines that fetch or pipe into a shell.
+  - An ordinary `setup.py` that calls cmake through subprocess, a `build.rs`
+    that compiles C, `stringer` and coverage's `.pth` are left alone. All 77
+    local repositories in the false-alarm sweep stay clean.
+- `snare doctor` shows the list's age and size, `snare update` refreshes it,
+  and the agent hook refreshes it in the background when it is a day old,
+  never making a command wait.
+
+### Fixed — from automated review of the above, before release
+
+- **Version ranges, tags and aliases** such as `npm i x@^0.7.0`, `x@latest`,
+  `pip install 'x>=1.0'` and `alias@npm:real@1.0` were checked only as
+  "unpinned". They now resolve the way the package manager would, through
+  `npm view name@range`, or the newest PyPI release the spec allows, before
+  matching.
+- **Package tools run by path** (`./venv/bin/pip install …`) or through a
+  launcher (`mise exec -- pip …`) skipped the package check. Both are read
+  now, and so is pip's glued `-rfile`.
+- **Partial versions counted as exact.** npm's `x@0.7` means the newest
+  0.7.x, cargo's `x@1.2.3` means `^1.2.3`, and pip's `==1.107` equals
+  1.107.0. Each now goes to the resolver, or compares the way pip does.
+  npm ranges resolve as npm resolves them: the `latest` tag when it fits,
+  otherwise the highest version that does. An alias is unwrapped before the
+  path and URL checks.
+- **Removing a Python package ran its payload.** `snare deps fix` used to
+  run the environment's own `pip uninstall`, which starts that Python, and a
+  malicious `.pth` runs at startup, first. snare now moves the files listed
+  in the package's `RECORD` into quarantine itself, refusing any path
+  outside site-packages, and runs nothing from that environment. Every
+  Python snare starts for these checks uses `-S`, so it does not run the
+  startup files it is looking for. Cargo's `=1.2` (every 1.2.x) and
+  `=1.2.3, <2` are no longer read as one exact version.
+- **A repository could run code through snare's own Python.** `python3 -c`
+  puts the current directory first on the import path, and snare runs from
+  inside the repository it is checking, the gate's hook included. A
+  `json.py` or `re.py` planted at a repo's root would have run on snare's
+  first import. Every Python snare starts now runs isolated (`-I`); the
+  selftest plants seven stdlib-named modules and checks none is imported.
+- **An empty field shifted every column after it,** because bash's `read`
+  collapses consecutive tabs. `snare deps fix` would have failed to move a
+  malicious `.pth` aside, and `respond` misread a blocked clone. A gate
+  finding with an empty excerpt could not be approved. Empty fields are now
+  written as `-`.
+
+### Fixed — a block on incoming code could not be approved
+
+Found while releasing 1.5.0. The gate stopped `git checkout main` and
+`git pull` on snare's own repository: the website's demo of the payload
+(`docs/assets/site.js:164`) carries a campaign marker as display text. That
+is a false alarm. The person was told to run `snare gate allow`, and it
+said "nothing to allow — clean". The gate kept blocking anyway. `snare
+respond` listed the block but only said "do not pull it until its owner
+cleans it", and the owner was the person reading it. The block had no way
+out.
+
+The cause: `allow` looked only at the files on disk. A checkout, a pull or
+a clone is blocked over code that has not arrived yet, so allow never saw
+it. Any user's false alarm on incoming code hit the same wall.
+
+- `snare gate allow` now also looks at the code a block stopped before it
+  arrived: the branch a checkout would bring, the upstream a pull would
+  merge, and anything the gate recorded for this repository.
+  `snare gate allow <dir> <ref>` names a branch. `snare gate allow <url>`
+  approves a blocked clone. Each finding says it is "not on disk yet".
+  Approvals are still tied to the file's content, so if the file changes it
+  is flagged again.
+- The block now prints the exact allow command for each thing it stopped,
+  for example `snare gate allow /path/to/repo main`. Before, it printed
+  `snare gate allow 'main in /path/to/repo'`, which is not a path.
+- `snare respond` re-checks incoming blocks, shows each file and line, and
+  offers **allow** or **leave**, with a pointer to `snare fix` if it really
+  is infected at the source. It no longer prints the raw command.
+- Considered and rejected: exempting snare's own repository from
+  branch and pull checks, the way its working copy is exempt. Those checks
+  are where incoming code is examined, so the exemption would let a
+  poisoned upstream of snare through unseen. Making it approvable fixes the
+  dead end without that cost.
+
 ## [1.5.0] — 2026-10-14
 
 ### Added — the gate: scan before code comes in or runs

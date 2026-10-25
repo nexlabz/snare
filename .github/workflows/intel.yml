@@ -1,0 +1,61 @@
+# Rebuild the known-malware list every six hours and publish it as the
+# `intel` release's assets. Every snare downloads the same two files and does
+# the matching on its own machine, so nothing about anyone is ever sent.
+name: intel
+on:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+  # A change to the builder is tried on the real data before it can publish.
+  pull_request:
+    paths: [scripts/build-intel.py, .github/workflows/intel.yml, lib/deps.sh]
+permissions:
+  contents: write
+concurrency:
+  group: intel
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch OpenSSF malicious-packages (OSV records only)
+        run: |
+          git clone --quiet --depth 1 --filter=blob:none --sparse \
+            https://github.com/ossf/malicious-packages.git mp
+          git -C mp sparse-checkout set osv/malicious
+      - name: Build
+        run: python3 scripts/build-intel.py mp out
+      - name: Sanity check before publishing
+        # A broken upstream or a parser change must not ship an empty list:
+        # snare would read "nothing is known-malicious" as a clean bill.
+        run: |
+          python3 - <<'PY'
+          import json, sys
+          m = json.load(open("out/intel.json"))
+          by = m["by_ecosystem"]
+          ok = m["entries"] > 50000 and by.get("npm", 0) > 40000 and by.get("pypi", 0) > 5000
+          print(m["entries"], by)
+          sys.exit(0 if ok else 1)
+          PY
+      - name: Matcher reads the real list
+        run: |
+          mkdir -p t && printf 'litellm==1.107.0\n' > t/requirements.txt
+          python3 -c "$(bash -c '. lib/common.sh >/dev/null 2>&1; . lib/deps.sh; _deps_py')" scan out/malicious.tsv.gz t | tee t/out
+          grep -q litellm t/out || echo "::warning::litellm 1.107.0 is not in the list (yet) — check the upstream record"
+      - uses: actions/upload-artifact@v4
+        if: github.event_name == 'pull_request'
+        with:
+          name: intel-preview
+          path: out/
+          retention-days: 3
+      - name: Publish
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view intel >/dev/null 2>&1 || gh release create intel \
+            --prerelease --latest=false --title "Known-malware list (rebuilt every 6 hours)" \
+            --notes "Machine-readable list snare downloads. Built from github.com/ossf/malicious-packages. Not a snare release."
+          gh release upload intel out/malicious.tsv.gz out/intel.json --clobber

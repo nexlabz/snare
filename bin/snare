@@ -3,7 +3,7 @@
 # https://github.com/  •  MIT
 set -uo pipefail
 
-SNARE_VERSION="1.5.0"
+SNARE_VERSION="1.6.0"
 
 # Fast path for the agent hook. It runs before EVERY shell command an agent
 # issues, so the commonest read-only ones must cost almost nothing. It may only
@@ -79,12 +79,17 @@ fi
 . "$_dir/lib/agents.sh"
 . "$_dir/lib/rotate.sh"
 . "$_dir/lib/respond.sh"
+. "$_dir/lib/deps.sh"
 . "$_dir/lib/doctor.sh"
 
 usage(){ cat <<USAGE
 ${C_BLD}snare${C_OFF} v$SNARE_VERSION — trap supply-chain malware before it runs
 
 ${C_BLD}START HERE${C_OFF}
+  snare deps [dir] [--system]   known-malicious packages in lockfiles and installs —
+                                npm, PyPI, crates.io, Go, RubyGems, Packagist, NuGet
+  snare deps fix [dir]          remove them, or replace with a version not listed (asks)
+  snare deps update | status    refresh / show the known-malware list (same file for everyone)
   snare respond                 guided clean-up: rotate, machine, repos, notify
   snare respond --status        where you got to
   snare respond --reset         start the walkthrough again
@@ -128,7 +133,8 @@ ${C_BLD}PREVENT${C_OFF}
   snare agents status | uninstall
   snare agents install --project [dir]   also this repo's CLAUDE.md, AGENTS.md and hook
   snare gate -- <command>       scan first; exit 0 means safe to run it
-  snare gate allow [dir]        you looked and it is yours: allow what was flagged (asks per item)
+  snare gate allow [dir [branch]|url]  you looked and it is yours: allow what was flagged,
+                                on disk or still incoming (asks per item)
   snare gate allowed | forget [dir|all]
   snare shield install          scan before npm/pnpm/yarn/bun/git clone runs anything
   snare shield status | uninstall
@@ -214,6 +220,9 @@ main(){
     # internal: the detached dead-drop refresh behind the guard's kill list
     _c2-refresh) snare_c2_refresh; exit 0 ;;
     respond) cmd_respond "$@" ;;
+    deps)   cmd_deps "$@" ;;
+    # internal: the detached known-malware list refresh
+    _intel-refresh) snare_intel_refresh; rm -f "$INTEL_DIR/.refreshing"; exit 0 ;;
     selftest) cmd_selftest "$@" ;;
     version|--version|-v)
       _sha="$(git -C "$_dir" rev-parse --short HEAD 2>/dev/null)"
@@ -231,7 +240,7 @@ main(){
 # the hook's hot path, not in CI, not under an agent, never after a "no" or
 # `snare agents uninstall`.
 case "${1:-}" in
-  gate|agents|_update-refresh|_c2-refresh) ;;
+  gate|agents|_update-refresh|_c2-refresh|_intel-refresh) ;;
   *)
     # Ask once, at a terminal, before touching anyone's agent files. An
     # upgrade from 1.4.x used to switch this on without asking.

@@ -37,7 +37,8 @@ payload into the repo itself — a build config, \`.vscode/tasks.json\`, a
 someone pulls, installs or runs. So before you:
 
 - \`git clone\`, \`git pull\`, \`git merge\`, \`git rebase\`, or check out a branch you did not write
-- install dependencies (\`npm\`/\`pnpm\`/\`yarn\`/\`bun install\`, \`npm ci\`, \`npx\`)
+- install dependencies (\`npm\`/\`pnpm\`/\`yarn\`/\`bun install\`, \`npm ci\`, \`npx\`,
+  \`pip\`/\`uv\`/\`poetry\`, \`cargo add\`, \`go get\`, \`gem install\`, \`composer require\`)
 - run anything from the repo (\`npm run …\`, \`node\`, \`next\`, \`vite\`, \`tsx\`, \`turbo\`)
 
 run it through the gate first:
@@ -72,7 +73,7 @@ _agents_hook_cmd(){
 
 # $1 = settings.json path, $2 = add|remove, $3 = hook command (for add).
 _agents_settings(){
-  python3 - "$1" "$2" "${3:-}" <<'PYAG'
+  python3 -I - "$1" "$2" "${3:-}" <<'PYAG'
 import json, os, sys
 path, op, cmd = sys.argv[1], sys.argv[2], sys.argv[3]
 MARK = "gate --hook"
@@ -135,7 +136,7 @@ PYAG
 
 # $1 = file, $2 = add|remove. Replaces the marked block, or appends it.
 _agents_md(){
-  python3 - "$1" "$2" "$AG_BEGIN" "$AG_END" "$(_agents_block)" <<'PYMD'
+  python3 -I - "$1" "$2" "$AG_BEGIN" "$AG_END" "$(_agents_block)" <<'PYMD'
 import os, sys
 path, op, begin, end, block = sys.argv[1:6]
 cur = open(path).read() if os.path.exists(path) else ""

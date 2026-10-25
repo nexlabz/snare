@@ -234,10 +234,12 @@ _qmatch(){ grep "$@" >/dev/null; }
 
 # Python 3 under whatever name this platform gives it: Debian/Ubuntu and macOS
 # expose python3, Git Bash on Windows often only has the py launcher.
+# Always isolated (-I): `python -c` otherwise imports from the current
+# directory first, and snare runs from inside the repository it checks.
 snare_py(){
-  if   command -v python3 >/dev/null 2>&1; then python3 "$@"
-  elif command -v python  >/dev/null 2>&1; then python  "$@"
-  elif command -v py      >/dev/null 2>&1; then py -3   "$@"
+  if   command -v python3 >/dev/null 2>&1; then python3 -I "$@"
+  elif command -v python  >/dev/null 2>&1; then python  -I "$@"
+  elif command -v py      >/dev/null 2>&1; then py -3 -I "$@"
   else die "Python 3 is required but not installed"; fi
 }
 
