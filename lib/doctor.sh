@@ -167,6 +167,7 @@ cmd_doctor(){
   elif [ -d "$HOME/.claude" ]; then
     ylw "  agent gate is off — a coding agent can pull or run code unchecked (snare agents install)"
   fi
+  _deps_status
   if [ -s "$SNARE_LOGS/origins.log" ]; then
     local n; n="$(grep -c '^\[' "$SNARE_LOGS/origins.log" 2>/dev/null | tr -d ' ')"
     ylw "  ${n:-0} past detection(s) recorded — snare guard origins"

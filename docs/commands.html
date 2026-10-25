@@ -38,7 +38,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 <nav class="nav" aria-label="Primary">
   <div class="nav-in">
     <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.5.1">v1.5.1</a>
+    <a class="ver" href="changelog.html" title="What changed in v1.6.0">v1.6.0</a>
     <div class="nav-links" id="nav-links">
       <a href="index.html">The threat</a>
       <a href="check.html">Check</a>
@@ -190,8 +190,37 @@ snare gate allowed | forget     review or withdraw what you allowed</pre></div><
     instruction block in <code>CLAUDE.md</code>, <code>AGENTS.md</code> and <code>GEMINI.md</code>
     for agents without hooks. A block reads <em>"FIRE ON THE MOUNTAIN"</em>, tells the agent to stop
     and tell you, and raises a desktop notification. Ordinary commands like <code>git status</code>
-    cost about 30ms. <code>install.sh</code> sets it up and <code>snare update</code> keeps it current;
+    cost about 30ms. <code>install.sh</code> and <code>snare update</code> show what it would change
+    and <strong>ask first</strong>; after a yes, <code>snare update</code> keeps it current, and
     <code>snare agents uninstall</code> removes it and keeps it removed.</p>
+  </section>
+
+  <section class="stack" id="deps">
+    <span class="eyebrow">Every ecosystem</span>
+    <h2>Known-malicious packages: npm, Python, Rust, Go and more</h2>
+    <div class="panel"><div class="panel-bar"><span class="label">Deps</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare deps [dir]                 lockfiles, node_modules and virtualenvs against the list
+snare deps --system              also your global Python, pipx, npm and cargo installs
+snare deps fix [dir]             remove each one, or replace it with a version not listed
+snare deps update | status       refresh / show the known-malware list</pre></div></div>
+
+    <p class="note">The list is <a href="https://github.com/ossf/malicious-packages">OpenSSF's
+    malicious-packages</a> database — about 117,000 packages across npm, PyPI, crates.io, Go,
+    RubyGems, Packagist, NuGet and Maven — condensed every six hours into one small file.
+    <strong>Every snare downloads the same file and matches it on its own machine</strong>, so
+    nothing about your packages is ever sent. Lockfiles read: npm, pnpm, yarn, bun,
+    <code>requirements*.txt</code>, poetry, uv, pdm, <code>pylock.toml</code>, Pipfile,
+    <code>Cargo.lock</code>, <code>go.sum</code>, <code>Gemfile.lock</code>,
+    <code>composer.lock</code> and NuGet's <code>packages.lock.json</code>.</p>
+
+    <p class="note">The <strong>gate</strong> uses the same list: <code>npm i x@1.2.3</code>,
+    <code>npx</code>, <code>pip install x==1.0</code>, <code>uv add</code>, <code>cargo add</code>,
+    <code>go get</code>, <code>gem install</code> and <code>composer require</code> are stopped
+    when the version is listed, and a repository's lockfiles are checked before
+    <code>npm install</code> or <code>pip install -r</code>. It also treats the files other
+    languages run on their own as routes: <code>setup.py</code>, <code>conftest.py</code>,
+    <code>build.rs</code>, <code>sitecustomize.py</code>, <code>.pth</code> files (Python runs them at
+    every start — the LiteLLM 1.107.0 payload was one) and <code>//go:generate</code> lines.</p>
   </section>
 
   <section class="stack" id="stop">
@@ -379,7 +408,7 @@ snare version                   version and commit</pre></div></div>
   </div>
   <div class="foot-bar">
     <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.5.1</a> · MIT</span>
+    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.6.0</a> · MIT</span>
   </div>
 </footer>
 </div>

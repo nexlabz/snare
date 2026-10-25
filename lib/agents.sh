@@ -37,7 +37,8 @@ payload into the repo itself — a build config, \`.vscode/tasks.json\`, a
 someone pulls, installs or runs. So before you:
 
 - \`git clone\`, \`git pull\`, \`git merge\`, \`git rebase\`, or check out a branch you did not write
-- install dependencies (\`npm\`/\`pnpm\`/\`yarn\`/\`bun install\`, \`npm ci\`, \`npx\`)
+- install dependencies (\`npm\`/\`pnpm\`/\`yarn\`/\`bun install\`, \`npm ci\`, \`npx\`,
+  \`pip\`/\`uv\`/\`poetry\`, \`cargo add\`, \`go get\`, \`gem install\`, \`composer require\`)
 - run anything from the repo (\`npm run …\`, \`node\`, \`next\`, \`vite\`, \`tsx\`, \`turbo\`)
 
 run it through the gate first:

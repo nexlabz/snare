@@ -38,7 +38,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 <nav class="nav" aria-label="Primary">
   <div class="nav-in">
     <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.5.1">v1.5.1</a>
+    <a class="ver" href="changelog.html" title="What changed in v1.6.0">v1.6.0</a>
     <div class="nav-links" id="nav-links">
       <a href="index.html">The threat</a>
       <a href="check.html">Check</a>
@@ -105,12 +105,23 @@ snare update && snare selftest</pre></div></div>
     </div>
   </section>
 
-<section class="stack" id="v1-5-1">
+<section class="stack" id="v1-6-0">
   <div class="rel">
     <div class="rel-head">
-      <h2 class="rel-v">1.5.1</h2>
-      <span class="rel-date">2026-10-15</span>
+      <h2 class="rel-v">1.6.0</h2>
+      <span class="rel-date">2026-10-25</span>
         <span class="tag now">Current</span>
+    </div>
+    <div class="rel-group">
+      <h3>Added — known-malicious package versions, in every ecosystem</h3>
+      <ul class="rel-list">
+        <li><strong>A known-malware list, the same for everyone.</strong> <code>.github/workflows/intel.yml</code> condenses [OpenSSF's malicious-packages](https://github.com/ossf/malicious-packages) database, about 117,000 packages across npm, PyPI, crates.io, Go, RubyGems, Packagist, NuGet and Maven, into one small file every six hours. It publishes the file as the <code>intel</code> release's assets. Every snare downloads that same file and matches it on its own machine, so nothing about anyone's packages is sent anywhere. A download that fails its checksum is refused, and the old list is kept. A build with implausibly few entries is never published, because an empty list would read as "nothing is malicious".</li>
+        <li><strong><code>snare deps [dir] [--system]</code></strong> reads lockfiles and installed packages and names each known-malicious one, with where it is and its OSV advisory. - npm, pnpm, yarn and bun lockfiles, plus <code>node_modules</code> - <code>requirements*.txt</code>, <code>poetry.lock</code>, <code>uv.lock</code>, <code>pdm.lock</code>, <code>pylock.toml</code> and <code>Pipfile.lock</code>, plus the site-packages of every virtualenv in the project - <code>Cargo.lock</code>, <code>go.sum</code>, <code>Gemfile.lock</code>, <code>composer.lock</code> and NuGet's <code>packages.lock.json</code> - with <code>--system</code>, also the user's Python, pipx, global npm and <code>cargo install</code></li>
+        <li><strong><code>snare deps fix</code></strong> asks about each one: remove it, or replace it with the newest version that is not listed. Replacements install with scripts off (<code>npm --ignore-scripts</code>, <code>pip --only-binary :all:</code>), so they cannot run code while installing. It points to <code>snare rotate</code> when something malicious was actually installed. A package whose every version is malicious gets a warning about lookalike names. It is person-only, like <code>snare gate allow</code>.</li>
+        <li><strong>The gate stops installs of a listed version.</strong> This covers <code>npm</code>/<code>pnpm</code>/ <code>yarn</code>/<code>bun</code> <code>install</code>/<code>add</code>, <code>npx</code>, <code>dlx</code>, <code>pip</code>/<code>pip3</code>/<code>python -m pip</code>, <code>uv add</code>, <code>uv pip</code>, <code>uvx</code>, <code>pipx</code>, <code>poetry</code>/<code>pdm</code>/<code>rye add</code>, <code>cargo add</code> and <code>install</code>, <code>go get</code>/<code>install</code>/<code>run</code>, <code>gem install</code> and <code>composer require</code>. It also checks a requirements file named with <code>-r</code>, and a repository's lockfiles on <code>npm install</code>. For an unpinned install of a package with some bad versions, it asks the registry which version would install, the same request the install was about to make, and stops only if that version is listed. A wrong list entry in a lockfile is approvable with <code>snare gate allow</code>, tied to content as always.</li>
+        <li><strong>Files other languages run on their own</strong> are now repository routes, like <code>package.json</code> scripts: - <code>setup.py</code> (on install), <code>conftest.py</code> (on test), <code>build.rs</code> (on build), <code>sitecustomize.py</code> and <code>usercustomize.py</code> (at every Python start), and <code>.pth</code> files (Python runs their import lines at every start): flagged when a line downloads, or decodes and runs, code. - <code>//go:generate</code> lines that fetch or pipe into a shell. - An ordinary <code>setup.py</code> that calls cmake through subprocess, a <code>build.rs</code> that compiles C, <code>stringer</code> and coverage's <code>.pth</code> are left alone. All 77 local repositories in the false-alarm sweep stay clean.</li>
+        <li><code>snare doctor</code> shows the list's age and size, <code>snare update</code> refreshes it, and the agent hook refreshes it in the background when it is a day old, never making a command wait.</li>
+      </ul>
     </div>
     <div class="rel-group">
       <h3>Fixed — a block on incoming code could not be approved</h3>
@@ -726,7 +737,7 @@ snare update && snare selftest</pre></div></div>
   </div>
   <div class="foot-bar">
     <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.5.1</a> · MIT</span>
+    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.6.0</a> · MIT</span>
   </div>
 </footer>
 </div>

