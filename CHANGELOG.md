@@ -7,6 +7,20 @@ because that is the failure that matters most in a scanner.
 `snare version` shows your version and commit. `snare update --check` compares
 commits, not just version numbers.
 
+## [1.7.1] — 2026-11-06
+
+### Fixed — "N commit(s) behind" kept showing after updating
+- snare caches whether it is behind, so commands need not ask the network
+  each time. That cache was never told about an update: right after
+  `snare update` succeeded, every command still said "1 commit(s) behind —
+  run: snare update". The cache refreshed only once a day, and only in an
+  interactive terminal, so under a coding agent it never refreshed at all.
+  One install showed a "behind" from 19 days and three releases earlier.
+- The cache now records the commit and version it describes and is ignored
+  as soon as the install moves, by `snare update`, a `git pull` or a
+  reinstall. `snare update` writes what it just established. `snare version`
+  keeps what its live check learned. A self-test covers it.
+
 ## [1.7.0] — 2026-11-06
 
 ### Fixed — `snare update` said "already up to date" and never updated
