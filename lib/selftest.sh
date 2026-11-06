@@ -1584,9 +1584,15 @@ CMDS
   else _st_bad "a lockfile or requirements file carrying a listed version is stopped, with where (rl=$rl rq=$rq)"; fi
   local fp; fp="$(_gate_allow_scan "$D/web" | awk -F'\t' '/ua-hijack/{print $6; exit}')"
   [ -n "$fp" ] && _gate_allow_record "$fp" "$D/web" package-lock.json test
-  if [ -n "$fp" ] && _gate_decide "npm install" "$D/web" >/dev/null 2>&1; then
+  local out2 ra=x
+  [ -n "$fp" ] && { out2="$(_gate_decide "npm install" "$D/web" 2>&1)"; ra=$?; }
+  if [ "$ra" = 0 ]; then
     _st_ok "a wrong list entry in a lockfile can be approved with snare gate allow"
-  else _st_bad "a wrong list entry in a lockfile can be approved with snare gate allow"; fi
+  else
+    _st_bad "a wrong list entry in a lockfile can be approved with snare gate allow (fp=${fp:-none} rc=$ra)"
+    printf '%s\n' "$out2" | head -8 | sed 's/^/        /'
+    _gate_allow_scan "$D/web" | head -4 | sed 's/^/        scan: /'
+  fi
 
   # files other languages run on their own
   mkdir -p "$D/ar/ok" "$D/ar/bad"
