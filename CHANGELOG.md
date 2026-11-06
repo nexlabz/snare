@@ -7,6 +7,42 @@ because that is the failure that matters most in a scanner.
 `snare version` shows your version and commit. `snare update --check` compares
 commits, not just version numbers.
 
+## [1.7.0] — 2026-11-06
+
+### Fixed — `snare update` said "already up to date" and never updated
+- `snare update` updated whichever branch the install happened to be on. An
+  install left on any other branch (an old work branch, a branch someone
+  checked out to test a fix) fetched that branch, found nothing new, and
+  answered "already up to date" on every run. Meanwhile `snare version`
+  compared against `main` and said "behind". Both were right about different
+  branches, and the install never moved.
+- Updates now always come from `main`, where releases are published. An
+  install on another branch is moved to `main` when everything on that branch
+  is already in `main`. A branch carrying commits `main` does not have is
+  someone's work: it is left alone, and snare prints the exact command to
+  switch. `snare update --check` and the "behind" notice now measure against
+  `main` as well, so they agree with what `snare update` does.
+- If you are stuck on an older version that has this bug, run once:
+  `cd ~/snare && git checkout main && snare update`.
+
+### Fixed — snare's own repository tripped its own gate
+- The website's "hidden payload" demo carried the campaign's markers
+  verbatim, so cloning or pulling snare under the agent gate stopped with
+  "fire on the mountain" for everyone, and the only way through was to
+  approve a block unread. That is the one habit the gate depends on nobody
+  having. The demo text is now stored reversed and restored by the page, so
+  the page looks the same and the file carries no live marker. snare still
+  does not exempt its own repository from branch and pull checks. A self-test
+  checks the website file the way a fresh clone would see it.
+
+### Added — what only the owner can do (#54)
+- When `snare fix <owner/repo>` cleans a branch that turns out to have existed
+  only for the payload (cleaned, it adds nothing to the default branch), it
+  names it under **What only you can do** with the exact delete command and
+  the GitHub branches page, for the owner to run. It also says when forks
+  still hold the old history. snare itself still never deletes a repository,
+  an organisation or a remote branch, and the backup bundle is the way back.
+
 ## [1.6.0] — 2026-10-25
 
 ### Added — known-malicious package versions, in every ecosystem

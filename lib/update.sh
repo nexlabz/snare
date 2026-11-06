@@ -31,16 +31,11 @@ ver_gt(){
 # date. Commit distance is the honest signal between releases.
 snare_commits_behind(){
   [ -d "$SNARE_ROOT/.git" ] || return 1
-  local br; br="$(git -C "$SNARE_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null)"
-  [ -z "$br" ] || [ "$br" = HEAD ] && br=main
-  # A local branch with no upstream (a work branch, a detached checkout) has
-  # nothing to compare against; fall back to main rather than reporting
-  # "not a git checkout", which would be false.
-  if ! git -C "$SNARE_ROOT" fetch --quiet origin "$br" 2>/dev/null; then
-    git -C "$SNARE_ROOT" fetch --quiet origin main 2>/dev/null || return 1
-    br=main
-  fi
-  git -C "$SNARE_ROOT" rev-list --count "HEAD..origin/$br" 2>/dev/null
+  # Always against main: that is where releases land and what `snare update`
+  # moves to. Comparing against the checkout's own branch once let a work
+  # branch report "up to date" while the passive notice said "behind".
+  git -C "$SNARE_ROOT" fetch --quiet origin main 2>/dev/null || return 1
+  git -C "$SNARE_ROOT" rev-list --count "HEAD..origin/main" 2>/dev/null
 }
 
 # The repository moved to the nexlabz organisation. GitHub redirects the old
@@ -162,7 +157,11 @@ _snare_update_write(){
 # that makes the tool worse than not running it.
 snare_update_risk(){
   local v="$SNARE_VERSION"
-  if ver_gt 1.4.0 "$v"; then
+  if ver_gt 1.6.0 "$v" && ver_gt "$v" 1.4.3; then
+    dim "  Before 1.6.0 a repository could plant a Python module that snare's own"
+    dim "  checks loaded and ran. And before 1.7.0, an install left on a branch"
+    dim "  other than main was told \"up to date\" for good."
+  elif ver_gt 1.4.0 "$v"; then
     dim "  Before 1.4.0 a repository could run a payload on every \`npm run dev\`"
     dim "  and re-drop it at every editor session, and snare reported it clean."
   elif ver_gt 1.3.2 "$v"; then
@@ -309,6 +308,36 @@ _snare_relink(){
   return 0
 }
 
+# Move a checkout that is not on main (detached at a tag, or left on a work
+# branch) onto main, without losing anything. A checkout whose commits are all
+# already in origin/main is safe to move; one carrying commits main does not
+# have is someone's work, so it is refused with the exact command instead.
+# $1 = current branch ("HEAD" or empty when detached), $2 = 1 under --force.
+_snare_land_on_main(){
+  local from="${1:-HEAD}" force="${2:-0}" label f=""
+  if [ "$from" = HEAD ] || [ -z "$from" ]; then label="a detached checkout"
+  else label="branch '$from'"; fi
+  [ "$force" = 1 ] && f="-f"
+  git -C "$SNARE_ROOT" rev-parse -q --verify origin/main >/dev/null 2>&1 || {
+    red "  origin/main not found — cannot tell what the latest release is"; return 1; }
+  if ! git -C "$SNARE_ROOT" merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
+    red "  this install is on $label, which has commits that are not on main"
+    dim "  snare updates from main. Keep your work and switch:"
+    dim "      cd $SNARE_ROOT && git checkout main && snare update"
+    return 1
+  fi
+  ylw "  this install was on $label — switching to main, where releases are published"
+  if git -C "$SNARE_ROOT" rev-parse -q --verify refs/heads/main >/dev/null 2>&1; then
+    git -C "$SNARE_ROOT" checkout -q $f main 2>/dev/null || {
+      red "  could not check out main"; return 1; }
+  else
+    git -C "$SNARE_ROOT" checkout -q $f -b main origin/main 2>/dev/null || {
+      red "  could not create main from origin/main"; return 1; }
+  fi
+  git -C "$SNARE_ROOT" branch -q --set-upstream-to=origin/main main >/dev/null 2>&1 || true
+  return 0
+}
+
 cmd_update(){
   local force=0 check=0 relink=0
   while [ $# -gt 0 ]; do
@@ -379,11 +408,13 @@ cmd_update(){
     return 1
   fi
 
-  # Detached HEAD or a non-main branch: land on main rather than guessing.
-  if [ "$branch" = "HEAD" ] || [ -z "$branch" ]; then
-    ylw "  detached HEAD — checking out main"
-    git -C "$SNARE_ROOT" checkout -q main 2>/dev/null || {
-      red "  could not check out main"; return 1; }
+  # Releases are published on main, and only main. This used to update
+  # whatever branch the checkout happened to be on: a checkout left on an old
+  # work branch fetched that branch, found nothing new, and said "already up
+  # to date" forever — while `snare version` compared against main and said
+  # "behind". Both were telling the truth about different branches.
+  if [ "$branch" != main ]; then
+    _snare_land_on_main "$branch" "$force" || return 1
     branch=main
   fi
 

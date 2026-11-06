@@ -224,6 +224,9 @@ JSON
   _st_deaddrop
   _st_campaign
   _st_relink
+  _st_update_branch
+  _st_own_site
+  _st_payload_only
   _st_gate
   _st_gate_bypasses
   _st_gate_decide
@@ -684,6 +687,87 @@ sys.exit(0 if [t for t in d['tasks'] if t.get('label')=='build'] else 1)" \
 # checkout — a fork, a worktree, a throwaway clone — silently pointed the
 # global launcher at that checkout. Delete the clone and `snare` is dangling,
 # with nothing having said so.
+# snare's own website shows a sample payload. Carrying it verbatim made the
+# gate flag snare's repository for everyone who cloned or pulled it, and that
+# taught people to approve blocks unread — the one habit the gate depends on
+# nobody having. The copy is checked away from SNARE_ROOT, where the
+# self-exemption does not apply, as a fresh clone would be.
+_st_own_site(){
+  local src="$SNARE_ROOT/docs/assets/site.js"
+  [ -f "$src" ] || return 0
+  local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snaresite.XXXXXX")" || return 0
+  mkdir -p "$D/docs/assets" && cp "$src" "$D/docs/assets/site.js"
+  git -C "$D" init -q 2>/dev/null
+  if ( GATE_ALLOW="$D/.allow"; GATE_CACHE="$D/.cache"; _gate_tree "$D" fresh ) >/dev/null 2>&1; then
+    _st_ok  "snare's own website demo does not trip the gate"
+  else
+    _st_bad "snare's own website demo does not trip the gate"
+  fi
+  rm -rf "$D"
+}
+
+# #54: a branch that existed only for the payload is named for the owner to
+# delete; a branch with real work on it is not.
+_st_payload_only(){
+  local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snarepo.XXXXXX")" || return 0
+  local G="git -c user.name=t -c user.email=t@t -c init.defaultBranch=main -c commit.gpgsign=false"
+  ( cd "$D" && $G init -q --bare o.git && $G clone -q o.git w 2>/dev/null && cd w \
+    && echo app > app.js && $G add . && $G commit -qm base && $G push -q origin HEAD:main \
+    && $G checkout -q -b evil && echo payload > loader.js && $G add . && $G commit -qm x \
+    && $G push -q origin evil && $G checkout -q -b feat main && echo more >> app.js \
+    && echo payload > loader.js && $G add . && $G commit -qm y && $G push -q origin feat \
+    && $G fetch -q origin ) >/dev/null 2>&1
+  local r1 r2
+  ( cd "$D/w" && $G checkout -q evil && $G rm -q loader.js && $G commit -qm clean ) >/dev/null 2>&1
+  ( cd "$D/w" && _fix_payload_only evil main ) && r1=yes || r1=no
+  ( cd "$D/w" && $G checkout -q feat && $G rm -q loader.js && $G commit -qm clean ) >/dev/null 2>&1
+  ( cd "$D/w" && _fix_payload_only feat main ) && r2=yes || r2=no
+  if [ "$r1" = yes ] && [ "$r2" = no ]; then
+    _st_ok  "a branch that was only payload is named for the owner to delete; real work is not"
+  else
+    _st_bad "a branch that was only payload is named for the owner to delete; real work is not ($r1/$r2)"
+  fi
+  rm -rf "$D"
+}
+
+# `snare update` must follow main. A checkout left on a work branch once
+# answered "already up to date" forever, because it pulled that branch.
+_st_update_branch(){
+  local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snareupd.XXXXXX")" || return 0
+  D="$(cd "$D" && pwd)"
+  local G="git -c user.name=t -c user.email=t@t -c init.defaultBranch=main -c commit.gpgsign=false"
+  ( cd "$D" && $G init -q --bare origin.git && $G clone -q origin.git seed 2>/dev/null \
+    && cd seed && echo 1 > f && $G add f && $G commit -qm one \
+    && $G push -q origin HEAD:main ) >/dev/null 2>&1
+  ( cd "$D" && $G clone -q origin.git inst && cd inst && $G checkout -q -b work ) >/dev/null 2>&1
+  ( cd "$D/seed" && echo 2 > f && $G commit -qam two && $G push -q origin HEAD:main ) >/dev/null 2>&1
+  $G -C "$D/inst" fetch -q origin 2>/dev/null
+
+  local behind
+  behind="$(SNARE_ROOT="$D/inst" snare_commits_behind 2>/dev/null)"
+  if [ "$behind" = 1 ]; then _st_ok  "a work-branch install is measured against main"
+  else _st_bad "a work-branch install is measured against main (got '$behind')"; fi
+
+  ( SNARE_ROOT="$D/inst"; _snare_land_on_main work 0 ) >/dev/null 2>&1
+  $G -C "$D/inst" merge --ff-only -q origin/main >/dev/null 2>&1
+  if [ "$($G -C "$D/inst" rev-parse --abbrev-ref HEAD 2>/dev/null)" = main ] \
+     && [ "$($G -C "$D/inst" rev-parse HEAD)" = "$($G -C "$D/inst" rev-parse origin/main)" ]; then
+    _st_ok  "update moves a merged work branch onto main and reaches the release"
+  else
+    _st_bad "update moves a merged work branch onto main and reaches the release"
+  fi
+
+  # A branch with commits main lacks is someone's work: refused, untouched.
+  ( cd "$D/inst" && $G checkout -q -b mine && echo 3 > g && $G add g && $G commit -qm mine ) >/dev/null 2>&1
+  if ( SNARE_ROOT="$D/inst"; _snare_land_on_main mine 0 ) >/dev/null 2>&1 \
+     || [ "$($G -C "$D/inst" rev-parse --abbrev-ref HEAD)" != mine ]; then
+    _st_bad "a branch carrying unmerged work is left alone"
+  else
+    _st_ok  "a branch carrying unmerged work is left alone"
+  fi
+  rm -rf "$D"
+}
+
 _st_relink(){
   local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snarelink.XXXXXX")" || {
     _st_bad "cannot create a temp directory"; return 1; }

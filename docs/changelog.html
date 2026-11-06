@@ -38,7 +38,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 <nav class="nav" aria-label="Primary">
   <div class="nav-in">
     <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.6.0">v1.6.0</a>
+    <a class="ver" href="changelog.html" title="What changed in v1.7.0">v1.7.0</a>
     <div class="nav-links" id="nav-links">
       <a href="index.html">The threat</a>
       <a href="check.html">Check</a>
@@ -105,12 +105,40 @@ snare update && snare selftest</pre></div></div>
     </div>
   </section>
 
+<section class="stack" id="v1-7-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h2 class="rel-v">1.7.0</h2>
+      <span class="rel-date">2026-11-06</span>
+        <span class="tag now">Current</span>
+    </div>
+    <div class="rel-group">
+      <h3>Fixed — <code>snare update</code> said "already up to date" and never updated</h3>
+      <ul class="rel-list">
+        <li><code>snare update</code> updated whichever branch the install happened to be on. An install left on any other branch (an old work branch, a branch someone checked out to test a fix) fetched that branch, found nothing new, and answered "already up to date" on every run. Meanwhile <code>snare version</code> compared against <code>main</code> and said "behind". Both were right about different branches, and the install never moved.</li>
+        <li>Updates now always come from <code>main</code>, where releases are published. An install on another branch is moved to <code>main</code> when everything on that branch is already in <code>main</code>. A branch carrying commits <code>main</code> does not have is someone's work: it is left alone, and snare prints the exact command to switch. <code>snare update --check</code> and the "behind" notice now measure against <code>main</code> as well, so they agree with what <code>snare update</code> does.</li>
+        <li>If you are stuck on an older version that has this bug, run once: <code>cd ~/snare &amp;&amp; git checkout main &amp;&amp; snare update</code>.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h3>Fixed — snare's own repository tripped its own gate</h3>
+      <ul class="rel-list">
+        <li>The website's "hidden payload" demo carried the campaign's markers verbatim, so cloning or pulling snare under the agent gate stopped with "fire on the mountain" for everyone, and the only way through was to approve a block unread. That is the one habit the gate depends on nobody having. The demo text is now stored reversed and restored by the page, so the page looks the same and the file carries no live marker. snare still does not exempt its own repository from branch and pull checks. A self-test checks the website file the way a fresh clone would see it.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h3>Added — what only the owner can do <a href="https://github.com/nexlabz/snare/pull/54">#54</a></h3>
+      <ul class="rel-list">
+        <li>When <code>snare fix &lt;owner/repo&gt;</code> cleans a branch that turns out to have existed only for the payload (cleaned, it adds nothing to the default branch), it names it under <strong>What only you can do</strong> with the exact delete command and the GitHub branches page, for the owner to run. It also says when forks still hold the old history. snare itself still never deletes a repository, an organisation or a remote branch, and the backup bundle is the way back.</li>
+      </ul>
+    </div>
+  </div>
+</section>
 <section class="stack" id="v1-6-0">
   <div class="rel">
     <div class="rel-head">
       <h2 class="rel-v">1.6.0</h2>
       <span class="rel-date">2026-10-25</span>
-        <span class="tag now">Current</span>
     </div>
     <div class="rel-group">
       <h3>Added — known-malicious package versions, in every ecosystem</h3>
@@ -121,6 +149,17 @@ snare update && snare selftest</pre></div></div>
         <li><strong>The gate stops installs of a listed version.</strong> This covers <code>npm</code>/<code>pnpm</code>/ <code>yarn</code>/<code>bun</code> <code>install</code>/<code>add</code>, <code>npx</code>, <code>dlx</code>, <code>pip</code>/<code>pip3</code>/<code>python -m pip</code>, <code>uv add</code>, <code>uv pip</code>, <code>uvx</code>, <code>pipx</code>, <code>poetry</code>/<code>pdm</code>/<code>rye add</code>, <code>cargo add</code> and <code>install</code>, <code>go get</code>/<code>install</code>/<code>run</code>, <code>gem install</code> and <code>composer require</code>. It also checks a requirements file named with <code>-r</code>, and a repository's lockfiles on <code>npm install</code>. For an unpinned install of a package with some bad versions, it asks the registry which version would install, the same request the install was about to make, and stops only if that version is listed. A wrong list entry in a lockfile is approvable with <code>snare gate allow</code>, tied to content as always.</li>
         <li><strong>Files other languages run on their own</strong> are now repository routes, like <code>package.json</code> scripts: - <code>setup.py</code> (on install), <code>conftest.py</code> (on test), <code>build.rs</code> (on build), <code>sitecustomize.py</code> and <code>usercustomize.py</code> (at every Python start), and <code>.pth</code> files (Python runs their import lines at every start): flagged when a line downloads, or decodes and runs, code. - <code>//go:generate</code> lines that fetch or pipe into a shell. - An ordinary <code>setup.py</code> that calls cmake through subprocess, a <code>build.rs</code> that compiles C, <code>stringer</code> and coverage's <code>.pth</code> are left alone. All 77 local repositories in the false-alarm sweep stay clean.</li>
         <li><code>snare doctor</code> shows the list's age and size, <code>snare update</code> refreshes it, and the agent hook refreshes it in the background when it is a day old, never making a command wait.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h3>Fixed — from automated review of the above, before release</h3>
+      <ul class="rel-list">
+        <li><strong>Version ranges, tags and aliases</strong> such as <code>npm i x@^0.7.0</code>, <code>x<a href="https://github.com/latest">@latest</a></code>, <code>pip install 'x&gt;=1.0'</code> and <code>alias<a href="https://github.com/npm">@npm</a>:real<a href="https://github.com/1">@1</a>.0</code> were checked only as "unpinned". They now resolve the way the package manager would, through <code>npm view name<a href="https://github.com/range">@range</a></code>, or the newest PyPI release the spec allows, before matching.</li>
+        <li><strong>Package tools run by path</strong> (<code>./venv/bin/pip install …</code>) or through a launcher (<code>mise exec -- pip …</code>) skipped the package check. Both are read now, and so is pip's glued <code>-rfile</code>.</li>
+        <li><strong>Partial versions counted as exact.</strong> npm's <code>x<a href="https://github.com/0">@0</a>.7</code> means the newest 0.7.x, cargo's <code>x<a href="https://github.com/1">@1</a>.2.3</code> means <code>^1.2.3</code>, and pip's <code>==1.107</code> equals 1.107.0. Each now goes to the resolver, or compares the way pip does. npm ranges resolve as npm resolves them: the <code>latest</code> tag when it fits, otherwise the highest version that does. An alias is unwrapped before the path and URL checks.</li>
+        <li><strong>Removing a Python package ran its payload.</strong> <code>snare deps fix</code> used to run the environment's own <code>pip uninstall</code>, which starts that Python, and a malicious <code>.pth</code> runs at startup, first. snare now moves the files listed in the package's <code>RECORD</code> into quarantine itself, refusing any path outside site-packages, and runs nothing from that environment. Every Python snare starts for these checks uses <code>-S</code>, so it does not run the startup files it is looking for. Cargo's <code>=1.2</code> (every 1.2.x) and <code>=1.2.3, &lt;2</code> are no longer read as one exact version.</li>
+        <li><strong>A repository could run code through snare's own Python.</strong> <code>python3 -c</code> puts the current directory first on the import path, and snare runs from inside the repository it is checking, the gate's hook included. A <code>json.py</code> or <code>re.py</code> planted at a repo's root would have run on snare's first import. Every Python snare starts now runs isolated (<code>-I</code>); the selftest plants seven stdlib-named modules and checks none is imported.</li>
+        <li><strong>An empty field shifted every column after it,</strong> because bash's <code>read</code> collapses consecutive tabs. <code>snare deps fix</code> would have failed to move a malicious <code>.pth</code> aside, and <code>respond</code> misread a blocked clone. A gate finding with an empty excerpt could not be approved. Empty fields are now written as <code>-</code>.</li>
       </ul>
     </div>
     <div class="rel-group">
@@ -737,7 +776,7 @@ snare update && snare selftest</pre></div></div>
   </div>
   <div class="foot-bar">
     <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.6.0</a> · MIT</span>
+    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.7.0</a> · MIT</span>
   </div>
 </footer>
 </div>
