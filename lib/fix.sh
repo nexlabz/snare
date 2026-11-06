@@ -617,11 +617,14 @@ cmd_fix(){
       fi
       red "  Collaborators MUST re-clone. Forks, PR refs and old SHAs still hold it —"
       red "  ask GitHub Support to garbage-collect unreachable objects."
+      _fix_owner_advice "$repo" ""
     else ylw "  rewritten locally, not pushed. Inspect: cd $src"; fi
     return 0
   fi
 
   hdr "4. Clean branch tips"
+  local defbr payload_only=""
+  defbr="$(git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null)"; defbr="${defbr#origin/}"
   for ref in $(git for-each-ref --format='%(refname)' refs/remotes/origin | grep -v '/HEAD$'); do
     br="${ref#refs/remotes/origin/}"
     git checkout -q -B "$br" "$ref" 2>/dev/null || continue
@@ -631,6 +634,7 @@ cmd_fix(){
 Found by snare. Files the project needs (build configs, package.json) were
 stripped of the payload and kept; files that were payload only were removed.
 See the security issue on this repository for detail."
+      _fix_payload_only "$br" "$defbr" && payload_only="$payload_only $br"
       if [ "$push" = 1 ]; then
         local tp
         if tp="$(GIT_TERMINAL_PROMPT=0 git push origin "$br" 2>&1)"; then
@@ -644,4 +648,44 @@ See the security issue on this repository for detail."
   done
   [ "$push" = 0 ] && ylw "  not pushed (add --push)"
   ylw "  Tip-only cleaning leaves the payload in history — use --purge-history for a full fix."
+  _fix_owner_advice "$repo" "$payload_only"
+}
+
+# Did this branch exist only for the payload? True when, once cleaned, it
+# adds nothing to the default branch: every change it carried was the attack.
+# Such a branch is better deleted than kept clean — and deleting is the
+# owner's call, never snare's (#54).
+# $1 = branch, $2 = default branch.
+_fix_payload_only(){
+  local br="$1" def="$2"
+  [ -n "$def" ] && [ "$br" != "$def" ] || return 1
+  git rev-parse -q --verify "refs/remotes/origin/$def" >/dev/null 2>&1 || return 1
+  # Three dots: what this branch changed since it left the default branch.
+  git diff --quiet "refs/remotes/origin/$def...HEAD" -- 2>/dev/null
+}
+
+# What only the owner can do. snare never deletes a repository, an
+# organisation or a remote branch; when deleting is the better fix, it says
+# so and gives the exact step, and the backup bundle is the way back.
+# $1 = owner/repo, $2 = space-separated payload-only branches.
+_fix_owner_advice(){
+  local repo="$1" brs="$2" b forks
+  forks="$(gh api "repos/$repo" --jq '.forks_count' 2>/dev/null)"
+  [ -z "$brs" ] && { [ -z "$forks" ] || [ "$forks" = 0 ]; } && return 0
+  hdr "What only you can do"
+  dim "  snare never deletes a repository, an organisation or a remote branch."
+  if [ -n "$brs" ]; then
+    ylw "  These branches carried nothing but the payload — cleaned, they add"
+    ylw "  nothing to the default branch. Deleting them is the better fix:"
+    for b in $brs; do
+      echo "      $b"
+      dim "        gh api -X DELETE repos/$repo/git/refs/heads/$b"
+    done
+    dim "  or on GitHub: https://github.com/$repo/branches"
+  fi
+  if [ -n "$forks" ] && [ "$forks" != 0 ] 2>/dev/null; then
+    ylw "  $forks fork(s) still hold the old history; cleaning here does not reach them."
+    dim "  list them: https://github.com/$repo/forks — ask the owners to delete or re-sync"
+  fi
+  dim "  The backup bundle above is your way back if you change your mind."
 }

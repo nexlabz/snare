@@ -20,7 +20,12 @@ INTEL_MAX_AGE="${SNARE_INTEL_MAX_AGE:-86400}"
 snare_intel_age(){
   [ -s "$INTEL_LIST" ] || return 1
   local m now; now="$(date +%s)"
-  m="$(stat -f %m "$INTEL_LIST" 2>/dev/null || stat -c %Y "$INTEL_LIST" 2>/dev/null)" || return 1
+  # GNU first. On Linux `stat -f` means "file system", which PRINTS a block
+  # of text and then fails — so `stat -f %m … || stat -c %Y …` handed the
+  # arithmetic garbage, the age came out unknown, and every agent command
+  # re-downloaded the whole list. BSD stat rejects -c without printing.
+  m="$(stat -c %Y "$INTEL_LIST" 2>/dev/null)" || m="$(stat -f %m "$INTEL_LIST" 2>/dev/null)" || return 1
+  case "$m" in ''|*[!0-9]*) return 1 ;; esac
   echo $((now - m))
 }
 
