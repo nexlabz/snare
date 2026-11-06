@@ -25,6 +25,16 @@ commits, not just version numbers.
 - If you are stuck on an older version that has this bug, run once:
   `cd ~/snare && git checkout main && snare update`.
 
+### Fixed — on Linux, every agent command re-downloaded the malware list
+- The list's age was read with `stat -f %m … || stat -c %Y …`. On Linux,
+  `stat -f` means "file system": it prints a block of text and then fails, so
+  the age came out unreadable and the gate's hook started a fresh 2.3 MB
+  download on every agent command (at most once per ten minutes). GNU `stat`
+  is now tried first, and a non-numeric age is treated as unknown. The
+  self-test checks the age reads as a number. It also stops one test's hook
+  from fetching the real list in the background, which had been making CI
+  fail at random.
+
 ### Fixed — snare's own repository tripped its own gate
 - The website's "hidden payload" demo carried the campaign's markers
   verbatim, so cloning or pulling snare under the agent gate stopped with

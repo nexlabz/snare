@@ -121,6 +121,12 @@ snare update && snare selftest</pre></div></div>
       </ul>
     </div>
     <div class="rel-group">
+      <h3>Fixed — on Linux, every agent command re-downloaded the malware list</h3>
+      <ul class="rel-list">
+        <li>The list's age was read with <code>stat -f %m … || stat -c %Y …</code>. On Linux, <code>stat -f</code> means "file system": it prints a block of text and then fails, so the age came out unreadable and the gate's hook started a fresh 2.3 MB download on every agent command (at most once per ten minutes). GNU <code>stat</code> is now tried first, and a non-numeric age is treated as unknown. The self-test checks the age reads as a number. It also stops one test's hook from fetching the real list in the background, which had been making CI fail at random.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
       <h3>Fixed — snare's own repository tripped its own gate</h3>
       <ul class="rel-list">
         <li>The website's "hidden payload" demo carried the campaign's markers verbatim, so cloning or pulling snare under the agent gate stopped with "fire on the mountain" for everyone, and the only way through was to approve a block unread. That is the one habit the gate depends on nobody having. The demo text is now stored reversed and restored by the page, so the page looks the same and the file carries no live marker. snare still does not exempt its own repository from branch and pull checks. A self-test checks the website file the way a fresh clone would see it.</li>

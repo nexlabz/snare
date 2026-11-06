@@ -1568,9 +1568,16 @@ CMDS
   ( cd "$D/plant" && _gate_decide "npm run dev" "$D/plant" && _gate_decide "pip install -r requirements.txt" "$D/plant" \
       && python3 -I -S -c "$(_deps_py)" scan "$INTEL_LIST" . --installed ) >/dev/null 2>&1
   python3 -I -c 'import json,sys;print(json.dumps({"tool_name":"Bash","cwd":sys.argv[1],"tool_input":{"command":"npm run dev"}}))' "$D/plant" \
-    | ( cd "$D/plant" && SNARE_HOME="$SNARE_HOME" "$SNARE_ROOT/bin/snare" gate --hook ) >/dev/null 2>&1
+    | ( cd "$D/plant" && SNARE_HOME="$SNARE_HOME" SNARE_INTEL_URL="$INTEL_URL" "$SNARE_ROOT/bin/snare" gate --hook ) >/dev/null 2>&1
   if [ ! -e "$D/PLANTED-RAN" ]; then _st_ok "a json.py or re.py planted in a repository is never imported by snare's checks"
   else _st_bad "a json.py or re.py planted in a repository is never imported by snare's checks ($(tr '\n' ' ' < "$D/PLANTED-RAN"))"; fi
+
+  # The list's age must read as a number on every platform. On Linux it did
+  # not, so every agent command re-downloaded the whole list.
+  local age; age="$(snare_intel_age)"
+  case "$age" in ''|*[!0-9]*) _st_bad "the known-malware list's age is readable (got '$age')" ;;
+    *) if [ "$age" -lt 600 ]; then _st_ok "the known-malware list's age is readable, so it is not re-downloaded on every command"
+       else _st_bad "the known-malware list's age is readable (got $age s)"; fi ;; esac
 
   # a repository's lockfile, and a requirements file on the command line
   mkdir -p "$D/web"; printf '{"lockfileVersion":3,"packages":{"node_modules/ua-hijack":{"version":"0.7.29"}}}\n' > "$D/web/package-lock.json"
@@ -1592,8 +1599,6 @@ CMDS
     _st_bad "a wrong list entry in a lockfile can be approved with snare gate allow (fp=${fp:-none} rc=$ra)"
     printf '%s\n' "$out2" | head -8 | sed 's/^/        /'
     _gate_allow_scan "$D/web" | head -4 | sed 's/^/        scan: /'
-    _deps_gate_tree "$D/web" /dev/null 2>&1 | head -4 | od -c | head -12 | sed 's/^/        raw: /'
-    echo "        bash=$BASH_VERSION intel=$(ls -la "$INTEL_LIST" 2>&1)"
   fi
 
   # files other languages run on their own
