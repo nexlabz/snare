@@ -3,7 +3,7 @@
 # https://github.com/  •  MIT
 set -uo pipefail
 
-SNARE_VERSION="1.7.1"
+SNARE_VERSION="1.8.0"
 
 # Fast path for the agent hook. It runs before EVERY shell command an agent
 # issues, so the commonest read-only ones must cost almost nothing. It may only

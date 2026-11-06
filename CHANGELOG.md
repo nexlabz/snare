@@ -7,6 +7,22 @@ because that is the failure that matters most in a scanner.
 `snare version` shows your version and commit. `snare update --check` compares
 commits, not just version numbers.
 
+## [1.8.0] — 2026-11-06
+
+### Changed — a block now explains itself, and you can copy it
+- When the gate stops a command, it starts with **what snare caught**: each
+  file and line, why it is suspected, and the matching text. The same message
+  is saved to `~/.snare/logs/last-block.txt`, and `snare gate report` prints
+  it again, so you can paste it into your own agent or an issue to work out
+  what it is. An agent's transcript scrolls; the report does not.
+- Before the allow command, the block now says plainly: if you think it is a
+  mistake, read every flagged file yourself, in full, and check who added it
+  (`git log -p -- <file>`), and only then run `snare gate allow` in your own
+  terminal. An agent can help explain the code, but an agent reading a
+  poisoned repository can be talked into calling it safe.
+- The instructions `snare agents install` writes now tell agents to show the
+  whole message, not a summary of it.
+
 ## [1.7.1] — 2026-11-06
 
 ### Fixed — "N commit(s) behind" kept showing after updating

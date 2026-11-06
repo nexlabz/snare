@@ -1420,7 +1420,32 @@ _gate_decide(){
   return 0
 }
 
-_gate_banner(){ # $1=command $2=details $3=payload|unverified
+# The last block, word for word, so the person can paste it into their own
+# agent, an issue or a chat to work out what it is. The banner scrolls away
+# in an agent's transcript; this file does not.
+GATE_REPORT="$SNARE_LOGS/last-block.txt"
+
+_gate_report_write(){ # $1=command $2=details $3=payload|unverified $4=cwd
+  mkdir -p "$SNARE_LOGS" 2>/dev/null || return 1
+  {
+    echo "snare block report"
+    echo "  when:     $(date '+%Y-%m-%d %H:%M:%S %Z')"
+    echo "  snare:    ${SNARE_VERSION:-?}"
+    echo "  where:    ${4:-$PWD}"
+    echo "  command:  $1"
+    echo "  verdict:  $( [ "$3" = payload ] && echo "blocked: looks like a supply-chain payload" || echo "blocked: could not be verified")"
+    echo
+    echo "What snare caught (file:line — why it is suspected, then the matching text):"
+    printf '%s\n' "$2" | grep -v '^@allow ' | sed 's/^/  /'
+    echo
+    echo "This is a suspicion, not a proof. To investigate, read each file above"
+    echo "in full, check who added it (git log -p -- <file>), and compare it with"
+    echo "what the project needs. Nothing here has been run."
+  } > "$GATE_REPORT" 2>/dev/null
+}
+
+_gate_banner(){ # $1=command $2=details $3=payload|unverified [$4=cwd]
+  _gate_report_write "$1" "$2" "$3" "${4:-$PWD}"
   echo
   if [ "$3" = payload ]; then
     echo "🔥 FIRE ON THE MOUNTAIN — snare stopped this before it ran:"
@@ -1429,7 +1454,11 @@ _gate_banner(){ # $1=command $2=details $3=payload|unverified
   fi
   echo "    $1"
   echo
+  echo "What snare caught (file:line — why it is suspected, then the matching text):"
   printf '%s\n' "$2" | grep -v '^@allow ' | sed 's/^/  /'
+  echo
+  echo "Copy this whole message, or the saved report, into your agent or an issue"
+  echo "to work out what it is:  $GATE_REPORT  (print it again: snare gate report)"
   echo
   if [ "$3" = payload ]; then
     # The exact allow command for each block. Deriving it from the heading
@@ -1437,28 +1466,37 @@ _gate_banner(){ # $1=command $2=details $3=payload|unverified
     # had not arrived yet allow had nothing to look at: a block nobody could
     # approve.
     local allows; allows="$(printf '%s\n' "$2" | sed -n 's/^@allow //p' | awk '!s[$0]++' | head -3)"
-    echo "What is listed above is what snare SUSPECTS, with where to look. It can"
-    echo "be a false alarm — a minified file, an unusual config. Look first; then"
-    echo "the person at the keyboard decides:"
+    echo "This is what snare SUSPECTS. It can be a false alarm — a minified file,"
+    echo "an unusual config. If you think it is a mistake:"
     echo
-    local first=1 l
+    echo "  1. Look yourself, thoroughly. Open every file listed above and read it"
+    echo "     in full, not just the flagged line. Check who added it and when:"
+    echo "     git log -p -- <file>. An agent can help explain it, but an agent"
+    echo "     reading a poisoned repository can be talked into calling it safe —"
+    echo "     the decision has to rest on what you read."
+    echo "  2. Only then, in your own terminal (it asks about each one):"
+    local l
     while IFS= read -r l; do
       [ -z "$l" ] && continue
-      if [ "$first" = 1 ]; then echo "  It is fine, it is mine:  $l"; first=0
-      else echo "                           $l"; fi
+      echo "       $l"
     done <<< "${allows:-snare gate allow}"
-    echo "                           (in your own terminal — it asks about each one)"
-    echo "  Let snare take charge:   snare respond"
     echo
-    echo "If you are a coding agent: stop. Show the user the locations above and"
-    echo "these two choices. Do not run either yourself, do not edit snare's"
-    echo "files, and do not retry the command another way."
+    echo "  Not sure, or it is real?  snare respond   (snare takes charge of the clean-up)"
+    echo
+    echo "If you are a coding agent: stop. Show the user this whole message — what"
+    echo "was caught, where, and both choices. Do not run either yourself, do not"
+    echo "edit snare's files, and do not retry the command another way."
   else
     echo "Nothing was run. If the reason above is a network or credentials"
     echo "problem, retry when it is back. If it is a value the gate could not"
     echo "resolve, write it out literally. Only the user can run it unchecked,"
     echo "from their own terminal — an agent cannot switch the gate off."
   fi
+}
+
+_gate_report(){
+  if [ -s "$GATE_REPORT" ]; then cat "$GATE_REPORT"
+  else echo "snare has not blocked anything yet (no $GATE_REPORT)."; fi
 }
 
 # ---- the person's decision: "this is fine"
@@ -1696,7 +1734,7 @@ sys.stdout.write(c + "\0" + (d.get("cwd") or "") + "\0")
   [ "$rc" = 0 ] && return 0
   printf '%s\n' "$verdict" | grep -q 'supply-chain payload' && kind=payload || kind=unverified
   [ "$kind" = payload ] && snare_desktop_notify "FIRE ON THE MOUNTAIN: an agent tried to run code carrying a payload. Command blocked."
-  _gate_banner "$cmd" "$verdict" "$kind" >&2
+  _gate_banner "$cmd" "$verdict" "$kind" "$cwd" >&2
   return 2
 }
 
@@ -1718,11 +1756,13 @@ cmd_gate(){
       return 1 ;;
     allow)   shift; _gate_allow "$@" ;;
     allowed) _gate_allowed ;;
+    report)  _gate_report ;;
     forget)  shift; _gate_forget "$@" ;;
     ""|-h|--help)
       echo "usage: snare gate -- <command>    check before running it (0 = clean)"
       echo "       snare gate allow [dir [branch]|url]  you looked, it is fine: allow what is flagged, on disk or incoming"
       echo "       snare gate allowed         what you have allowed"
+      echo "       snare gate report          the last block, word for word, to paste into an agent or issue"
       echo "       snare gate forget [dir|all] withdraw approvals"
       echo "       snare gate --hook          Claude Code PreToolUse hook (stdin JSON)" ;;
     *) cmd_gate -- "$@" ;;

@@ -38,7 +38,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 <nav class="nav" aria-label="Primary">
   <div class="nav-in">
     <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.7.1">v1.7.1</a>
+    <a class="ver" href="changelog.html" title="What changed in v1.8.0">v1.8.0</a>
     <div class="nav-links" id="nav-links">
       <a href="index.html">The threat</a>
       <a href="check.html">Check</a>
@@ -105,12 +105,28 @@ snare update && snare selftest</pre></div></div>
     </div>
   </section>
 
+<section class="stack" id="v1-8-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h2 class="rel-v">1.8.0</h2>
+      <span class="rel-date">2026-11-06</span>
+        <span class="tag now">Current</span>
+    </div>
+    <div class="rel-group">
+      <h3>Changed — a block now explains itself, and you can copy it</h3>
+      <ul class="rel-list">
+        <li>When the gate stops a command, it starts with <strong>what snare caught</strong>: each file and line, why it is suspected, and the matching text. The same message is saved to <code>~/.snare/logs/last-block.txt</code>, and <code>snare gate report</code> prints it again, so you can paste it into your own agent or an issue to work out what it is. An agent's transcript scrolls; the report does not.</li>
+        <li>Before the allow command, the block now says plainly: if you think it is a mistake, read every flagged file yourself, in full, and check who added it (<code>git log -p -- &lt;file&gt;</code>), and only then run <code>snare gate allow</code> in your own terminal. An agent can help explain the code, but an agent reading a poisoned repository can be talked into calling it safe.</li>
+        <li>The instructions <code>snare agents install</code> writes now tell agents to show the whole message, not a summary of it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
 <section class="stack" id="v1-7-1">
   <div class="rel">
     <div class="rel-head">
       <h2 class="rel-v">1.7.1</h2>
       <span class="rel-date">2026-11-06</span>
-        <span class="tag now">Current</span>
     </div>
     <div class="rel-group">
       <h3>Fixed — "N commit(s) behind" kept showing after updating</h3>
@@ -797,7 +813,7 @@ snare update && snare selftest</pre></div></div>
   </div>
   <div class="foot-bar">
     <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.7.1</a> · MIT</span>
+    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.8.0</a> · MIT</span>
   </div>
 </footer>
 </div>
