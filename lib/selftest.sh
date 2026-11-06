@@ -733,6 +733,7 @@ _st_payload_only(){
 
 # The cached "behind" is about one commit. After an update it must stop
 # being repeated: it once said "1 commit(s) behind" for weeks after updating.
+# shellcheck disable=SC2034  # UPDATE_CACHE is read by the functions under test
 _st_update_cache(){
   local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snareuc.XXXXXX")" || return 0
   local r1 r2 r3
