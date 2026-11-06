@@ -1422,10 +1422,10 @@ _st_allow_incoming(){
   local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snareai.XXXXXX")" || return 0
   D="$(cd "$D" && pwd -P)"
   local SNARE_NO_NOTIFY=1; export SNARE_NO_NOTIFY
-  local _h="$SNARE_HOME" _l="$SNARE_LOGS" _g="$GATE_LOG" _p="$GATE_PENDING" _a="$GATE_ALLOW" _c="$GATE_CACHE"
+  local _h="$SNARE_HOME" _l="$SNARE_LOGS" _g="$GATE_LOG" _p="$GATE_PENDING" _a="$GATE_ALLOW" _c="$GATE_CACHE" _r="$GATE_REPORT"
   SNARE_HOME="$D/.snare"; SNARE_LOGS="$SNARE_HOME/logs"; GATE_LOG="$SNARE_LOGS/gate.log"
   GATE_PENDING="$SNARE_LOGS/gate-pending"; GATE_ALLOW="$SNARE_HOME/gate-allow"; GATE_CACHE="$SNARE_HOME/gate-cache"
-  mkdir -p "$SNARE_LOGS"
+  GATE_REPORT="$SNARE_LOGS/last-block.txt"; mkdir -p "$SNARE_LOGS"
   local G=(git -c user.email=t@t -c user.name=t -c init.defaultBranch=main -c advice.detachedHead=false)
   # upstream: clean, then a commit on main adds a file the gate flags
   "${G[@]}" init -q --bare "$D/up.git"
@@ -1442,9 +1442,20 @@ _st_allow_incoming(){
   out="$(_gate_decide "git checkout main" "$D/work")"; rc=$?
   if [ "$rc" = 1 ] && printf '%s' "$out" | _qmatch "@allow snare gate allow $D/work main" \
      && [ "$(_gate_banner "git checkout main" "$out" payload | grep -c '@allow')" = 0 ] \
-     && _gate_banner "git checkout main" "$out" payload | _qmatch "It is fine, it is mine:  snare gate allow $D/work main"; then
+     && _gate_banner "git checkout main" "$out" payload | _qmatch "       snare gate allow $D/work main"; then
     _st_ok "a block on an incoming branch prints an allow command that names it"
   else _st_bad "a block on an incoming branch prints an allow command that names it (rc=$rc)"; fi
+
+  # The block is saved word for word, so the person can paste it into their
+  # own agent or an issue — and told to read the code before allowing it.
+  local ban; ban="$(_gate_banner "git checkout main" "$out" payload "$D/work")"
+  if printf '%s' "$ban" | _qmatch "Look yourself, thoroughly" \
+     && printf '%s' "$ban" | _qmatch "snare gate report" \
+     && _qmatch "postcss.config.js" < "$GATE_REPORT" && _qmatch "command:  git checkout main" < "$GATE_REPORT" \
+     && ! _qmatch "@allow" < "$GATE_REPORT" \
+     && SNARE_HOME="$D/.snare" "$SNARE_ROOT/bin/snare" gate report 2>/dev/null | _qmatch "command:  git checkout main"; then
+    _st_ok "a block saves a pasteable report and says to read the code before allowing"
+  else _st_bad "a block saves a pasteable report and says to read the code before allowing"; fi
 
   out="$(_gate_allow_scan "$D/work" main)"; rc=$?
   local fp; fp="$(printf '%s\n' "$out" | head -1 | awk -F'\t' '{print $6}')"
@@ -1466,7 +1477,7 @@ _st_allow_incoming(){
     _st_ok "a blocked clone is approvable by its URL"
   else _st_bad "a blocked clone is approvable by its URL (rc=$rc)"; fi
 
-  SNARE_HOME="$_h"; SNARE_LOGS="$_l"; GATE_LOG="$_g"; GATE_PENDING="$_p"; GATE_ALLOW="$_a"; GATE_CACHE="$_c"
+  SNARE_HOME="$_h"; SNARE_LOGS="$_l"; GATE_LOG="$_g"; GATE_PENDING="$_p"; GATE_ALLOW="$_a"; GATE_CACHE="$_c"; GATE_REPORT="$_r"
   rm -rf "$D"
 }
 

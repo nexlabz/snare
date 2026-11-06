@@ -46,10 +46,12 @@ run it through the gate first:
     snare gate -- <the exact command>
 
 Exit 0 means it is clean: run the command. Anything else means **do not run
-it**. Stop and tell the user immediately: list each location snare reports
-and what it suspects — it can be a false alarm, so the user has to look —
-then give them the two choices snare prints: \`snare gate allow\` if it is
-theirs and harmless, \`snare respond\` to let snare take charge. Never run
+it**. Stop and tell the user immediately: show snare's message in full —
+each location it reports and what it suspects (it is also saved; \`snare gate
+report\` prints it). It can be a false alarm, so the user has to read the
+flagged code themselves, thoroughly, before deciding. Then give them the two
+choices snare prints: \`snare gate allow\` if, having read it, it is theirs
+and harmless; \`snare respond\` to let snare take charge. Never run
 either yourself. Never retry it another way:
 not through \`sh -c\`, \`eval\`, a script, or a different package manager.
 There is no switch an agent can use to turn the gate off; if the user wants
