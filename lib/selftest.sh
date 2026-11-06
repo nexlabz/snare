@@ -225,6 +225,7 @@ JSON
   _st_campaign
   _st_relink
   _st_update_branch
+  _st_update_cache
   _st_own_site
   _st_payload_only
   _st_gate
@@ -726,6 +727,27 @@ _st_payload_only(){
     _st_ok  "a branch that was only payload is named for the owner to delete; real work is not"
   else
     _st_bad "a branch that was only payload is named for the owner to delete; real work is not ($r1/$r2)"
+  fi
+  rm -rf "$D"
+}
+
+# The cached "behind" is about one commit. After an update it must stop
+# being repeated: it once said "1 commit(s) behind" for weeks after updating.
+_st_update_cache(){
+  local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snareuc.XXXXXX")" || return 0
+  local r1 r2 r3
+  ( UPDATE_CACHE="$D/c"
+    printf 'checked=%s\nbehind=3\nremote_version=\n' "$(date +%s)" > "$D/c"
+    _snare_update_cache_current ) && r1=trusted || r1=ignored
+  ( UPDATE_CACHE="$D/c"
+    printf 'checked=%s\nbehind=3\nremote_version=\nhead=0000000000000000000000000000000000000000\nversion=%s\n' \
+      "$(date +%s)" "$SNARE_VERSION" > "$D/c"
+    _snare_update_cache_current ) && r2=trusted || r2=ignored
+  ( UPDATE_CACHE="$D/c"; SNARE_HOME="$D"; _snare_update_write 0 ""; _snare_update_cache_current ) && r3=trusted || r3=ignored
+  if [ "$r1" = ignored ] && [ "$r2" = ignored ] && [ "$r3" = trusted ]; then
+    _st_ok  "a cached 'behind' about another commit is not repeated after an update"
+  else
+    _st_bad "a cached 'behind' about another commit is not repeated after an update ($r1/$r2/$r3)"
   fi
   rm -rf "$D"
 }

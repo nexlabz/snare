@@ -78,7 +78,7 @@ snare_update_hint(){
   # made a command that prints one line take about five seconds on a slow link.
   # `update --check` still does the live check, because there waiting is the
   # point.
-  if [ -f "$UPDATE_CACHE" ]; then
+  if _snare_update_cache_current; then
     local cb; cb="$(grep -m1 '^behind=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
     if [ -n "$cb" ] && [ "$cb" -gt 0 ] 2>/dev/null; then
       ylw "  $cb commit(s) behind — run: snare update"
@@ -87,10 +87,13 @@ snare_update_hint(){
     [ -n "$cb" ] && return 0
   fi
   local behind; behind="$(snare_commits_behind 2>/dev/null)"
+  # Keep what the live check learned, so the next command need not repeat it.
+  [ -n "$behind" ] && _snare_update_write "$behind" ""
   if [ -n "$behind" ] && [ "$behind" -gt 0 ] 2>/dev/null; then
     ylw "  $behind commit(s) behind — run: snare update"
     return 0
   fi
+  [ -n "$behind" ] && return 0
   local r; r="$(snare_remote_version)"
   [ -z "$r" ] && return 0
   ver_gt "$r" "$SNARE_VERSION" || return 0
@@ -143,11 +146,29 @@ snare_update_refresh(){
   _snare_update_write "$behind" "$rv"
 }
 
+# The commit this install is on; empty without a repository.
+_snare_head(){ git -C "$SNARE_ROOT" rev-parse HEAD 2>/dev/null; }
+
+# Does the cached answer describe THIS install? It is a statement about one
+# commit. Once the install moves (snare update, a git pull, a reinstall), it
+# is about something that no longer exists: the cache once kept telling
+# people who had just updated that they were "1 commit(s) behind", for days,
+# and where the daily refresh never ran (no terminal, as under a coding
+# agent) for good. A cache from before this field existed is not trusted.
+_snare_update_cache_current(){
+  [ -f "$UPDATE_CACHE" ] || return 1
+  local h v
+  h="$(grep -m1 '^head=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
+  v="$(grep -m1 '^version=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
+  [ "$v" = "$SNARE_VERSION" ] || return 1
+  [ "$h" = "$(_snare_head)" ]
+}
+
 # One writer, so every path above leaves a usable cache behind.
 _snare_update_write(){
   mkdir -p "$SNARE_HOME" 2>/dev/null
-  printf 'checked=%s\nbehind=%s\nremote_version=%s\n' \
-    "$(date +%s)" "${1:-}" "${2:-}" > "$UPDATE_CACHE.tmp" 2>/dev/null \
+  printf 'checked=%s\nbehind=%s\nremote_version=%s\nhead=%s\nversion=%s\n' \
+    "$(date +%s)" "${1:-}" "${2:-}" "$(_snare_head)" "$SNARE_VERSION" > "$UPDATE_CACHE.tmp" 2>/dev/null \
     && mv "$UPDATE_CACHE.tmp" "$UPDATE_CACHE" 2>/dev/null
 }
 
@@ -176,7 +197,7 @@ snare_update_risk(){
 # report written to a file or a CI log needs to carry the caveat too.
 snare_update_stale_note(){
   [ -n "${SNARE_NO_UPDATE_CHECK:-}" ] && return 0
-  [ -f "$UPDATE_CACHE" ] || return 0
+  _snare_update_cache_current || return 0
   local b rv
   b="$(grep -m1 '^behind=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
   rv="$(grep -m1 '^remote_version=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
@@ -201,7 +222,7 @@ snare_update_nudge(){
   local now checked behind age
   now="$(date +%s)"
   checked=0; behind=0
-  if [ -f "$UPDATE_CACHE" ]; then
+  if _snare_update_cache_current; then
     checked="$(grep -m1 '^checked=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
     behind="$(grep -m1 '^behind=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
   fi
@@ -209,8 +230,8 @@ snare_update_nudge(){
   [ -z "$behind" ] && behind=0
   age=$(( now - checked ))
 
-  local rv
-  rv="$(grep -m1 '^remote_version=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
+  local rv=""
+  [ "$checked" != 0 ] && rv="$(grep -m1 '^remote_version=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
   if [ "$behind" -gt 0 ] 2>/dev/null; then
     echo
     ylw "  snare is $behind commit(s) behind — run: snare update"
@@ -432,6 +453,11 @@ cmd_update(){
 
   local after; after="$(git -C "$SNARE_ROOT" rev-parse --short HEAD 2>/dev/null)"
   local newver; newver="$(snare_version_at "$SNARE_ROOT")"
+
+  # Record what was just established, so no command keeps repeating the
+  # "behind" it read before this update.
+  local _left; _left="$(git -C "$SNARE_ROOT" rev-list --count HEAD..origin/main 2>/dev/null)"
+  SNARE_VERSION="${newver:-$SNARE_VERSION}" _snare_update_write "${_left:-0}" "${newver:-}"
 
   if [ "$before" = "$after" ]; then
     grn "  already up to date ($SNARE_VERSION, $after)"

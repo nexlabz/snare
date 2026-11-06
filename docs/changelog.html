@@ -38,7 +38,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 <nav class="nav" aria-label="Primary">
   <div class="nav-in">
     <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.7.0">v1.7.0</a>
+    <a class="ver" href="changelog.html" title="What changed in v1.7.1">v1.7.1</a>
     <div class="nav-links" id="nav-links">
       <a href="index.html">The threat</a>
       <a href="check.html">Check</a>
@@ -105,12 +105,27 @@ snare update && snare selftest</pre></div></div>
     </div>
   </section>
 
+<section class="stack" id="v1-7-1">
+  <div class="rel">
+    <div class="rel-head">
+      <h2 class="rel-v">1.7.1</h2>
+      <span class="rel-date">2026-11-06</span>
+        <span class="tag now">Current</span>
+    </div>
+    <div class="rel-group">
+      <h3>Fixed — "N commit(s) behind" kept showing after updating</h3>
+      <ul class="rel-list">
+        <li>snare caches whether it is behind, so commands need not ask the network each time. That cache was never told about an update: right after <code>snare update</code> succeeded, every command still said "1 commit(s) behind — run: snare update". The cache refreshed only once a day, and only in an interactive terminal, so under a coding agent it never refreshed at all. One install showed a "behind" from 19 days and three releases earlier.</li>
+        <li>The cache now records the commit and version it describes and is ignored as soon as the install moves, by <code>snare update</code>, a <code>git pull</code> or a reinstall. <code>snare update</code> writes what it just established. <code>snare version</code> keeps what its live check learned. A self-test covers it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
 <section class="stack" id="v1-7-0">
   <div class="rel">
     <div class="rel-head">
       <h2 class="rel-v">1.7.0</h2>
       <span class="rel-date">2026-11-06</span>
-        <span class="tag now">Current</span>
     </div>
     <div class="rel-group">
       <h3>Fixed — <code>snare update</code> said "already up to date" and never updated</h3>
@@ -782,7 +797,7 @@ snare update && snare selftest</pre></div></div>
   </div>
   <div class="foot-bar">
     <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.7.0</a> · MIT</span>
+    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.7.1</a> · MIT</span>
   </div>
 </footer>
 </div>
