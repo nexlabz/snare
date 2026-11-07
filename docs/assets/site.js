@@ -7,14 +7,13 @@
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------------------------------------------------------------- theme
-     Honour the OS by default. A click pins an explicit choice, which the
-     inline <head> snippet re-applies on the next page load before paint. */
+     Dark by default. A click pins an explicit choice, which the inline
+     <head> snippet re-applies on the next page load before paint. */
   var themeBtn = document.querySelector(".theme-toggle");
   if (themeBtn) {
     themeBtn.addEventListener("click", function () {
       var root = document.documentElement;
-      var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      var isDark = root.dataset.theme ? root.dataset.theme === "dark" : systemDark;
+      var isDark = (root.dataset.theme || "dark") === "dark";
       var next = isDark ? "light" : "dark";
       root.dataset.theme = next;
       themeBtn.setAttribute("aria-label", next === "dark" ? "Switch to light theme" : "Switch to dark theme");
@@ -30,8 +29,7 @@
      not load, the fallback keeps a working link to the same thread. */
   function currentTheme() {
     var pinned = document.documentElement.dataset.theme;
-    if (pinned) return pinned;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    return pinned || "dark";
   }
 
   function setGiscusTheme(theme) {

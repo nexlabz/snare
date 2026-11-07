@@ -1,43 +1,39 @@
 /* ==========================================================================
-   THEME — "blueprint" (1.9.0). Warm paper, ruled rails, registration marks,
-   mono labels. Ember stays snare's signal colour; an amber highlighter marks
-   the words that matter.
+   THEME — dark by default, terminal-flavoured. Structure borrowed from
+   drafting sheets (rails, rules, registration marks); colour from a terminal:
+   near-black, phosphor green for what is safe or typed, ember for danger —
+   snare's "fire on the mountain". Light is an opt-in via the toggle.
    ========================================================================== */
 :root{
+  --ground:#08090A; --surface:#0E1012; --sunk:#050607;
+  --ink:#E3E6E0; --muted:#8A9089; --hair:#1D2124; --rail:#24292C;
+  --accent:#FF6A2B; --accent-soft:#2A1309;
+  --term:#5CF29A; --term-soft:#0D2418;
+  --hl:rgba(255,106,43,.30); --hl-blend:normal;
+  --safe:#5CF29A; --safe-soft:#0D2418;
+  --btn:#FF6A2B; --btn-ink:#08090A;
+  --shadow:none;
+  --navbg:rgba(8,9,10,.86);
+  --grid:rgba(92,242,154,.045);
+  --scan:rgba(255,255,255,.018);
+  --r:3px;
+  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --body:"Geist",system-ui,-apple-system,Segoe UI,sans-serif;
+  --disp:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --nav-h:57px; --col:1120px;
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
   --ground:#EDECE6; --surface:#F7F6F2; --sunk:#E5E3DC;
   --ink:#121317; --muted:#585B63; --hair:#D2CFC5; --rail:#CBC8BD;
   --accent:#C2410C; --accent-soft:#F5DDCD;
+  --term:#0F7355; --term-soft:#DCEDE5;
   --hl:#FFC774; --hl-blend:multiply;
   --safe:#0F7355; --safe-soft:#DCEDE5;
   --btn:#121317; --btn-ink:#F7F6F2;
-  --shadow:none;
   --navbg:rgba(237,236,230,.88);
-  --grid:rgba(18,19,23,.045);
-  --r:4px;
-  --mono:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-  --body:"Geist",system-ui,-apple-system,Segoe UI,sans-serif;
-  --disp:"Geist",system-ui,-apple-system,Segoe UI,sans-serif;
-  --nav-h:57px; --col:1120px;
-}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --ground:#0D0E10; --surface:#141518; --sunk:#0A0B0D;
-    --ink:#ECEAE4; --muted:#9B9DA4; --hair:#25272C; --rail:#2B2D33;
-    --accent:#FF7A3D; --accent-soft:#2A170E;
-    --hl:rgba(255,122,61,.30); --hl-blend:normal;
-    --safe:#3FBF8F; --safe-soft:#11231C;
-    --btn:#ECEAE4; --btn-ink:#0D0E10;
-    --navbg:rgba(13,14,16,.86); --grid:rgba(236,234,228,.035);
-  }
-}
-:root[data-theme="dark"]{
-  --ground:#0D0E10; --surface:#141518; --sunk:#0A0B0D;
-  --ink:#ECEAE4; --muted:#9B9DA4; --hair:#25272C; --rail:#2B2D33;
-  --accent:#FF7A3D; --accent-soft:#2A170E;
-  --hl:rgba(255,122,61,.30); --hl-blend:normal;
-  --safe:#3FBF8F; --safe-soft:#11231C;
-  --btn:#ECEAE4; --btn-ink:#0D0E10;
-  --navbg:rgba(13,14,16,.86); --grid:rgba(236,234,228,.035);
+  --grid:rgba(18,19,23,.045); --scan:transparent;
+  color-scheme:light;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:76px}
@@ -345,13 +341,9 @@ td code{color:var(--accent)}
 }
 .icon-btn:hover{color:var(--accent);border-color:var(--accent)}
 .icon-btn svg{width:16px;height:16px}
-.theme-toggle .moon{display:none}
-:root[data-theme="dark"] .theme-toggle .moon{display:block}
-:root[data-theme="dark"] .theme-toggle .sun{display:none}
-@media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]) .theme-toggle .moon{display:block}
-  :root:not([data-theme="light"]) .theme-toggle .sun{display:none}
-}
+.theme-toggle .sun{display:none}
+:root[data-theme="light"] .theme-toggle .sun{display:block}
+:root[data-theme="light"] .theme-toggle .moon{display:none}
 .nav-toggle{display:none}
 
 @media(max-width:860px){
@@ -801,3 +793,70 @@ pre code,.panel code{background:none;padding:0}
 footer{border-top:0}
 .toc{scrollbar-width:thin;scrollbar-color:var(--hair) transparent}
 @media(max-width:640px){.announce{flex-wrap:nowrap;align-items:flex-start;font-size:.8rem;gap:10px;padding:8px 16px}.announce-tag{margin-top:1px}}
+
+/* ==========================================================================
+   TERMINAL LAYER
+   ========================================================================== */
+h1,h2{font-family:var(--disp);font-weight:600}
+h1{letter-spacing:-.05em}
+h2{letter-spacing:-.04em}
+::selection{background:var(--term);color:var(--sunk)}
+code{color:var(--term);background:var(--term-soft)}
+:root[data-theme="light"] code{color:var(--ink);background:color-mix(in srgb,var(--sunk) 70%,transparent)}
+pre code,.panel code{color:inherit;background:none}
+a{color:var(--accent)}
+
+/* labels read like comments */
+.eyebrow::before{content:"//";width:auto;height:auto;background:none;color:var(--term);letter-spacing:0}
+.kicker{color:var(--term);border-color:color-mix(in srgb,var(--term) 35%,transparent);background:var(--term-soft)}
+.kicker .dot{background:var(--term)}
+.next-card .step,.verb .cmd,.route .trigger{color:var(--term)}
+.next-card.urgent .step{color:var(--accent)}
+ol.chain li::before{color:var(--term)}
+
+/* the hero: a terminal pane — grid, faint scanlines, a cursor after the headline */
+.wrap.hero{
+  background-color:var(--surface);
+  background-image:
+    repeating-linear-gradient(0deg,var(--scan) 0 1px,transparent 1px 3px),
+    linear-gradient(var(--grid) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:auto,28px 28px,28px 28px;
+}
+.hero h1::after{
+  content:"";display:inline-block;width:.5em;height:.82em;margin-left:.12em;
+  background:var(--accent);vertical-align:-.06em;
+}
+@media (prefers-reduced-motion:no-preference){
+  .hero h1::after{animation:blink 1.1s steps(1) infinite}
+  @keyframes blink{50%{opacity:0}}
+}
+.hero::before,.latest::before,.callout::before,.covers::before,.verbs::before{--t:var(--term);opacity:.6}
+
+/* terminal panes */
+.panel{background:var(--sunk);border-color:var(--hair)}
+.panel-bar{background:var(--surface)}
+.panel-bar .label::before{content:"$ ";color:var(--term)}
+pre{color:var(--ink)}
+
+/* the announcement reads like a log line */
+.announce{background:var(--sunk);color:var(--ink);border-bottom:1px solid var(--hair);font-family:var(--mono);font-size:.78rem}
+.announce-tag{background:transparent;color:var(--term);border:1px solid color-mix(in srgb,var(--term) 45%,transparent)}
+.announce-go{color:var(--accent);opacity:.9}
+:root[data-theme="light"] .announce{background:var(--btn);color:var(--btn-ink)}
+
+/* buttons: ember for the main action, outlines for the rest */
+.btn-primary{background:var(--btn);color:var(--btn-ink);font-weight:600}
+.btn-ghost:hover,.route:hover,.next-card:hover,.report-link:hover,.pager a:hover,
+.btn:hover,.icon-btn:hover,.jump a:hover{border-color:var(--term);color:var(--ink)}
+.nav-cta{background:var(--btn);color:var(--btn-ink)!important}
+.tab[aria-selected="true"],.btn[aria-pressed="true"]{background:var(--term);color:var(--sunk);border-color:var(--term)}
+.toc a.on{border-left-color:var(--term)}
+.jump a.on{border-color:var(--term)}
+.latest-meta b,.rel-v{color:var(--term)}
+.latest-item:hover{background:var(--sunk)}
+.latest-item:hover .latest-sum{text-decoration-color:var(--term)}
+.tag.now{background:var(--term-soft);color:var(--term);border-color:color-mix(in srgb,var(--term) 40%,transparent)}
+.brand .mark{background:var(--accent);color:var(--sunk)}
+.nav-links a[aria-current="page"]:not(.nav-cta)::after,.nav-links a:not(.nav-cta)::after{background:var(--term)}
+:root:not([data-theme="light"]) .hero h1 em{background:none;color:var(--accent);text-shadow:0 0 28px rgba(255,106,43,.35)}

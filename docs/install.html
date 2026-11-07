@@ -16,16 +16,15 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Install snare — macOS, Linux, Windows and WSL — snare">
 <meta name="twitter:description" content="Install the free open-source scanner in about a minute. Requires bash, git, python3 and the GitHub CLI. It ships no token of its own and uses your own GitHub credentials.">
-<meta name="theme-color" content="#EDECE6" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0D0E10" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#08090A">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪤</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="expect" href="#main" blocking="render">
-<script>/* apply a pinned theme before first paint so the page never flashes */
-try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script>/* dark unless the reader picked light; set before first paint so nothing flashes */
+var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}document.documentElement.dataset.theme=t;</script>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
  {"@type":"ListItem","position":1,"name":"snare","item":"https://nexlabz.github.io/snare/"},
