@@ -16,12 +16,12 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Command reference — every command, and what it will not do — snare">
 <meta name="twitter:description" content="Every snare command grouped by what it is for: find it, stop it running, stop it spreading, clean up, keep watch. Includes the honest limits of each one.">
-<meta name="theme-color" content="#C2410C" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101319" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EDECE6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D0E10" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪤</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="expect" href="#main" blocking="render">
 <script>/* apply a pinned theme before first paint so the page never flashes */
@@ -34,6 +34,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 </head>
 <body data-page="commands">
 <a class="skip" href="#main">Skip to content</a>
+<a class="announce" href="changelog.html#v1-9-0"><span class="announce-tag">v1.9.0</span><span class="announce-text"><code>snare update</code> now restarts the guard and cleans up after itself.</span><span class="announce-go" aria-hidden="true">What changed →</span></a>
 <header class="site-header">
 <nav class="nav" aria-label="Primary">
   <div class="nav-in">
@@ -383,7 +384,7 @@ snare version                   version and commit</pre></div></div>
 </nav></div>
 </main>
 
-<div class="wrap">
+<div class="foot-shell"><div class="wrap">
 <footer>
   <div class="foot-grid">
     <div class="foot-col">
@@ -413,7 +414,7 @@ snare version                   version and commit</pre></div></div>
     <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.9.0</a> · MIT</span>
   </div>
 </footer>
-</div>
+</div></div>
 
 <script src="assets/site.js"></script>
 </body>

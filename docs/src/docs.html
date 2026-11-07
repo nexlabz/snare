@@ -8,6 +8,8 @@
     <span class="toc-title">Documentation</span>
     <ul>
       <li><a href="#start">Start here</a></li>
+      <li><a href="#blocked">When snare stops a command</a></li>
+      <li><a href="#updates">Staying up to date</a></li>
       <li><a href="#auth">Auth and permissions</a></li>
       <li><a href="#extend">Extending detection</a></li>
       <li><a href="#state">Where state lives</a></li>
@@ -33,6 +35,8 @@
 
   <div class="jump">
     <a href="#start">Start here</a>
+    <a href="#blocked">Blocked</a>
+    <a href="#updates">Updates</a>
     <a href="#auth">Auth</a>
     <a href="#extend">Extending</a>
     <a href="#state">State</a>
@@ -65,6 +69,69 @@
         <p>Every command grouped by purpose, each with the limits written next to it.</p>
       </a>
     </div>
+  </section>
+
+  <section class="stack" id="blocked">
+    <span class="eyebrow">When snare stops a command</span>
+    <h2>A block tells you what it caught, and you decide</h2>
+    <p class="lede">With the agent gate on, snare checks code before a clone, pull, install or run
+    brings it onto your machine. When it stops something, the message says <strong>what it
+    caught</strong>: the file and line, why it is suspected, and the text that matched.
+    Nothing has run.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">a block, shortened</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>🔥 FIRE ON THE MOUNTAIN — snare stopped this before it ran:
+    npm run dev
+
+What snare caught (file:line — why it is suspected, then the matching text):
+  package.json:1 — "dev" runs api.js, a 29 KB obfuscated file
+
+Copy this whole message, or the saved report, into your agent or an issue
+to work out what it is:  ~/.snare/logs/last-block.txt  (snare gate report)
+
+  1. Look yourself, thoroughly. …
+  2. Only then, in your own terminal:  snare gate allow /path/to/repo
+
+  Not sure, or it is real?  snare respond</pre></div></div>
+    <ol class="chain">
+      <li><b>Read what it caught</b><span>Every finding names a file and a line. <code>snare gate report</code>
+      prints the last block again, word for word, to paste into your own agent or an issue.</span></li>
+      <li><b>If you think it is a mistake, read the code yourself</b><span>Open every flagged file in full, not just the
+      flagged line, and check who added it: <code>git log -p -- &lt;file&gt;</code>. An agent can help explain it,
+      but an agent reading a poisoned repository can be talked into calling it safe.</span></li>
+      <li><b>Then allow it, in your own terminal</b><span>Run the <code>snare gate allow …</code> command the block printed.
+      An approval covers that file's exact content; if the file changes, it is checked again.</span></li>
+      <li><b>If it looks real</b><span><code>snare respond</code> takes charge of the clean-up, in the right order.</span></li>
+    </ol>
+    <p class="note">A coding agent can never approve its own block. <code>snare gate allow</code> only
+    runs for a person at a terminal.</p>
+  </section>
+
+  <section class="stack" id="updates">
+    <span class="eyebrow">Staying up to date</span>
+    <h2>snare tells you when a new version is out, or installs it itself</h2>
+    <p class="lede">A scanner is only as good as its last fix, so snare checks in the background,
+    at most every six hours, and never slows a command down to do it. Choose what happens when it
+    finds something:</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Mode</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td><code>notify</code> <span class="note">default</span></td><td>One line the next time you use snare:
+          <em>snare 1.9.1 is out (you have 1.9.0) — update: snare update</em>.</td></tr>
+          <tr><td><code>auto</code></td><td>snare installs it, restarts the guard, clears the old version's leftovers,
+          then tells you once what changed. It only moves forward along <code>main</code>, never over local
+          edits, and logs to <code>~/.snare/logs/auto-update.log</code>.</td></tr>
+          <tr><td><code>off</code></td><td>Never checks. You run <code>snare update</code> yourself.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel"><div class="panel-bar"><span class="label">choose a mode, or update now</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare update --mode auto     # or notify, or off
+snare update                 # update now: pulls, restarts the guard, tidies up
+snare update --check         # just look</pre></div></div>
+    <p class="note"><code>snare update</code> restarts the background guard on the new version by itself
+    (from 1.9.0). Coming from an older version, run <code>snare guard restart</code> once after updating.
+    What each release changed is on the <a href="changelog.html">changelog</a>.</p>
   </section>
 
   <section class="stack" id="auth">
@@ -120,6 +187,9 @@ eth\.blockscout\.com</pre></div></div>
           <tr><td><code>logs/</code></td><td>Scan and guard logs, plus saved reports.</td></tr>
           <tr><td><code>logs/evidence/</code></td><td>What the guard captured when it killed something — keep this if you plan to report a variant.</td></tr>
           <tr><td><code>backups/</code></td><td>Bundle backups written before any <code>fix</code> touches a repository.</td></tr>
+          <tr><td><code>logs/last-block.txt</code></td><td>The last thing the gate stopped, word for word. <code>snare gate report</code> prints it.</td></tr>
+          <tr><td><code>logs/auto-update.log</code></td><td>What each automatic update did, in <code>auto</code> mode.</td></tr>
+          <tr><td><code>update-mode</code></td><td><code>notify</code>, <code>auto</code> or <code>off</code>, as set by <code>snare update --mode</code>.</td></tr>
           <tr><td><code>work/</code></td><td>Scratch clones used during scanning and history rewriting.</td></tr>
         </tbody>
       </table>

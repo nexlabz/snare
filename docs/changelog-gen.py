@@ -16,6 +16,7 @@ Mapping:
     `code`  **bold**  *em*    -> <code> <strong> <em>
 """
 import html
+import os
 import re
 import sys
 
@@ -109,7 +110,7 @@ def parse(md: str):
     return releases
 
 
-def render(releases) -> str:
+def render(releases, notes_dir="../releases") -> str:
     out = []
     for i, r in enumerate(releases):
         tag = '\n        <span class="tag now">Current</span>' if i == 0 else ""
@@ -117,8 +118,11 @@ def render(releases) -> str:
         out.append('  <div class="rel">')
         out.append('    <div class="rel-head">')
         out.append(f'      <h2 class="rel-v">{html.escape(r["version"])}</h2>')
-        out.append(f'      <span class="rel-date">{html.escape(r["date"])}</span>{tag}')
+        out.append(f'      <span class="rel-date">{html.escape(short_date(r["date"]))}</span>{tag}')
+        if os.path.exists(f"{notes_dir}/v{r['version']}.md"):
+            out.append(f'      <a class="rel-gh" href="{REPO}/releases/tag/v{html.escape(r["version"])}">Release notes ↗</a>')
         out.append('    </div>')
+        out.append(f'    <p class="rel-sum">{inline(summary(r, notes_dir))}</p>')
         if r["lede"]:
             out.append(f'    <p class="lede">{inline(r["lede"])}</p>')
         for g in r["groups"]:
@@ -135,9 +139,94 @@ def render(releases) -> str:
     return "\n".join(out)
 
 
+def strip_md(t: str) -> str:
+    t = re.sub(r"\*\*([^*]+)\*\*", r"\1", t)
+    t = re.sub(r"(?<!\*)\*([^*\n]+)\*(?!\*)", r"\1", t)
+    return t.strip()
+
+
+def summary(r, notes_dir) -> str:
+    """One plain sentence on what a release changed, for people who will not
+    read the full notes: the headline of releases/vX.md when there is one,
+    else the first group heading without its "Fixed — " prefix."""
+    try:
+        with open(f"{notes_dir}/v{r['version']}.md") as f:
+            for line in f:
+                if line.strip():
+                    return strip_md(line.strip())
+    except OSError:
+        pass
+    if r["groups"]:
+        t = r["groups"][0]["title"]
+        t = re.sub(r"^[A-Za-z ]+\s+—\s+", "", t)
+        return strip_md(t[:1].upper() + t[1:]) + "."
+    return strip_md(r["lede"])
+
+
+def first_sentence(t: str) -> str:
+    m = re.match(r"(.+?[.!?])(\s|$)", t)
+    return m.group(1) if m else t
+
+
+def short_date(d: str) -> str:
+    m = re.match(r"(\d{4})-(\d{2})-(\d{2})", d)
+    if not m:
+        return d
+    mon = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()[int(m.group(2)) - 1]
+    return f"{int(m.group(3))} {mon} {m.group(1)}"
+
+
+def render_toc(releases) -> str:
+    return "\n".join(
+        f'      <li><a href="#{slug(r["version"])}">{html.escape(r["version"])}'
+        f' <span class="toc-date">{html.escape(short_date(r["date"]))}</span></a></li>'
+        for r in releases)
+
+
+def render_jump(releases) -> str:
+    return "\n".join(f'    <a href="#{slug(r["version"])}">{html.escape(r["version"])}</a>'
+                      for r in releases[:12])
+
+
+def render_latest(releases, notes_dir, n=3) -> str:
+    out = ['<div class="latest">']
+    for i, r in enumerate(releases[:n]):
+        groups = " · ".join(sorted({re.sub(r"\s+—.*", "", g["title"]) for g in r["groups"]}))
+        out.append(f'  <a class="latest-item" href="changelog.html#{slug(r["version"])}">')
+        out.append(f'    <span class="latest-meta"><b>v{html.escape(r["version"])}</b>'
+                   f'<span>{html.escape(short_date(r["date"]))}</span>'
+                   + ('<span class="tag now">Latest</span>' if i == 0 else "") + '</span>')
+        out.append(f'    <span class="latest-sum">{inline(summary(r, notes_dir))}</span>')
+        if groups:
+            out.append(f'    <span class="latest-kind">{html.escape(groups)}</span>')
+        out.append('  </a>')
+    out.append('</div>')
+    return "\n".join(out)
+
+
+def render_announce(releases, notes_dir) -> str:
+    r = releases[0]
+    return (f'<a class="announce" href="changelog.html#{slug(r["version"])}">'
+            f'<span class="announce-tag">v{html.escape(r["version"])}</span>'
+            f'<span class="announce-text">{inline(first_sentence(summary(r, notes_dir)))}</span>'
+            f'<span class="announce-go" aria-hidden="true">What changed →</span></a>')
+
+
 if __name__ == "__main__":
-    src = sys.argv[1] if len(sys.argv) > 1 else "../CHANGELOG.md"
+    args = sys.argv[1:]
+    mode = "releases"
+    if args and args[0].startswith("--"):
+        mode = args.pop(0)[2:]
+    src = args[0] if args else "../CHANGELOG.md"
+    notes = args[1] if len(args) > 1 else "../releases"
     rels = parse(open(src).read())
     if not rels:
         sys.exit("changelog-gen: no releases parsed from " + src)
-    sys.stdout.write(render(rels) + "\n")
+    out = {"releases": lambda: render(rels, notes),
+           "toc": lambda: render_toc(rels),
+           "jump": lambda: render_jump(rels),
+           "latest": lambda: render_latest(rels, notes),
+           "announce": lambda: render_announce(rels, notes)}.get(mode)
+    if out is None:
+        sys.exit("changelog-gen: unknown mode --" + mode)
+    sys.stdout.write(out() + "\n")

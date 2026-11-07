@@ -16,12 +16,12 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="The supply-chain attack npm audit cannot see — snare">
 <meta name="twitter:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
-<meta name="theme-color" content="#C2410C" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101319" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EDECE6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D0E10" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪤</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="expect" href="#main" blocking="render">
 <script>/* apply a pinned theme before first paint so the page never flashes */
@@ -45,6 +45,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 </head>
 <body data-page="index">
 <a class="skip" href="#main">Skip to content</a>
+<a class="announce" href="changelog.html#v1-9-0"><span class="announce-tag">v1.9.0</span><span class="announce-text"><code>snare update</code> now restarts the guard and cleans up after itself.</span><span class="announce-go" aria-hidden="true">What changed →</span></a>
 <header class="site-header">
 <nav class="nav" aria-label="Primary">
   <div class="nav-in">
@@ -109,6 +110,34 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 </div>
 
 <div class="wrap">
+
+<section class="stack whats-new" id="whats-new">
+  <div class="sec-head">
+    <span class="eyebrow">What's new</span>
+    <a class="sec-link" href="changelog.html">All releases →</a>
+  </div>
+  <h2>What changed lately, in plain words</h2>
+  <p class="lede">snare ships often, and every release says what it fixes and why it matters
+  to you. Already installed? <code>snare update</code> brings you current. To have snare install
+  new versions itself, run <code>snare update --mode auto</code>.</p>
+<div class="latest">
+  <a class="latest-item" href="changelog.html#v1-9-0">
+    <span class="latest-meta"><b>v1.9.0</b><span>7 Nov 2026</span><span class="tag now">Latest</span></span>
+    <span class="latest-sum"><code>snare update</code> now restarts the guard and cleans up after itself. And snare tells you when there's a new version, or installs it for you.</span>
+    <span class="latest-kind">Added · Changed</span>
+  </a>
+  <a class="latest-item" href="changelog.html#v1-8-0">
+    <span class="latest-meta"><b>v1.8.0</b><span>6 Nov 2026</span></span>
+    <span class="latest-sum">When snare blocks something, it now tells you exactly what it caught, and gives it to you in a form you can copy.</span>
+    <span class="latest-kind">Changed</span>
+  </a>
+  <a class="latest-item" href="changelog.html#v1-7-1">
+    <span class="latest-meta"><b>v1.7.1</b><span>6 Nov 2026</span></span>
+    <span class="latest-sum">The "commit(s) behind" message now goes away after you update.</span>
+    <span class="latest-kind">Fixed</span>
+  </a>
+</div>
+</section>
 
 <section class="stack" id="threat">
   <span class="eyebrow">The threat</span>
@@ -379,7 +408,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 </nav></div>
 </main>
 
-<div class="wrap">
+<div class="foot-shell"><div class="wrap">
 <footer>
   <div class="foot-grid">
     <div class="foot-col">
@@ -409,7 +438,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
     <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.9.0</a> · MIT</span>
   </div>
 </footer>
-</div>
+</div></div>
 
 <script src="assets/site.js"></script>
 </body>

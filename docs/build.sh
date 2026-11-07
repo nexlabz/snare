@@ -17,8 +17,6 @@ cd "$(dirname "$0")"
 
 SITE="https://nexlabz.github.io/snare/"
 REPO="https://github.com/nexlabz/snare"
-tmp_rel="$(mktemp "${TMPDIR:-/tmp}/snarerel.XXXXXX")"
-trap 'rm -f "$tmp_rel"' EXIT
 VERSION="$(sed -n 's/^## \[\([0-9.]*\)\].*/\1/p' ../CHANGELOG.md | head -1)"
 [ -n "$VERSION" ] || { echo "could not read version from ../CHANGELOG.md" >&2; exit 1; }
 
@@ -31,6 +29,8 @@ nav_label(){ case "$1" in
   index) echo "The threat";; check) echo "Check";; infected) echo "If infected";;
   install) echo "Install";; docs) echo "Docs";; community) echo "Community";; esac; }
 
+gen(){ python3 changelog-gen.py "--$1" ../CHANGELOG.md ../releases \
+        || { echo "changelog-gen --$1 failed" >&2; exit 1; }; }
 meta(){ sed -n "s/^<!--#$1: \(.*\)-->$/\1/p" "$2" | head -1; }
 
 build_page(){
@@ -64,12 +64,12 @@ build_page(){
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="$title">
 <meta name="twitter:description" content="$desc">
-<meta name="theme-color" content="#C2410C" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101319" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#EDECE6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0D0E10" media="(prefers-color-scheme: dark)">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪤</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 <link rel="expect" href="#main" blocking="render">
 <script>/* apply a pinned theme before first paint so the page never flashes */
@@ -167,6 +167,9 @@ JSONLD
     echo "<body data-page=\"${out%.html}\">"
     echo '<a class="skip" href="#main">Skip to content</a>'
 
+    # ---- announcement: the latest release, in one sentence ----
+    gen announce
+
     # ---- nav ----
     cat <<'NAVTOP'
 <header class="site-header">
@@ -203,21 +206,20 @@ NAVTOP
 NAVBOT
 
     # ---- body ----
-    # <!--#releases--> becomes the release notes rendered from CHANGELOG.md.
-    # They used to be written twice — there and as hand-written HTML here — so
-    # the site could claim a fix had shipped when it had not. One source now.
-    if grep -q '<!--#releases-->' "$src"; then
-      python3 changelog-gen.py ../CHANGELOG.md > "$tmp_rel" \
-        || { echo "changelog-gen failed for $src" >&2; exit 1; }
-      grep -v '^<!--#' "$src" | while IFS= read -r line; do
-        case "$line" in
-          *'<!--#releases-->'*) cat "$tmp_rel" ;;
-          *) printf '%s\n' "$line" ;;
-        esac
-      done
-    else
-      grep -v '^<!--#' "$src"
-    fi
+    # <!--#releases--> and friends are rendered from CHANGELOG.md (and the
+    # one-line headlines in ../releases/). They used to be written by hand as
+    # well — the changelog sidebar still listed 1.1.0 as the latest release
+    # sixteen versions later — so the site could disagree with what shipped.
+    # One source now.
+    grep -v '^<!--#[a-z]*:' "$src" | while IFS= read -r line; do
+      case "$line" in
+        *'<!--#releases-->'*) gen releases ;;
+        *'<!--#reltoc-->'*)   gen toc ;;
+        *'<!--#reljump-->'*)  gen jump ;;
+        *'<!--#latest-->'*)   gen latest ;;
+        *) printf '%s\n' "$line" ;;
+      esac
+    done
 
     # ---- pager ----
     if [ -n "$prev" ] || [ -n "$next" ]; then
@@ -231,7 +233,7 @@ NAVBOT
     cat <<FOOT
 </main>
 
-<div class="wrap">
+<div class="foot-shell"><div class="wrap">
 <footer>
   <div class="foot-grid">
     <div class="foot-col">
@@ -261,7 +263,7 @@ NAVBOT
     <span><a href="$REPO">github.com/nexlabz/snare</a> · <a href="changelog.html">v$VERSION</a> · MIT</span>
   </div>
 </footer>
-</div>
+</div></div>
 
 <script src="assets/site.js"></script>
 </body>
