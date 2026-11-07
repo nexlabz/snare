@@ -7,6 +7,35 @@ because that is the failure that matters most in a scanner.
 `snare version` shows your version and commit. `snare update --check` compares
 commits, not just version numbers.
 
+## [1.9.0] — 2026-11-07
+
+### Changed — `snare update` finishes the job
+- **The background guard is restarted for you.** After every update people
+  were told to run `snare guard stop && snare guard start`, and a guard nobody
+  restarted kept running the previous version. `snare update` now restarts it
+  on the new code, rewriting its service file first. It also catches a guard
+  that is still on an older version even when there is nothing new to pull.
+  The guard records its version when it starts, and `snare guard restart`
+  does the same by hand.
+- **Leftovers are cleared.** The gate's cached verdicts from the old version
+  are removed, since they are keyed by version and can never be used again.
+  So are blocks waiting for `snare respond` in repositories that no longer
+  exist, logs past 1 MB (trimmed to their most recent part) and stale refresh
+  markers. Backups, reports and evidence are never touched.
+
+### Added — snare tells you when a new version is out, or installs it
+- `snare update --mode notify|auto|off`.
+  - **notify** (the default): snare checks in the background at most every
+    six hours and tells you "snare X is out (you have Y) — update: snare
+    update".
+  - **auto**: snare installs new versions itself, then says once what changed.
+    It only fast-forwards from main, never touches an install with local
+    edits, and logs to `~/.snare/logs/auto-update.log`.
+  - **off**: never check.
+- The background check now also runs when snare is used by a coding agent.
+  Before, it ran only at a terminal, so installs used mostly through agents
+  never learned about a new version.
+
 ## [1.8.0] — 2026-11-06
 
 ### Changed — a block now explains itself, and you can copy it
