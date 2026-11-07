@@ -171,7 +171,7 @@ snare deps update | status       refresh / show the known-malware list</pre></di
     <div class="panel"><div class="panel-bar"><span class="label">Guard · shield</span><div class="bar-actions"></div></div>
       <div class="scroller"><pre>snare guard install             kill the loader on sight, from login onwards
 snare guard scan                one-shot check of this machine
-snare guard status | log | stop | start | uninstall
+snare guard status | log | stop | start | restart | uninstall
 
 snare shield install            scan before npm/pnpm/yarn/bun/npx and git clone run
 snare shield status | uninstall
@@ -269,6 +269,7 @@ snare baseline status | clear
 
 snare update                    pull the latest version
 snare update --check            is a newer version available?
+snare update --mode auto        install new versions itself (default: notify, or off)
 snare update --relink           point ~/.local/bin/snare at this checkout
 snare version                   version and commit</pre></div></div>
 

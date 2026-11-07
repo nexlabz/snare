@@ -3,7 +3,7 @@
 # https://github.com/  •  MIT
 set -uo pipefail
 
-SNARE_VERSION="1.8.0"
+SNARE_VERSION="1.9.0"
 
 # Fast path for the agent hook. It runs before EVERY shell command an agent
 # issues, so the commonest read-only ones must cost almost nothing. It may only
@@ -100,7 +100,7 @@ ${C_BLD}TRACK${C_OFF}
   snare guard scan              one-shot check of this machine
   snare guard log               follow the log
   snare guard origins           where detections came from (the file to clean)
-  snare guard start | stop      restart it after an update
+  snare guard start | stop | restart   (snare update restarts it for you)
   snare guard uninstall
   snare c2                      the C2 the guard kills on, live from the dead drop
   snare c2 --refresh            re-resolve it now (otherwise daily, in the background)
@@ -148,6 +148,8 @@ ${C_BLD}PREVENT${C_OFF}
 ${C_BLD}MAINTAIN${C_OFF}
   snare update                  pull the latest version
   snare update --check          is a newer version available?
+  snare update --mode [notify|auto|off]  say when one is out (default), install it
+                                itself, or never check
   snare update --relink         point ~/.local/bin/snare at THIS checkout
 
 ${C_BLD}FIX${C_OFF}
@@ -259,5 +261,9 @@ esac
 # command's own exit status.
 _snare_rc=0
 main "$@" || _snare_rc=$?
-snare_update_nudge 2>/dev/null || true
+# `version` and `update` already say where the install stands.
+case "${1:-}" in
+  version|--version|-v|update) ;;
+  *) snare_update_nudge 2>/dev/null || true ;;
+esac
 exit "$_snare_rc"

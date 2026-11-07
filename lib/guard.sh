@@ -275,7 +275,7 @@ cmd_guard(){
       while [ $# -gt 0 ]; do
         case "$1" in --interval) iv="${2:-1}"; shift ;; esac; shift
       done
-      echo "[$(date '+%F %T')] guard started (interval=${iv}s, pid=$$)" | tee -a "$SNARE_LOGS/guard.log"
+      echo "[$(date '+%F %T')] guard started (snare $SNARE_VERSION, interval=${iv}s, pid=$$)" | tee -a "$SNARE_LOGS/guard.log"
       trap 'echo "[$(date "+%F %T")] guard stopped" >> "$SNARE_LOGS/guard.log"; exit 0' INT TERM
       # The kill list follows the dead drop (see lib/c2.sh), but this loop
       # runs every second, so it must stay fork-free: resolve the list once
@@ -301,6 +301,7 @@ cmd_guard(){
     uninstall) guard_service uninstall ;;
     start)     guard_service start ;;
     stop)      guard_service stop ;;
+    restart)   guard_restart ;;
     log)       tail -f "$SNARE_LOGS/guard.log" ;;
     origins)
       # Where detections came from, which is the only question that leads to a
@@ -320,8 +321,42 @@ cmd_guard(){
         dim "  $SNARE_LOGS/origins.log"
       fi ;;
     status)    guard_service status ;;
-    *) echo "usage: snare guard [status|scan|install|uninstall|start|stop|log|origins|run]" ;;
+    *) echo "usage: snare guard [status|scan|install|uninstall|start|stop|restart|log|origins|run]" ;;
   esac
+}
+
+# Stop the guard and start it again on the code now on disk, rewriting its
+# service file from this version first. `snare update` calls this, so nobody
+# has to remember `snare guard stop && snare guard start` — before 1.9.0 the
+# guard kept running the previous version's code until someone did.
+guard_restart(){
+  case "$(guard_state)" in
+    absent) ylw "the background guard is not installed — 'snare guard install' to enable it"; return 1 ;;
+  esac
+  case "$SNARE_OS" in
+    macos)     guard_svc_launchd install >/dev/null 2>&1 ;;      # unload, rewrite, load
+    linux|wsl)
+      if command -v systemctl >/dev/null 2>&1; then
+        guard_svc_systemd install >/dev/null 2>&1
+        systemctl --user restart snare-guard.service >/dev/null 2>&1
+      else
+        ylw "no systemd: restart 'snare guard run' yourself"; return 1
+      fi ;;
+    windows)
+      MSYS_NO_PATHCONV=1 schtasks /End /TN "snare-guard" >/dev/null 2>&1
+      MSYS_NO_PATHCONV=1 schtasks /Run /TN "snare-guard" >/dev/null 2>&1 ;;
+    *) return 1 ;;
+  esac
+  sleep 1
+  if [ "$(guard_state)" = running ]; then grn "guard restarted (snare $SNARE_VERSION)"; return 0; fi
+  red "guard did not come back up — run: snare guard install"; return 1
+}
+
+# Which version the running guard started as, from its own log line.
+# Empty when it started before 1.9.0, which did not record it.
+guard_running_version(){
+  grep 'guard started' "$SNARE_LOGS/guard.log" 2>/dev/null | tail -1 \
+    | sed -n 's/.*guard started (snare \([0-9][0-9.]*\),.*/\1/p'
 }
 
 guard_service(){

@@ -38,7 +38,7 @@ try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.data
 <nav class="nav" aria-label="Primary">
   <div class="nav-in">
     <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.8.0">v1.8.0</a>
+    <a class="ver" href="changelog.html" title="What changed in v1.9.0">v1.9.0</a>
     <div class="nav-links" id="nav-links">
       <a href="index.html">The threat</a>
       <a href="check.html">Check</a>
@@ -105,12 +105,34 @@ snare update && snare selftest</pre></div></div>
     </div>
   </section>
 
+<section class="stack" id="v1-9-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h2 class="rel-v">1.9.0</h2>
+      <span class="rel-date">2026-11-07</span>
+        <span class="tag now">Current</span>
+    </div>
+    <div class="rel-group">
+      <h3>Changed — <code>snare update</code> finishes the job</h3>
+      <ul class="rel-list">
+        <li><strong>The background guard is restarted for you.</strong> After every update people were told to run <code>snare guard stop &amp;&amp; snare guard start</code>, and a guard nobody restarted kept running the previous version. <code>snare update</code> now restarts it on the new code, rewriting its service file first. It also catches a guard that is still on an older version even when there is nothing new to pull. The guard records its version when it starts, and <code>snare guard restart</code> does the same by hand.</li>
+        <li><strong>Leftovers are cleared.</strong> The gate's cached verdicts from the old version are removed, since they are keyed by version and can never be used again. So are blocks waiting for <code>snare respond</code> in repositories that no longer exist, logs past 1 MB (trimmed to their most recent part) and stale refresh markers. Backups, reports and evidence are never touched.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h3>Added — snare tells you when a new version is out, or installs it</h3>
+      <ul class="rel-list">
+        <li><code>snare update --mode notify|auto|off</code>. - <strong>notify</strong> (the default): snare checks in the background at most every six hours and tells you "snare X is out (you have Y) — update: snare update". - <strong>auto</strong>: snare installs new versions itself, then says once what changed. It only fast-forwards from main, never touches an install with local edits, and logs to <code>~/.snare/logs/auto-update.log</code>. - <strong>off</strong>: never check.</li>
+        <li>The background check now also runs when snare is used by a coding agent. Before, it ran only at a terminal, so installs used mostly through agents never learned about a new version.</li>
+      </ul>
+    </div>
+  </div>
+</section>
 <section class="stack" id="v1-8-0">
   <div class="rel">
     <div class="rel-head">
       <h2 class="rel-v">1.8.0</h2>
       <span class="rel-date">2026-11-06</span>
-        <span class="tag now">Current</span>
     </div>
     <div class="rel-group">
       <h3>Changed — a block now explains itself, and you can copy it</h3>
@@ -813,7 +835,7 @@ snare update && snare selftest</pre></div></div>
   </div>
   <div class="foot-bar">
     <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.8.0</a> · MIT</span>
+    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.9.0</a> · MIT</span>
   </div>
 </footer>
 </div>

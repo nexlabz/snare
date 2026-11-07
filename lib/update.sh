@@ -118,6 +118,10 @@ snare_update_hint(){
 # SNARE_NO_UPDATE_CHECK=1 turns it off entirely.
 UPDATE_CACHE="$SNARE_HOME/update-state"
 
+# Modification time in epoch seconds. GNU stat first: on Linux `stat -f` means
+# "filesystem", prints text and then fails.
+_snare_mtime(){ stat -c %Y "$1" 2>/dev/null || stat -f %m "$1" 2>/dev/null || echo 0; }
+
 # Refresh the cache. Runs detached; never writes to the terminal.
 snare_update_refresh(){
   local remote local_sha behind="" rv=""
@@ -144,6 +148,9 @@ snare_update_refresh(){
     [ -z "$behind" ] && behind=1
   fi
   _snare_update_write "$behind" "$rv"
+  rm -f "$SNARE_HOME/.update-refreshing" 2>/dev/null
+  [ "${behind:-0}" -gt 0 ] 2>/dev/null && _snare_auto_update
+  return 0
 }
 
 # The commit this install is on; empty without a repository.
@@ -217,7 +224,8 @@ snare_update_stale_note(){
 snare_update_nudge(){
   [ -n "${SNARE_NO_UPDATE_CHECK:-}" ] && return 0
   [ -n "${CI:-}" ] && return 0
-  [ -t 1 ] || return 0            # not a terminal: stay out of pipes and logs
+  local mode; mode="$(snare_update_mode)"
+  [ "$mode" = off ] && return 0
 
   local now checked behind age
   now="$(date +%s)"
@@ -230,35 +238,43 @@ snare_update_nudge(){
   [ -z "$behind" ] && behind=0
   age=$(( now - checked ))
 
-  local rv=""
-  [ "$checked" != 0 ] && rv="$(grep -m1 '^remote_version=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
-  if [ "$behind" -gt 0 ] 2>/dev/null; then
-    echo
-    ylw "  snare is $behind commit(s) behind — run: snare update"
-    snare_update_risk
-  elif [ -n "$rv" ] && ver_gt "$rv" "$SNARE_VERSION"; then
-    # No git checkout, so there is no commit distance — but the version alone
-    # is enough to say something true.
-    echo
-    ylw "  snare $rv is available (you have $SNARE_VERSION) — run: snare update"
-    snare_update_risk
+  # Stale (or never checked): refresh in the background — at a terminal or
+  # not. This used to sit behind the terminal check, so under a coding agent,
+  # where most snare commands now run, nothing ever checked. Every 6 hours at
+  # most, one at a time, fully detached (stdin included: a child still holding
+  # the terminal keeps the parent waiting). No setsid: macOS does not ship it.
+  # nohup so it survives the terminal closing on a short command.
+  local mark="$SNARE_HOME/.update-refreshing"
+  if [ "$age" -gt 21600 ] 2>/dev/null \
+     && { [ ! -f "$mark" ] || [ $(( now - $(_snare_mtime "$mark") )) -gt 600 ]; }; then
+    mkdir -p "$SNARE_HOME" 2>/dev/null; : > "$mark" 2>/dev/null
+    ( nohup "$SNARE_ROOT/bin/snare" _update-refresh </dev/null >/dev/null 2>&1 & ) </dev/null >/dev/null 2>&1
   fi
 
-  # Stale (or never checked): try to refresh for next time, fully detached —
-  # stdin included, since a child still holding the terminal keeps the parent
-  # waiting, which is the blocking this exists to avoid.
-  #
-  # This is BEST EFFORT and nothing depends on it. The cache is also refreshed
-  # synchronously by the commands that already wait on the network (doctor,
-  # scan github, update --check), so it gets populated even where detaching
-  # does not survive — a short-lived terminal, a restrictive shell, a platform
-  # without the job control this assumes.
-  if [ "$age" -gt 86400 ] 2>/dev/null; then
-    # No setsid: macOS does not ship it, and the `||` fallback never fired
-    # because backgrounding succeeds even when the command does not exist.
-    # Redirecting all three streams is enough — measured at 0.09s.
-    # nohup so the refresh survives the terminal closing on a short command.
-    ( nohup "$SNARE_ROOT/bin/snare" _update-refresh </dev/null >/dev/null 2>&1 & ) </dev/null >/dev/null 2>&1
+  [ -t 1 ] || return 0            # what follows is for a person: stay out of pipes and logs
+
+  # Auto mode installed something since the last command: say so, once.
+  if [ -s "$AUTO_UPDATED" ]; then
+    local f t sha
+    IFS="$(printf '\t')" read -r f t sha < "$AUTO_UPDATED"
+    rm -f "$AUTO_UPDATED"
+    echo
+    grn "  snare updated itself: $f -> $t"
+    dim "    what changed: git -C $SNARE_ROOT log --oneline $sha..HEAD   (log: $SNARE_LOGS/auto-update.log)"
+    return 0
+  fi
+
+  local rv=""
+  [ "$checked" != 0 ] && rv="$(grep -m1 '^remote_version=' "$UPDATE_CACHE" 2>/dev/null | cut -d= -f2)"
+  if [ -n "$rv" ] && ver_gt "$rv" "$SNARE_VERSION"; then
+    echo
+    ylw "  snare $rv is out (you have $SNARE_VERSION) — update: snare update"
+    snare_update_risk
+    [ "$mode" = notify ] && dim "  or let snare install updates itself: snare update --mode auto"
+  elif [ "$behind" -gt 0 ] 2>/dev/null; then
+    echo
+    ylw "  snare is $behind commit(s) behind — update: snare update"
+    snare_update_risk
   fi
   return 0
 }
@@ -359,13 +375,100 @@ _snare_land_on_main(){
   return 0
 }
 
+# ------------------------------------------------------------- update mode
+# How snare keeps itself current, chosen with `snare update --mode`:
+#   notify  (default) check in the background and say when a new version is
+#           out, with the one command to run;
+#   auto    the same check, but install it too: fast-forward from main, restart
+#           the guard, refresh what snare installed — then say once what changed;
+#   off     never check (SNARE_NO_UPDATE_CHECK=1 does the same, per process).
+UPDATE_MODE_FILE="$SNARE_HOME/update-mode"
+AUTO_UPDATED="$SNARE_HOME/auto-updated"
+snare_update_mode(){
+  local m; m="$(head -1 "$UPDATE_MODE_FILE" 2>/dev/null)"
+  case "$m" in auto|off) echo "$m" ;; *) echo notify ;; esac
+}
+_snare_update_set_mode(){
+  case "${1:-}" in
+    "") echo "update mode: $(snare_update_mode)"
+        dim "  change it:  snare update --mode notify|auto|off" ; return 0 ;;
+    notify|auto|off) ;;
+    *) red "  unknown mode: $1 (notify, auto or off)"; return 2 ;;
+  esac
+  mkdir -p "$SNARE_HOME" 2>/dev/null
+  echo "$1" > "$UPDATE_MODE_FILE" || return 1
+  case "$1" in
+    notify) grn "  snare will tell you when a new version is out" ;;
+    auto)   grn "  snare will install new versions itself, and tell you once what changed"
+            dim "  it only fast-forwards from main, and never touches an install with local edits" ;;
+    off)    ylw "  snare will not check for new versions — run 'snare update' yourself" ;;
+  esac
+}
+
+# What an update leaves behind that no longer means anything.
+_snare_update_tidy(){
+  local n=0
+  # The gate's clean verdicts are keyed by version, so the old version's can
+  # never be used again; they only crowd out new ones.
+  [ -f "${GATE_CACHE:-$SNARE_HOME/gate-cache}" ] && rm -f "${GATE_CACHE:-$SNARE_HOME/gate-cache}" && n=$((n+1))
+  # Blocks waiting for `snare respond` in repositories that no longer exist.
+  local gp="$SNARE_LOGS/gate-pending"
+  if [ -s "$gp" ]; then
+    local keep k w c d r dropped=0
+    keep="$(mktemp "${TMPDIR:-/tmp}/snaregp.XXXXXX")" || keep=""
+    if [ -n "$keep" ]; then
+      while IFS="$(printf '\t')" read -r k w c d r; do
+        [ -z "$k" ] && continue
+        if [ "$d" != - ] && [ -n "$d" ] && [ ! -d "$d" ]; then dropped=$((dropped+1)); continue; fi
+        printf '%s\t%s\t%s\t%s\t%s\n' "$k" "$w" "$c" "$d" "$r"
+      done < "$gp" > "$keep"
+      if [ "$dropped" -gt 0 ]; then mv "$keep" "$gp"; n=$((n+dropped)); else rm -f "$keep"; fi
+    fi
+  fi
+  # Logs that only grow: keep the most recent part.
+  local f
+  for f in "$SNARE_LOGS/gate.log" "$SNARE_LOGS/guard.log" "$SNARE_LOGS/guard.out" "$SNARE_LOGS/auto-update.log"; do
+    if [ -f "$f" ] && [ "$(wc -c < "$f" 2>/dev/null)" -gt 1048576 ] 2>/dev/null; then
+      tail -n 5000 "$f" > "$f.tmp" 2>/dev/null && mv "$f.tmp" "$f" && n=$((n+1))
+    fi
+  done
+  # Refresh markers a killed process left behind.
+  rm -f "$SNARE_HOME/intel/.refreshing" "$SNARE_HOME/.update-refreshing" 2>/dev/null
+  [ "$n" -gt 0 ] && dim "  cleared $n leftover(s) from the previous version"
+  return 0
+}
+
+# The background half of `--mode auto`: install what the refresh just found.
+# Never at a dirty install, never off main, never two at once.
+_snare_auto_update(){
+  [ "$(snare_update_mode)" = auto ] || return 0
+  [ -d "$SNARE_ROOT/.git" ] || return 0
+  [ -z "$(git -C "$SNARE_ROOT" status --porcelain 2>/dev/null)" ] || return 0
+  [ "$(git -C "$SNARE_ROOT" rev-parse --abbrev-ref HEAD 2>/dev/null)" = main ] || return 0
+  local lock="$SNARE_HOME/.auto-updating"
+  mkdir "$lock" 2>/dev/null || return 0
+  local from="$SNARE_VERSION" fromsha to
+  fromsha="$(git -C "$SNARE_ROOT" rev-parse --short HEAD 2>/dev/null)"
+  mkdir -p "$SNARE_LOGS" 2>/dev/null
+  { echo "== $(date '+%F %T') auto-update from $from ($fromsha)"
+    "$SNARE_ROOT/bin/snare" update --auto-run 2>&1; } >> "$SNARE_LOGS/auto-update.log" 2>&1
+  to="$(snare_version_at "$SNARE_ROOT")"
+  if [ "$(git -C "$SNARE_ROOT" rev-parse --short HEAD 2>/dev/null)" != "$fromsha" ]; then
+    printf '%s\t%s\t%s\n' "$from" "${to:-?}" "$fromsha" > "$AUTO_UPDATED"
+  fi
+  rmdir "$lock" 2>/dev/null
+  return 0
+}
+
 cmd_update(){
-  local force=0 check=0 relink=0
+  local force=0 check=0 relink=0 auto=0
   while [ $# -gt 0 ]; do
     case "$1" in
       --force)  force=1 ;;
       --check)  check=1 ;;
       --relink) relink=1 ;;
+      --auto-run) auto=1 ;;                        # internal: the background auto-update
+      --mode)   _snare_update_set_mode "${2:-}"; return $? ;;
       *) red "unknown flag: $1"; return 2 ;;
     esac; shift
   done
@@ -491,7 +594,7 @@ cmd_update(){
   # Not on yet and never answered: the person running the update is right
   # here, so ask now rather than on some later command. (Asks only at a
   # terminal; does nothing in CI or under an agent.)
-  [ -z "${SNARE_NO_AGENTS:-}" ] && "$SNARE_ROOT/bin/snare" agents offer || true
+  [ -z "${SNARE_NO_AGENTS:-}" ] && [ "$auto" = 0 ] && "$SNARE_ROOT/bin/snare" agents offer || true
   # The known-malware list, refreshed now so the new version starts current.
   "$SNARE_ROOT/bin/snare" deps update >/dev/null 2>&1 \
     && dim "  known-malware list updated — 'snare deps' checks your projects against it"
@@ -502,12 +605,25 @@ cmd_update(){
   # refreshing instead of leaving people to assume it was handled.
   local stale=0
 
-  if launchctl list 2>/dev/null | _qmatch com.snare.guard \
-     || systemctl --user is-active snare-guard >/dev/null 2>&1; then
-    echo; ylw "  the background guard is still running the previous version"
-    dim "    snare guard stop && snare guard start"
-    stale=1
+  # The background guard is a long-running copy of the OLD code. Restart it on
+  # the new code here rather than asking: people were told to run
+  # `snare guard stop && snare guard start` after every update, and a guard
+  # nobody restarted kept running a version with known gaps.
+  if [ -z "${SNARE_NO_GUARD_RESTART:-}" ] && [ "$(guard_state 2>/dev/null)" = running ]; then
+    local gv; gv="$(guard_running_version 2>/dev/null)"
+    if [ "$before" != "$after" ] || [ "$gv" != "${newver:-$SNARE_VERSION}" ]; then
+      if "$SNARE_ROOT/bin/snare" guard restart >/dev/null 2>&1; then
+        dim "  background guard restarted on ${newver:-$SNARE_VERSION}"
+      else
+        echo; ylw "  the background guard could not be restarted on the new version"
+        dim "    snare guard restart"
+        stale=1
+      fi
+    fi
   fi
+
+  # Leftovers from the previous version.
+  _snare_update_tidy
 
   # Shield: compare the installed block against what we would write now.
   local rc

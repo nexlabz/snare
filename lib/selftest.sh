@@ -226,6 +226,7 @@ JSON
   _st_relink
   _st_update_branch
   _st_update_cache
+  _st_update_mode
   _st_own_site
   _st_payload_only
   _st_gate
@@ -755,6 +756,65 @@ _st_update_cache(){
 
 # `snare update` must follow main. A checkout left on a work branch once
 # answered "already up to date" forever, because it pulled that branch.
+# 1.9.0: how snare keeps itself current. The mode is a setting, an update
+# clears what the old version left, and auto mode really installs — from
+# main, fast-forward only — and says so once.
+_st_update_mode(){
+  local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snareum.XXXXXX")" || return 0
+  D="$(cd "$D" && pwd -P)"
+  local _h="$SNARE_HOME" _l="$SNARE_LOGS" _m="$UPDATE_MODE_FILE" _au="$AUTO_UPDATED" _gc="$GATE_CACHE"
+  SNARE_HOME="$D/home/.snare"; SNARE_LOGS="$SNARE_HOME/logs"; GATE_CACHE="$SNARE_HOME/gate-cache"
+  UPDATE_MODE_FILE="$SNARE_HOME/update-mode"; AUTO_UPDATED="$SNARE_HOME/auto-updated"
+  mkdir -p "$SNARE_LOGS"
+
+  local m1 m2 m3 rc
+  m1="$(snare_update_mode)"
+  _snare_update_set_mode auto >/dev/null; m2="$(snare_update_mode)"
+  _snare_update_set_mode sometimes >/dev/null 2>&1; rc=$?
+  _snare_update_set_mode off >/dev/null; m3="$(snare_update_mode)"
+  if [ "$m1" = notify ] && [ "$m2" = auto ] && [ "$rc" = 2 ] && [ "$m3" = off ]; then
+    _st_ok "update mode defaults to notify and can be set to auto or off"
+  else _st_bad "update mode defaults to notify and can be set to auto or off ($m1/$m2/$rc/$m3)"; fi
+
+  # tidy: the old version's gate verdicts and blocks in deleted repos go
+  echo "k 1" > "$GATE_CACHE"; mkdir -p "$D/kept"
+  printf 'local\t%s\tnpm i\t%s\t-\nlocal\t%s\tnpm i\t%s\t-\n' "$D/gone" "$D/gone" "$D/kept" "$D/kept" > "$SNARE_LOGS/gate-pending"
+  _snare_update_tidy >/dev/null
+  if [ ! -f "$GATE_CACHE" ] && ! _qmatch "$D/gone" < "$SNARE_LOGS/gate-pending" \
+     && _qmatch "$D/kept" < "$SNARE_LOGS/gate-pending"; then
+    _st_ok "an update clears the old version's leftovers and keeps what still applies"
+  else _st_bad "an update clears the old version's leftovers and keeps what still applies"; fi
+
+  # auto: a published commit is installed by the background check itself
+  if git -C "$SNARE_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+    local G="git -c user.name=t -c user.email=t@t -c init.defaultBranch=main -c commit.gpgsign=false"
+    mkdir -p "$D/seed"
+    ( cd "$SNARE_ROOT" && git ls-files -z | xargs -0 tar cf - ) 2>/dev/null | ( cd "$D/seed" && tar xf - ) 2>/dev/null
+    ( cd "$D" && $G init -q --bare origin.git && cd seed && $G init -q && $G add -A \
+      && $G commit -qm base && $G remote add origin "$D/origin.git" && $G push -q origin HEAD:main \
+      && cd .. && $G clone -q origin.git inst \
+      && cd seed && echo later > LATER && $G add LATER && $G commit -qm later && $G push -q origin HEAD:main ) >/dev/null 2>&1
+    echo auto > "$UPDATE_MODE_FILE"
+    HOME="$D/home" SNARE_HOME="$SNARE_HOME" SNARE_NO_AGENTS=1 SNARE_NO_GUARD_RESTART=1 \
+      SNARE_INTEL_URL="file://$D/none" SNARE_NO_NOTIFY=1 \
+      "$D/inst/bin/snare" _update-refresh >/dev/null 2>&1 </dev/null
+    if [ -f "$D/inst/LATER" ] && [ -s "$AUTO_UPDATED" ]; then
+      _st_ok "in auto mode the background check installs a new release and records it"
+    else _st_bad "in auto mode the background check installs a new release and records it"; fi
+    # notify mode: found, not installed
+    ( cd "$D/seed" && echo more > MORE && $G add MORE && $G commit -qm more && $G push -q origin HEAD:main ) >/dev/null 2>&1
+    echo notify > "$UPDATE_MODE_FILE"
+    HOME="$D/home" SNARE_HOME="$SNARE_HOME" SNARE_NO_AGENTS=1 SNARE_NO_GUARD_RESTART=1 \
+      "$D/inst/bin/snare" _update-refresh >/dev/null 2>&1 </dev/null
+    if [ ! -f "$D/inst/MORE" ] && _qmatch '^behind=1' < "$SNARE_HOME/update-state"; then
+      _st_ok "in notify mode the check finds the release but leaves installing to you"
+    else _st_bad "in notify mode the check finds the release but leaves installing to you"; fi
+  fi
+
+  SNARE_HOME="$_h"; SNARE_LOGS="$_l"; UPDATE_MODE_FILE="$_m"; AUTO_UPDATED="$_au"; GATE_CACHE="$_gc"
+  rm -rf "$D"
+}
+
 _st_update_branch(){
   local D; D="$(mktemp -d "${TMPDIR:-/tmp}/snareupd.XXXXXX")" || return 0
   D="$(cd "$D" && pwd)"
