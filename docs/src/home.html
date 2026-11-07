@@ -1,0 +1,83 @@
+<!--#title: snare — the supply-chain attack npm audit cannot see-->
+<!--#desc: A dropper committed straight into your repository, not into a dependency. It runs when you start the dev server or open the folder. snare finds it, kills it and cleans it up. Free and open source.-->
+<section class="home-hero" aria-labelledby="hero-title">
+  <div class="hh-main">
+    <p class="wordmark" aria-hidden="true">SNARE</p>
+    <h1 id="hero-title">Malware that runs the moment you open the project.</h1>
+    <p class="hh-lede">It hides in your repository, not your dependencies, so <code>npm audit</code>
+    never sees it. snare finds it, kills it and cleans it up.</p>
+    <div class="cover-actions">
+      <a class="cta cta-hot" href="install.html">Install snare</a>
+      <a class="cta" href="check.html">Check your machine first</a>
+    </div>
+  </div>
+  <!--#spec-->
+</section>
+
+<a class="cover-urgent" href="infected.html">
+  <span class="cu-k">Already found something?</span>
+  <span class="cu-v">Rotate your credentials first, then clean the machine. Not the repositories.</span>
+</a>
+
+<section class="home-band" aria-labelledby="problem-title">
+  <div class="band-head">
+    <h2 id="problem-title">Four ordinary actions set it off</h2>
+    <a class="band-link" href="attack.html">How the attack works</a>
+  </div>
+  <ol class="routes-grid">
+    <li><span class="rg-n">01</span><b>Opening the folder</b><code>.vscode/tasks.json</code></li>
+    <li><span class="rg-n">02</span><b>Starting the dev server</b><code>postcss.config.js</code></li>
+    <li><span class="rg-n">03</span><b>Running any npm script</b><code>package.json</code></li>
+    <li><span class="rg-n">04</span><b>Starting your coding agent</b><code>.claude/settings.json</code></li>
+  </ol>
+</section>
+
+<section class="home-band" aria-labelledby="solve-title">
+  <div class="band-head">
+    <h2 id="solve-title">What snare does about it</h2>
+    <a class="band-link" href="docs.html">Read the docs</a>
+  </div>
+  <div class="solve">
+    <div><span class="sv-k">Guard</span><p>Watches your machine and kills the loader the moment it starts.</p></div>
+    <div><span class="sv-k">Scan</span><p>Checks every repository you can reach, history included.</p></div>
+    <div><span class="sv-k">Gate</span><p>Stops your coding agent pulling or running an infected repo.</p></div>
+    <div><span class="sv-k">Fix</span><p>Removes the payload, backs up first, and helps you warn collaborators.</p></div>
+  </div>
+</section>
+
+<section class="home-band" id="get" aria-labelledby="install-title">
+  <div class="band-head">
+    <h2 id="install-title">Install in about a minute</h2>
+    <a class="band-link" href="install.html">Every platform</a>
+  </div>
+  <div class="tabs" role="tablist" aria-label="Platform">
+    <button class="tab" role="tab" aria-selected="true" data-p="mac" id="tab-mac" aria-controls="p-mac">macOS</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="linux" id="tab-linux" aria-controls="p-linux">Linux</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="win" id="tab-win" aria-controls="p-win">Windows</button>
+  </div>
+  <div class="pane" id="p-mac" role="tabpanel" aria-labelledby="tab-mac" tabindex="0">
+    <div class="panel"><div class="panel-bar"><span class="label">macOS</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>brew install git gh python3 git-filter-repo
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh && snare doctor</pre></div></div>
+  </div>
+  <div class="pane" id="p-linux" role="tabpanel" aria-labelledby="tab-linux" tabindex="0" hidden>
+    <div class="panel"><div class="panel-bar"><span class="label">Linux</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>sudo apt install -y git python3 gh
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh && snare doctor</pre></div></div>
+  </div>
+  <div class="pane" id="p-win" role="tabpanel" aria-labelledby="tab-win" tabindex="0" hidden>
+    <div class="panel"><div class="panel-bar"><span class="label">Git Bash on Windows</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>winget install Git.Git GitHub.cli Python.Python.3.12
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh && snare doctor</pre></div></div>
+  </div>
+</section>
+
+<section class="home-band" aria-labelledby="more-title">
+  <div class="band-head">
+    <h2 id="more-title">Go deeper</h2>
+  </div>
+  <!--#explore-->
+</section>

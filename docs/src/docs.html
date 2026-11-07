@@ -147,10 +147,7 @@ export GH_TOKEN=...        # or an env var</pre></div></div>
     and a token that can do more is a token worth more to whoever steals it.</p>
     <div class="callout">
       <h3>If you are here because you were compromised</h3>
-      <p>Do not authenticate with a token that existed while the machine was infected. Rotate
-      first, then log in with the new credential — the <a href="infected.html#rotate">rotation
-      order is here</a>. This family harvests token files and environment variables, so a token
-      you reuse is a token the operator may already hold.</p>
+      <p>Don't log in with a token that existed while you were infected. <a href="infected.html#rotate">Rotate first</a>; this family harvests token files and environment variables.</p>
     </div>
   </section>
 

@@ -109,11 +109,7 @@ git log --format='%H %cI %s' @{u}..HEAD</pre></div></div>
   </div>
   <div class="callout">
     <h2>A clean result is narrower than it looks</h2>
-    <p>Checks 2, 3 and 4 test <strong>one clone</strong> — not your other repositories, and not the
-    branches you do not have checked out. Check 1 reports what is running <em>right now</em>; the
-    loader fires when a build runs or an editor opens the folder, does its work, and exits, so a
-    quiet process list alongside an infected repository is the expected result, not a
-    contradiction.</p>
+    <p>Checks 2–4 test <strong>one clone</strong>, checked-out branch only. Check 1 shows what's running <em>now</em>; the loader runs and exits, so a quiet process list next to an infected repo is normal.</p>
     <p>These checks also key on <em>this</em> operator's wallet. A variant using a different address
     passes check 2 and is still caught by the long-line heuristic above — which is why that one
     matters most.</p>

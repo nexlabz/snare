@@ -97,11 +97,41 @@
   }
 
   /* --------------------------------------------------- legacy hash redirect
-     Links like /snare/#detect predate the chapter names. Forward them to the
-     chapter that now holds the same content. (The old page URLs, check.html
-     and friends, are redirect stubs written by assemble.py.) */
-  var MOVED = { "#detect": "#check" };
-  if (MOVED[location.hash]) location.replace(MOVED[location.hash]);
+     The site has been one long page before, so links like /snare/#infected
+     are published in GitHub issues, threads and articles. Forward them. */
+  var MOVED = {
+    "#detect": "check.html", "#check": "check.html", "#install": "install.html",
+    "#infected": "infected.html", "#commands": "docs.html#reference",
+    "#security": "security.html", "#changelog": "changelog.html",
+    "#community": "community.html", "#docs": "docs.html",
+    "#attack": "attack.html", "#threat": "attack.html#threat",
+    "#mechanism": "attack.html#mechanism", "#reports": "attack.html#reports"
+  };
+  if (document.body.dataset.page === "index" && MOVED[location.hash]) {
+    location.replace(MOVED[location.hash]);
+    return;
+  }
+
+  /* -------------------------------------------------------------- menu
+     Below the breakpoint the primary links become a drawer. Escape closes it
+     and returns focus to the button. */
+  var navBtn = document.querySelector(".nav-toggle"),
+      navEl = document.getElementById("bar-nav");
+  if (navBtn && navEl) {
+    var setMenu = function (open) {
+      navEl.dataset.open = String(open);
+      navBtn.setAttribute("aria-expanded", String(open));
+      navBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    };
+    setMenu(false);
+    navBtn.addEventListener("click", function () { setMenu(navEl.dataset.open !== "true"); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && navEl.dataset.open === "true") { setMenu(false); navBtn.focus(); }
+    });
+    document.addEventListener("click", function (e) {
+      if (navEl.dataset.open === "true" && !navEl.contains(e.target) && !navBtn.contains(e.target)) setMenu(false);
+    });
+  }
 
   /* ------------------------------------------------- hero whitespace reveal */
   var code = document.getElementById("code");
@@ -317,5 +347,72 @@
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll);
     update();
+  }
+  /* ------------------------------------------------------- changelog filter
+     Each release groups its notes under headings that start with the kind of
+     change (Fixed, Added, Changed...). Buttons appear only for the
+     Keep a Changelog kinds that actually occur; free-form headings
+     ("Measured", "Known issues") show under All. Older
+     releases are folded; filtering opens them, since hiding matches inside a
+     closed fold would read as "nothing found". */
+  var filter = document.getElementById("rel-filter");
+  if (filter) {
+    var KINDS = ["Fixed", "Added", "Changed", "Removed", "Security"];
+    var groups = Array.prototype.slice.call(document.querySelectorAll(".rel-group"));
+    var kindOf = function (g) {
+      var h = g.querySelector("h3,h4");
+      var k = h ? h.textContent.trim().split(/[\s—–,:-]+/)[0] : "";
+      return KINDS.indexOf(k) >= 0 ? k : "Other";
+    };
+    var kinds = [];
+    groups.forEach(function (g) { var k = kindOf(g); if (k !== "Other" && kinds.indexOf(k) < 0) kinds.push(k); });
+    kinds.sort(function (a, b) { return KINDS.indexOf(a) - KINDS.indexOf(b); });
+    var buttons = [];
+    var apply = function (kind) {
+      buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.k === kind)); });
+      groups.forEach(function (g) { g.hidden = kind !== "All" && kindOf(g) !== kind; });
+      document.querySelectorAll(".rel").forEach(function (r) {
+        var any = Array.prototype.some.call(r.querySelectorAll(".rel-group"), function (g) { return !g.hidden; });
+        r.closest("section").hidden = !any;
+      });
+      var older = document.querySelector("details.older");
+      if (older && kind !== "All") older.open = true;
+    };
+    ["All"].concat(kinds).forEach(function (k) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "btn"; b.dataset.k = k; b.textContent = k;
+      b.addEventListener("click", function () { apply(k); });
+      filter.appendChild(b); buttons.push(b);
+    });
+    filter.hidden = false;
+    apply("All");
+  }
+  /* ------------------------------------------------------------ report form
+     Builds the issue text and hands it to GitHub's new-issue page. There is
+     no backend: nothing leaves the browser until the reader submits on
+     GitHub, where they can still edit or abandon it. */
+  var form = document.getElementById("report-form");
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var f = form.elements, msg = document.getElementById("rf-msg");
+      var what = f.what.value.trim();
+      if (!what) {
+        f.what.setAttribute("aria-invalid", "true");
+        msg.textContent = "Say what happened first. One sentence is enough.";
+        f.what.focus();
+        return;
+      }
+      f.what.removeAttribute("aria-invalid");
+      var first = what.split(/\n/)[0].slice(0, 70);
+      var body = "## What happened\n" + what +
+        "\n\n## Version\n" + (f.version.value.trim() || "(not given)") +
+        "\n\n## System\n" + f.os.value +
+        "\n\n## snare selftest\n" + (f.selftest.checked ? "passes" : "not run, or failing") + "\n";
+      var url = "https://github.com/nexlabz/snare/issues/new?title=" +
+        encodeURIComponent(f.kind.value + ": " + first) + "&body=" + encodeURIComponent(body);
+      window.open(url, "_blank", "noopener");
+      msg.textContent = "Opened GitHub in a new tab. Check the text, then press Submit there.";
+    });
   }
 })();

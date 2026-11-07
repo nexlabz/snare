@@ -21,14 +21,8 @@
     <div class="scroller"><pre>snare respond</pre></div></div>
   <div class="callout">
     <h3>What it will and will not do</h3>
-    <p>It revokes what it safely can — npm tokens are one keypress, and they are the ones that
-    matter most — opens your browser at the pages it cannot act on, and asks before every push.
-    Anything that writes to a repository defaults to <strong>no</strong>. The destructive choice,
-    whether to purge history, is asked <strong>once</strong> rather than per repository, so a
-    rhythm of "yes" cannot carry you through it by accident.</p>
-    <p>It will not pretend to have rotated your credentials for you. It asks, and if you say no it
-    carries on — but it tells you again before anything is pushed, and again at the end. A step
-    that blocks you is a step you abandon.</p>
+    <p>It revokes npm tokens in one keypress, opens the pages it can't act on, and asks before every push. Writes default to <strong>no</strong>. Purging history is asked <strong>once</strong>, not per repository.</p>
+    <p>If you skip rotating credentials it carries on, but reminds you before anything is pushed and again at the end.</p>
     <p><code>snare respond --status</code> shows where you got to.
     <code>snare respond --reset</code> starts again.</p>
   </div>
@@ -40,11 +34,7 @@
   <span class="eyebrow">The order</span>
   <h2>Four steps, and the sequence is the point</h2>
   <ol class="chain">
-    <li><b>Rotate your credentials</b><span>Stealing them is the objective; the
-    file in your repository is delivery, not payload. Removing it does not un-steal
-    a token. <b>npm write tokens first</b> — a stolen one lets the worm publish
-    trojanised versions of your other packages under your name, which is how one
-    laptop becomes a supply-chain incident.</span></li>
+    <li><b>Rotate your credentials</b><span>The file in your repo is only delivery; removing it doesn't un-steal a token. <b>npm write tokens first</b>: a stolen one publishes trojaned versions of your packages under your name.</span></li>
     <li><b>Clean the machine you push from</b><span>Before touching any
     repository. If several repositories are flagged, the common factor is almost
     always the machine that pushed to them, not several separate accidents.</span></li>
@@ -62,15 +52,7 @@
   <h2>Rotate</h2>
   <div class="panel"><div class="panel-bar"><span class="label">Do this first</span><div class="bar-actions"></div></div>
     <div class="scroller"><pre>snare rotate        # the ordered checklist, plus a GitHub audit</pre></div></div>
-  <p class="note">In order: <strong>npm tokens</strong>
-  (<code>npmjs.com/settings/~/tokens</code> — write and "bypass 2FA" first), then
-  <strong>GitHub</strong> PATs, OAuth apps and SSH keys, then <strong>cloud keys</strong>
-  (AWS — including Secrets Manager in every region you use — GCP, Azure), then
-  everything else the process could read: <code>.env</code> files in any project you
-  had open, kubeconfig, Vault tokens, database URLs, VPN, AI-service keys, wallet
-  keys and seed phrases. Finally <strong>your clipboard</strong> — this family has a
-  documented clipboard stealer, so a password pasted out of a manager while infected
-  should be treated as seen.</p>
+  <p class="note"><strong>npm tokens</strong> first (<code>npmjs.com/settings/~/tokens</code>, write and "bypass 2FA"), then <strong>GitHub</strong> PATs, OAuth apps and SSH keys, then <strong>cloud keys</strong> (AWS incl. Secrets Manager in every region, GCP, Azure), then anything the process could read: <code>.env</code> files, kubeconfig, Vault, database URLs, AI keys, wallets. Treat anything you <strong>copied to the clipboard</strong> while infected as seen.</p>
 </section>
 
 <section class="stack" id="machine">
@@ -80,11 +62,7 @@
     <div class="scroller"><pre>snare doctor          # machine, persistence spots, your GitHub account
 snare guard scan      # one-shot process check
 snare guard install   # kill the loader on sight, from login onwards</pre></div></div>
-  <p class="note"><strong><code>guard scan</code> saying "clean" does not mean you
-  were never infected.</strong> It reports what is running <em>right now</em>. The
-  loader fires when a build runs or an editor opens the folder, does its work, and
-  exits. A clean process check alongside infected repositories is the expected
-  result, not a contradiction.</p>
+  <p class="note"><strong>A clean <code>guard scan</code> doesn't mean you were never infected.</strong> The loader runs during a build or folder open, then exits. Clean process, infected repos: that's expected.</p>
 </section>
 
 <section class="stack" id="repos">
@@ -96,11 +74,7 @@ snare fix --all                             # dry run over everything flagged
 
 snare fix owner/repo --push                 # clean the branch tips
 snare fix owner/repo --purge-history --push # erase it from all history</pre></div></div>
-  <p class="note"><code>--purge-history</code> rewrites every commit, so <strong>every
-  SHA changes</strong>. Collaborators must delete their clone and re-clone; a
-  <code>git pull</code> will conflict or silently reintroduce old objects. Forks and
-  pull-request refs keep the old objects regardless — ask GitHub Support to
-  garbage-collect them if that matters to you.</p>
+  <p class="note"><code>--purge-history</code> changes <strong>every SHA</strong>. Collaborators must re-clone; a pull will conflict or bring old objects back. Forks and PR refs keep the old objects unless GitHub Support garbage-collects them.</p>
   <p class="note">Afterwards, verify rather than assume. <code>snare scan github</code>
   only reads branch tips; run <code>snare scan repo</code> against a fresh clone to
   walk full history.</p>
@@ -113,10 +87,7 @@ snare fix owner/repo --purge-history --push # erase it from all history</pre></d
     <div class="scroller"><pre>snare notify owner/repo             # list collaborators, preview the notice
 snare notify owner/repo --issue     # file a GitHub issue @-mentioning them
 snare notify owner/repo --mail      # open a pre-filled mail draft per person</pre></div></div>
-  <p class="note">Both templates lead with credential rotation and say plainly that
-  this is not an accusation: the malware injects from an already-infected machine, so
-  a collaborator whose commit carried it was almost certainly a victim rather than a
-  cause. Say that early, or you will not get the reply you need.</p>
+  <p class="note">Both templates lead with rotation and say it isn't an accusation: whoever's commit carried it was almost certainly a victim. Say that early.</p>
 </section>
 
 <section class="stack" id="many">
@@ -125,11 +96,6 @@ snare notify owner/repo --mail      # open a pre-filled mail draft per person</p
   <p>Fifteen infected repositories is not fifteen accidents. It points at one machine
   that pushed to all of them. Work out which machine that is before cleaning anything,
   or you will clean the same repositories twice.</p>
-  <p class="note">Worth knowing what you scaffold new projects with — a starter
-  template, a <code>create-*</code> command, a downloaded theme, an editor extension.
-  The delivery mechanism for this family is <strong>still unidentified</strong>, and
-  that is the single most useful thing anyone can contribute. If you find yours,
-  <a href="https://github.com/nexlabz/snare/discussions">say so in the
-  discussion</a>.</p>
+  <p class="note">How this family first reaches a machine is <strong>still unknown</strong>. If you can name what you scaffolded an infected project with (a template, <code>create-*</code>, theme or extension), <a href="https://github.com/nexlabz/snare/discussions">say so in the discussion</a>.</p>
 </section>
 </div>

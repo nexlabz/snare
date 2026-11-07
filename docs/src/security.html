@@ -1,57 +1,71 @@
 <!--#title: Report a bug — a false clean is the one we most want — snare-->
-<!--#desc: snare has shipped bugs that made it report clean on genuinely infected repositories. If you find another, that is the most useful contribution there is. What to report, and how.-->
-<!--#nav: none-->
-<!--#prev: community.html|Community-->
+<!--#desc: snare has shipped bugs that made it report clean on infected repositories. If you find another, report it on GitHub in one click. No fix or write-up needed.-->
 <div class="wrap page-head">
-  <span class="eyebrow">Found a hole?</span>
-  <h1>Tell us — that is the whole ask</h1>
-  <p class="lede">This tool has shipped bugs that made it report clean on genuinely
-  infected repositories. Every one was found by someone actually testing it rather than
-  reading it. If you find another, that is the most useful contribution there is.</p>
+  <span class="eyebrow">Report a bug</span>
+  <h1>Found a hole? Tell us.</h1>
+  <p class="lede">No fix or write-up needed. A repository, a file or "this isn't caught" is enough.</p>
 </div>
 
 <div class="wrap">
-<section class="stack" id="what">
-  <span class="eyebrow">What to report</span>
-  <h2>In rough order of how much we want to hear about it</h2>
-  <ol class="chain">
-    <li><b>A false clean</b><span>A repository or sample snare says is fine and is not.
-    This is the worst failure a scanner can have, and the one we most want reported.</span></li>
-    <li><b>An evasion</b><span>A payload shaped so the heuristics miss it, or a way to hide
-    from the guard, the hook or the shield. One such hole let any process hide from the
-    guard simply by having the word <code>snare</code> in its command line.</span></li>
-    <li><b>A false positive</b><span>Noisy enough that people would learn to ignore the
-    output. That is a real failure too — a scanner nobody reads protects nobody.</span></li>
-    <li><b>A variant we do not detect</b><span>A different config file, a different
-    execution route, a different obfuscation.</span></li>
-    <li><b>Anything destructive</b><span>A case where <code>fix</code> removes something it
-    should not, or reports success without having done anything.</span></li>
-  </ol>
+<section class="stack" id="pick">
+  <h2>What did you find?</h2>
+  <div class="report-grid">
+    <a class="report-card hot" href="https://github.com/nexlabz/snare/issues/new?title=False%20clean%3A%20&body=%23%23%20What%20snare%20said%0Aclean%0A%0A%23%23%20What%20is%20actually%20there%0A%3C!--%20file%2C%20repository%20or%20sample%3B%20redact%20tokens%20and%20hostnames%20--%3E%0A%0A%23%23%20Command%20I%20ran%0A%60%60%60%0Asnare%20...%0A%60%60%60%0A%0A%23%23%20Version%0A%3C!--%20output%20of%20snare%20version%20--%3E%0A">
+      <span class="rc-k">Worst case</span><b>It said clean, and it isn't</b>
+      <span class="rc-p">A false clean. The bug we most want to hear about.</span>
+    </a>
+    <a class="report-card" href="https://github.com/nexlabz/snare/issues/new?title=Missed%20variant%3A%20&body=%23%23%20How%20it%20hides%20or%20runs%0A%0A%23%23%20Where%20I%20saw%20it%0A%0A%23%23%20Sample%20(defanged)%0A">
+      <span class="rc-k">Evasion</span><b>A variant it doesn't catch</b>
+      <span class="rc-p">A different file, trigger or obfuscation, or a way to hide from the guard.</span>
+    </a>
+    <a class="report-card" href="https://github.com/nexlabz/snare/issues/new?title=False%20positive%3A%20&body=%23%23%20What%20snare%20flagged%0A%0A%23%23%20Why%20it%20is%20harmless%0A%0A%23%23%20Version%0A">
+      <span class="rc-k">Noise</span><b>It flags something harmless</b>
+      <span class="rc-p">Enough of these and people stop reading the output.</span>
+    </a>
+    <a class="report-card" href="https://github.com/nexlabz/snare/issues/new?title=Bug%3A%20&body=%23%23%20What%20I%20ran%0A%0A%23%23%20What%20happened%0A%0A%23%23%20What%20I%20expected%0A%0A%23%23%20Version%20and%20OS%0A">
+      <span class="rc-k">Bug</span><b>Something else broke</b>
+      <span class="rc-p">A crash, a wrong message, or <code>fix</code> touching what it shouldn't.</span>
+    </a>
+  </div>
+  <p class="note">Can't share details in public? Open an issue that says so, without the details, and we'll arrange another way.</p>
 </section>
 
-<section class="stack" id="how">
-  <span class="eyebrow">How</span>
-  <h2>Open an issue. That is enough.</h2>
-  <p><strong>You do not need a fix, a pull request, or a polished write-up</strong> — a repository
-  name, a file, or "this sample is not caught" is plenty. If you would rather not post details
-  publicly, open an issue saying so without the specifics and we will find another way.</p>
+<section class="stack" id="write">
+  <h2>Or let this write it for you</h2>
+  <form class="report-form" id="report-form" novalidate>
+    <label>Type
+      <select name="kind">
+        <option value="False clean">It said clean, and it isn't</option>
+        <option value="Missed variant">A variant it doesn't catch</option>
+        <option value="False positive">It flags something harmless</option>
+        <option value="Bug">Something else broke</option>
+      </select>
+    </label>
+    <label>What happened
+      <textarea name="what" rows="5" required placeholder="I ran snare scan repo on a clone with a padded postcss.config.js, and it said clean."></textarea>
+    </label>
+    <div class="rf-row">
+      <label>snare version
+        <input name="version" placeholder="output of: snare version" autocomplete="off">
+      </label>
+      <label>System
+        <select name="os"><option>macOS</option><option>Linux</option><option>Windows (Git Bash)</option><option>WSL</option></select>
+      </label>
+    </div>
+    <label class="rf-check"><input type="checkbox" name="selftest"> <span><code>snare selftest</code> passes on this machine</span></label>
+    <button class="cta cta-hot" type="submit">Open it on GitHub</button>
+    <p class="note" id="rf-msg">This opens a new GitHub issue with your text filled in. Nothing is sent until you press Submit there. Redact tokens and internal hostnames first.</p>
+  </form>
+</section>
 
-  <div class="panel"><div class="panel-bar"><span class="label">Report it</span><div class="bar-actions"></div></div>
-    <div class="scroller"><pre>https://github.com/nexlabz/snare/issues/new
-
-# helpful, if you have it:
-snare selftest          # does detection still work on your machine?
-snare version
-bash --version          # macOS ships bash 3.2; several bugs were 3.2-specific</pre></div></div>
-
-  <p class="note">Known-good starting points if you want to poke at it: the heuristics
-  live in <code>lib/scan.sh</code>, the process matching in <code>lib/guard.sh</code>,
-  and the history rewriting in <code>lib/fix.sh</code>. <code>snare selftest</code>
-  shows the shape of a test case; adding one that fails is a perfectly good bug report.</p>
-
-  <p class="note">There is also an open discussion on the two questions we cannot answer
-  ourselves: how this family actually reaches developer machines, and whether a defence
-  can propagate the way the infection does without becoming a dropper itself.
-  <a href="https://github.com/nexlabz/snare/discussions">Join it here.</a></p>
+<section class="stack" id="help">
+  <h2>Useful to include</h2>
+  <div class="panel"><div class="panel-bar"><span class="label">paste the output</span><div class="bar-actions"></div></div>
+    <div class="scroller"><pre>snare version
+snare selftest
+bash --version    # macOS ships bash 3.2; several bugs were 3.2-specific</pre></div></div>
+  <p class="note">Want to dig in? Heuristics live in <code>lib/scan.sh</code>, process matching in
+  <code>lib/guard.sh</code>, history rewriting in <code>lib/fix.sh</code>. A failing
+  <code>snare selftest</code> case is a perfect bug report.</p>
 </section>
 </div>

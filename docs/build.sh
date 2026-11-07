@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
-# build.sh — assemble the one-page field manual from the fragments in src/.
+# build.sh — build the site from the fragments in src/.
 #
-# Each src/<name>.html is one chapter, with its metadata in leading comments
-# (<!--#title: ...-->, <!--#desc: ...-->). assemble.py stitches them into
-# index.html in reading order, under a cover and a contents list with reading
-# times, and writes small redirect stubs at the old page URLs.
+# assemble.py does the pages (a short home, long reads with a progress rail,
+# and ordinary pages; see its docstring). This script adds the sitemap,
+# robots.txt and llms.txt.
 set -euo pipefail
 cd "$(dirname "$0")"
 
@@ -14,16 +13,24 @@ VERSION="$(sed -n 's/^## \[\([0-9.]*\)\].*/\1/p' ../CHANGELOG.md | head -1)"
 [ -n "$VERSION" ] || { echo "could not read version from ../CHANGELOG.md" >&2; exit 1; }
 
 python3 assemble.py "$SITE" "$REPO" "$VERSION"
-built=1
 
 # ---- sitemap + robots ----
-# One page, one URL. The old page URLs are noindex redirect stubs.
+# One URL per page. commands.html is a noindex stub; it lives in docs.html now.
 {
   echo '<?xml version="1.0" encoding="UTF-8"?>'
   echo '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-  lm="$(date -u -r index.html '+%Y-%m-%d' 2>/dev/null || date -u '+%Y-%m-%d')"
-  printf '  <url><loc>%s</loc><lastmod>%s</lastmod><priority>1.0</priority></url>
-' "$SITE" "$lm"
+  for page in index.html attack.html check.html infected.html install.html docs.html changelog.html security.html community.html; do
+    [ -f "$page" ] || continue
+    case "$page" in
+      index.html) loc="$SITE"; pri="1.0" ;;
+      check.html|infected.html|install.html|attack.html) loc="$SITE$page"; pri="0.9" ;;
+      docs.html) loc="$SITE$page"; pri="0.8" ;;
+      *) loc="$SITE$page"; pri="0.6" ;;
+    esac
+    lm="$(date -u -r "$page" '+%Y-%m-%d' 2>/dev/null || date -u '+%Y-%m-%d')"
+    printf '  <url><loc>%s</loc><lastmod>%s</lastmod><priority>%s</priority></url>
+' "$loc" "$lm" "$pri"
+  done
   echo '</urlset>'
 } > sitemap.xml
 
@@ -103,19 +110,19 @@ repository is delivery. Removing it does not un-steal a token.
   history or build configs. \`snare scan repo\` against a real clone is the
   thorough check.
 
-## Sections (all on one page)
+## Pages
 
-- [The attack](${SITE}#attack): how it gets in, why npm audit misses it
-- [Check your machine](${SITE}#check): seven checks, nothing to install
-- [If you are infected](${SITE}#infected): the response walkthrough
-- [Install](${SITE}#install): every platform, plus a prompt for AI assistants
-- [How snare works](${SITE}#docs): blocks, updates, auth, state
-- [Command reference](${SITE}#commands): every command and its honest limits
-- [Community](${SITE}#community): field reports and the open questions
-- [Report a bug](${SITE}#security): false clean results wanted most of all
-- [Changelog](${SITE}#changelog): every release, and what was broken before it
+- [Home](${SITE}): the problem, what snare does, install
+- [The attack](${SITE}attack.html): how it gets in, why npm audit misses it
+- [Check your machine](${SITE}check.html): seven checks, nothing to install
+- [If you are infected](${SITE}infected.html): the response walkthrough
+- [Install](${SITE}install.html): every platform, plus a prompt for AI assistants
+- [Docs](${SITE}docs.html): how snare works, and the full command reference
+- [Changelog](${SITE}changelog.html): every release, and what was broken before it
+- [Report a bug](${SITE}security.html): false clean results wanted most of all
+- [Community](${SITE}community.html): field reports and the open questions
 - [Source](${REPO})
 LLMS
 } > llms.txt
 
-echo "built $built page + sitemap.xml, robots.txt, llms.txt (v$VERSION)"
+echo "built pages + sitemap.xml, robots.txt, llms.txt (v$VERSION)"

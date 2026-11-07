@@ -1,55 +1,14 @@
-<!--#title: The supply-chain attack npm audit cannot see — snare-->
+<!--#title: How the attack works — the dropper npm audit cannot see — snare-->
 <!--#desc: A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.-->
-<!--#nav: index-->
-<!--#next: check.html|Check your machine-->
-<div class="wrap hero stack">
-  <span class="kicker"><span class="dot" aria-hidden="true"></span>SUPPLY-CHAIN ATTACK · ACTIVE IN PRIVATE AND PUBLIC REPOS</span>
-  <h1>Malware that runs the moment you <em>open the project</em>.</h1>
-  <p class="lede">This is a supply-chain attack — but not the kind <code>npm audit</code> can see.
-  Instead of poisoning a package you depend on, the dropper is committed <em>directly into the
-  repository</em>, buried in ordinary config files and disguised as font assets. It executes when
-  you start the dev server, or the instant your editor opens the folder. <strong>No
-  <code>npm install</code> required.</strong></p>
-  <p class="lede"><strong>snare</strong> is a free, open-source command-line tool that watches your
-  machine for the loader and kills it, then scans every Git repository you can reach, cleans out
-  what it finds, and helps you warn your collaborators.</p>
-  <div class="cta-row">
-    <a class="btn-lg btn-primary" href="check.html">Check your machine</a>
-    <a class="btn-lg btn-ghost" href="install.html">Install snare</a>
-    <a class="btn-lg btn-ghost" href="https://github.com/nexlabz/snare">
-      <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-      Star on GitHub
-    </a>
-  </div>
-  <p class="lede" style="margin-top:10px;font-size:0.95em">216 developers cloned snare in the two weeks to 14 October 2026.
-  <a href="https://github.com/nexlabz/snare/stargazers">Star it</a> so the next one finds it first.</p>
-  <div class="next" style="margin-top:14px">
-    <a class="next-card urgent" href="infected.html">
-      <span class="step">Already found something</span>
-      <b>Do these four things, in this order</b>
-      <p>Rotate credentials first — not the repositories. Cleaning in the wrong order is wasted work.</p>
-    </a>
-    <a class="next-card" href="check.html">
-      <span class="step">Not sure yet</span>
-      <b>Four checks, about a minute</b>
-      <p>Run them against any clone on your machine. No tools required.</p>
-    </a>
-  </div>
+
+<div class="wrap page-head">
+  <span class="eyebrow">The attack</span>
+  <h1>How a dropper hides in your own repository</h1>
+  <p class="lede">Four routes in, a file that looks untouched, and a server address read from the
+  blockchain. Why <code>npm audit</code> never sees any of it.</p>
 </div>
 
 <div class="wrap">
-
-<section class="stack whats-new" id="whats-new">
-  <div class="sec-head">
-    <span class="eyebrow">What's new</span>
-    <a class="sec-link" href="changelog.html">All releases →</a>
-  </div>
-  <h2>What changed lately, in plain words</h2>
-  <p class="lede">snare ships often, and every release says what it fixes and why it matters
-  to you. Already installed? <code>snare update</code> brings you current. To have snare install
-  new versions itself, run <code>snare update --mode auto</code>.</p>
-<!--#latest-->
-</section>
 
 <section class="stack" id="threat">
   <span class="eyebrow">The threat</span>
@@ -77,10 +36,7 @@
     <div class="route">
       <h3>Running any npm script</h3>
       <p class="filename">package.json</p>
-      <p class="d">Every script you had is still there, each one now prefixed:
-      <code>"dev": "node api.js &amp;&amp; next dev"</code>. The obfuscated <code>api.js</code> sits
-      at the repository root. Nothing has to be installed for this to run, so
-      <code>--ignore-scripts</code> makes no difference — these are not install hooks.</p>
+      <p class="d">Every script gains a prefix: <code>"dev": "node api.js &amp;&amp; next dev"</code>. These aren't install hooks, so <code>--ignore-scripts</code> doesn't help.</p>
       <p class="trigger">▸ fires on <code>npm run dev</code> / <code>build</code> / <code>start</code></p>
     </div>
     <div class="route">
@@ -99,12 +55,7 @@
     <p>A classic npm supply-chain attack compromises a package you depend on. It arrives through
     <code>npm install</code>, it shows up in your lockfile, and <code>npm audit</code> or a
     dependency scanner has a chance of catching it.</p>
-    <p><strong>This one never touches the registry.</strong> The payload is committed into your own
-    repository, so there is no malicious dependency to find — <code>npm audit</code> is clean,
-    your lockfile is clean, and Dependabot has nothing to report. The malicious code is sitting in
-    a file your build already loads. Interestingly, the loader carries an internal vector tag
-    reading <code>NPM</code>, so the same operator appears to run registry-delivered variants as
-    well.</p>
+    <p><strong>This one never touches the registry.</strong> It's committed into your repo, so <code>npm audit</code>, your lockfile and Dependabot all stay clean. (The loader is tagged <code>NPM</code> internally, so registry variants likely exist too.)</p>
     <p>If you arrived here searching for the npm attack: run the
     <a href="check.html">four checks</a> anyway. They take a minute and they cover the route a
     dependency scanner cannot see.</p>
@@ -146,10 +97,7 @@
 <section class="stack after-bleed" id="mechanism">
   <span class="eyebrow">How it works</span>
   <h2>The address it phones home to is not in the code</h2>
-  <p class="lede">This is why blocking an IP achieves nothing. The loader ships with no server
-  address at all — it derives a fresh one every run by reading the public Ethereum blockchain, a
-  documented technique known as <em>EtherHiding</em>. The operator moves their infrastructure by
-  sending a single transaction.</p>
+  <p class="lede">Blocking an IP does nothing. The loader reads a fresh server address from the Ethereum blockchain on every run (<em>EtherHiding</em>), and the operator moves with one transaction.</p>
 
   <figure class="fig">
     <svg viewBox="0 0 940 340" role="img" xmlns="http://www.w3.org/2000/svg"
@@ -255,11 +203,7 @@
 <section class="stack" id="reports">
   <span class="eyebrow">Reports from the field</span>
   <h2>This is not a one-off</h2>
-  <p class="lede">The accounts below are what developers have described first-hand — an internship
-  cohort of several thousand, engineers nearly dismissed over a compromise that was not their doing,
-  and disrupted operations at several companies. <strong>These are reports, not audited figures.</strong>
-  They are collected in the open precisely so you can read them and judge for yourself. One sample
-  sat in a repository for five months before anyone noticed.</p>
+  <p class="lede">First-hand accounts: an internship cohort of thousands, engineers nearly dismissed, operations disrupted. <strong>Reports, not audited figures.</strong> One sample sat unnoticed for five months.</p>
 
   <div class="reports">
     <a class="report-link" href="https://github.com/nexlabz/snare/issues/1">
@@ -286,32 +230,8 @@
 
   <div class="callout">
     <h3>If it reached your team, say so</h3>
-    <p>You do not have to name an employer or client — "a fintech I contract for" is a perfectly
-    good data point. Redact tokens, keys and internal hostnames first. The reason to post is simple:
-    the developers who lost work to this mostly had never heard of the technique, and the ones who
-    caught it early had heard about it from someone else.</p>
+    <p>No need to name an employer; redact tokens and hostnames. Most people who lost work had never heard of this; those who caught it early had heard from someone else.</p>
   </div>
 </section>
 
-<section class="stack">
-  <span class="eyebrow">What next</span>
-  <h2>Two minutes decides whether this is your problem</h2>
-  <div class="next">
-    <a class="next-card" href="check.html">
-      <span class="step">Step 1</span>
-      <b>Check your machine</b>
-      <p>Four commands against any clone. No install, no tools, about a minute.</p>
-    </a>
-    <a class="next-card" href="install.html">
-      <span class="step">Step 2</span>
-      <b>Install snare</b>
-      <p>Does all four checks continuously, across every repository you can reach.</p>
-    </a>
-    <a class="next-card" href="https://github.com/nexlabz/snare/stargazers">
-      <span class="step">Step 3</span>
-      <b>⭐ Star it on GitHub</b>
-      <p>If snare caught something, or just made you look, a star is how the next developer finds it.</p>
-    </a>
-  </div>
-</section>
 </div>
