@@ -3,150 +3,192 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The supply-chain attack npm audit cannot see — snare</title>
-<meta name="description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
+<title>snare — the supply-chain attack npm audit cannot see</title>
+<meta name="description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or open the folder — no npm install needed. The whole field manual on one page: how it works, how to check, what to do, and a free open-source scanner.">
+<meta name="keywords" content="npm supply chain attack, supply chain malware, supply chain attack detection, npm malware, malicious npm package, compromised repository, repository malware scanner, shai-hulud, malicious postcss.config.js, vscode tasks.json malware, folderOpen exploit, EtherHiding, blockchain C2, fake woff2 payload, clipboard stealer, git history malware, npm audit missed, dependency security, developer security, open source security tool">
 <meta name="author" content="AviOfLagos">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://nexlabz.github.io/snare/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="snare">
-<meta property="og:title" content="The supply-chain attack npm audit cannot see — snare">
-<meta property="og:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
+<meta property="og:title" content="snare — the supply-chain attack npm audit cannot see">
+<meta property="og:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or open the folder — no npm install needed. The whole field manual on one page: how it works, how to check, what to do, and a free open-source scanner.">
 <meta property="og:url" content="https://nexlabz.github.io/snare/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="The supply-chain attack npm audit cannot see — snare">
-<meta name="twitter:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
-<meta name="theme-color" content="#08090A">
+<meta name="twitter:title" content="snare — the supply-chain attack npm audit cannot see">
+<meta name="twitter:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or open the folder — no npm install needed. The whole field manual on one page: how it works, how to check, what to do, and a free open-source scanner.">
+<meta name="theme-color" content="#121311">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪤</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="assets/site.css">
-<link rel="expect" href="#main" blocking="render">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Doto:wght@700..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css?v=eed63bb5">
 <script>/* dark unless the reader picked light; set before first paint so nothing flashes */
 var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}document.documentElement.dataset.theme=t;</script>
-<meta name="keywords" content="npm supply chain attack, supply chain malware, supply chain attack detection, npm malware, malicious npm package, compromised repository, repository malware scanner, shai-hulud, malicious postcss.config.js, vscode tasks.json malware, folderOpen exploit, EtherHiding, blockchain C2, fake woff2 payload, clipboard stealer, git history malware, npm audit missed, dependency security, developer security, open source security tool">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"SoftwareApplication","name":"snare",
-  "applicationCategory":"SecurityApplication",
-  "operatingSystem":"macOS, Linux, Windows, WSL",
-  "softwareVersion":"1.9.0",
+ {"@type":"SoftwareApplication","name":"snare","applicationCategory":"SecurityApplication",
+  "operatingSystem":"macOS, Linux, Windows, WSL","softwareVersion":"1.9.0",
   "description":"Command-line tool that detects and kills supply-chain malware loaders, scans every Git repository you can reach, removes the payload including from history, and notifies collaborators.",
-  "url":"https://nexlabz.github.io/snare/","codeRepository":"https://github.com/nexlabz/snare",
-  "license":"https://opensource.org/licenses/MIT",
+  "url":"https://nexlabz.github.io/snare/","codeRepository":"https://github.com/nexlabz/snare","license":"https://opensource.org/licenses/MIT",
   "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},
  {"@type":"TechArticle","headline":"Malware that runs the moment you open the project",
-  "description":"A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.","url":"https://nexlabz.github.io/snare/",
-  "author":{"@type":"Person","name":"AviOfLagos"}}
+  "description":"A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or open the folder — no npm install needed. The whole field manual on one page: how it works, how to check, what to do, and a free open-source scanner.","url":"https://nexlabz.github.io/snare/","author":{"@type":"Person","name":"AviOfLagos"}},
+ {"@type":"HowTo","name":"Remove a committed supply-chain dropper from your repositories",
+  "url":"https://nexlabz.github.io/snare/#infected","totalTime":"PT30M","tool":[{"@type":"HowToTool","name":"snare"}],
+  "step":[
+   {"@type":"HowToStep","position":1,"name":"Rotate your credentials","url":"https://nexlabz.github.io/snare/#rotate",
+    "text":"Stealing credentials is the objective; removing the payload does not un-steal a token. Revoke npm write tokens first, then GitHub tokens, SSH keys and cloud keys."},
+   {"@type":"HowToStep","position":2,"name":"Clean the machine you push from","url":"https://nexlabz.github.io/snare/#machine",
+    "text":"This family injects into commits as they leave an already-infected machine, so cleaning a repository first is wasted work."},
+   {"@type":"HowToStep","position":3,"name":"Clean the repositories","url":"https://nexlabz.github.io/snare/#repos",
+    "text":"snare fix is a dry run by default and always backs up first. Purging history rewrites every commit SHA, so every clone must be re-cloned rather than pulled."},
+   {"@type":"HowToStep","position":4,"name":"Tell your collaborators","url":"https://nexlabz.github.io/snare/#notify",
+    "text":"They may be infected from the same source, and a rewritten history breaks their clones without explanation."}]},
+ {"@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"How do I know if my machine is infected with this malware?",
+   "acceptedAnswer":{"@type":"Answer","text":"Look for a node process running inline code with obfuscated globals, any file carrying the operator's wallet address, a .vscode/tasks.json task set to runOn folderOpen, and font files whose first four bytes are not a real font magic. A genuine .woff2 begins with wOF2."}},
+  {"@type":"Question","name":"Does npm audit detect this?",
+   "acceptedAnswer":{"@type":"Answer","text":"No. The dropper is committed into the repository itself rather than pulled from the registry, so there is no malicious dependency for npm audit, the lockfile or Dependabot to report."}},
+  {"@type":"Question","name":"My process check came back clean. Am I safe?",
+   "acceptedAnswer":{"@type":"Answer","text":"Not necessarily. The loader runs when a build runs or an editor opens the folder, then exits. A clean process check alongside infected repositories is the expected result, not a contradiction."}}]}
 ]}
 </script>
 </head>
 <body data-page="index">
-<a class="skip" href="#main">Skip to content</a>
-<a class="announce" href="changelog.html#v1-9-0"><span class="announce-tag">v1.9.0</span><span class="announce-text"><code>snare update</code> now restarts the guard and cleans up after itself.</span><span class="announce-go" aria-hidden="true">What changed →</span></a>
-<header class="site-header">
-<nav class="nav" aria-label="Primary">
-  <div class="nav-in">
-    <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.9.0">v1.9.0</a>
-    <div class="nav-links" id="nav-links">
-      <a href="index.html" aria-current="page">The threat</a>
-      <a href="check.html">Check</a>
-      <a href="infected.html">If infected</a>
-      <a href="install.html">Install</a>
-      <a href="docs.html">Docs</a>
-      <a href="community.html">Community</a>
-      <a class="nav-cta" href="install.html">Install snare</a>
-    </div>
-    <div class="nav-tools">
-      <button class="icon-btn theme-toggle" type="button" aria-label="Switch theme">
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
-      </button>
-      <button class="icon-btn nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line class="bar-top" x1="3" y1="6" x2="21" y2="6"/><line class="bar-mid" x1="3" y1="12" x2="21" y2="12"/><line class="bar-bot" x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
+<a class="skip" href="#contents">Skip to the contents</a>
+<a class="announce" href="#v1-9-0"><span class="announce-tag">v1.9.0</span><span class="announce-text"><code>snare update</code> now restarts the guard and cleans up after itself.</span><span class="announce-go" aria-hidden="true">What changed →</span></a>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="#top" aria-label="snare, back to the cover"><span class="brand-mark" aria-hidden="true"></span>snare</a>
+    <span class="bar-doc">Field manual <span class="bar-sep">/</span> rev 1.9.0</span>
+    <div class="bar-tools">
+      <a class="bar-link" href="#install">Install</a>
+      <a class="bar-link bar-gh" href="https://github.com/nexlabz/snare"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg><span>GitHub</span></a>
+      <button class="icon-btn theme-toggle" type="button" aria-label="Switch theme"><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
     </div>
   </div>
-</nav>
 </header>
-
-<main id="main">
-<div class="wrap hero stack">
-  <span class="kicker"><span class="dot" aria-hidden="true"></span>SUPPLY-CHAIN ATTACK · ACTIVE IN PRIVATE AND PUBLIC REPOS</span>
-  <h1>Malware that runs the moment you <em>open the project</em>.</h1>
-  <p class="lede">This is a supply-chain attack — but not the kind <code>npm audit</code> can see.
-  Instead of poisoning a package you depend on, the dropper is committed <em>directly into the
-  repository</em>, buried in ordinary config files and disguised as font assets. It executes when
-  you start the dev server, or the instant your editor opens the folder. <strong>No
-  <code>npm install</code> required.</strong></p>
-  <p class="lede"><strong>snare</strong> is a free, open-source command-line tool that watches your
-  machine for the loader and kills it, then scans every Git repository you can reach, cleans out
-  what it finds, and helps you warn your collaborators.</p>
-  <div class="cta-row">
-    <a class="btn-lg btn-primary" href="check.html">Check your machine</a>
-    <a class="btn-lg btn-ghost" href="install.html">Install snare</a>
-    <a class="btn-lg btn-ghost" href="https://github.com/nexlabz/snare">
-      <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-      Star on GitHub
-    </a>
+<main id="top">
+<section class="cover" aria-labelledby="cover-title">
+  <div class="cover-in">
+    <div class="cover-main">
+      <p class="wordmark" aria-hidden="true">SNARE</p>
+      <h1 id="cover-title">Malware that runs the moment you open the project.</h1>
+      <p class="cover-lede">A supply-chain attack that <code>npm audit</code> cannot see. The dropper is
+      committed straight into the repository, hidden in ordinary config files and fake fonts. It runs
+      when you start the dev server, or as soon as your editor opens the folder. No
+      <code>npm install</code> needed.</p>
+      <p class="cover-lede"><strong>snare</strong> is a free, open-source command-line tool. It kills
+      the loader on your machine, scans every Git repository you can reach, cleans what it finds and
+      helps you warn your collaborators.</p>
+      <div class="cover-actions">
+        <a class="cta cta-hot" href="#check">Check your machine</a>
+        <a class="cta" href="#install">Install snare</a>
+        <a class="cta cta-quiet" href="https://github.com/nexlabz/snare/stargazers"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg> Star on GitHub</a>
+      </div>
+    </div>
+    <dl class="spec" aria-label="About this manual">
+      <div><dt>Document</dt><dd>Field manual, one page</dd></div>
+      <div><dt>Revision</dt><dd>1.9.0<span class="spec-dim"> / 7 Nov 2026</span></dd></div>
+      <div><dt>Reading time</dt><dd>38 min<span class="spec-dim"> / 9 chapters</span></dd></div>
+      <div><dt>Threat</dt><dd class="spec-hot"><span class="pulse" aria-hidden="true"></span>Campaign active</dd></div>
+      <div><dt>Runs on</dt><dd>macOS, Linux, Windows, WSL</dd></div>
+      <div><dt>Licence</dt><dd>MIT, free</dd></div>
+    </dl>
   </div>
-  <p class="lede" style="margin-top:10px;font-size:0.95em">216 developers cloned snare in the two weeks to 14 October 2026.
-  <a href="https://github.com/nexlabz/snare/stargazers">Star it</a> so the next one finds it first.</p>
-  <div class="next" style="margin-top:14px">
-    <a class="next-card urgent" href="infected.html">
-      <span class="step">Already found something</span>
-      <b>Do these four things, in this order</b>
-      <p>Rotate credentials first — not the repositories. Cleaning in the wrong order is wasted work.</p>
-    </a>
-    <a class="next-card" href="check.html">
-      <span class="step">Not sure yet</span>
-      <b>Four checks, about a minute</b>
-      <p>Run them against any clone on your machine. No tools required.</p>
-    </a>
+  <a class="cover-urgent" href="#infected">
+    <span class="cu-k">Already found something?</span>
+    <span class="cu-v">Skip to chapter 03. Rotate your credentials first, not the repositories.</span>
+  </a>
+</section>
+<section class="contents" id="contents" aria-labelledby="contents-title">
+  <div class="contents-head">
+    <h2 id="contents-title">Everything is on this page</h2>
+    <p>9 chapters, about 38 minutes end to end. Read it straight through, or jump to the one you
+    need. The rail on the left shows where you are and how much is left.</p>
   </div>
-</div>
-
-<div class="wrap">
-
+  <ol class="toc-list">
+    <li><a href="#attack"><span class="tl-n">01</span><span class="tl-t">The attack</span><span class="tl-b">How the dropper gets in, why the file looks normal, and how it finds its server.</span><span class="tl-m">6 min</span></a></li>
+    <li><a href="#check"><span class="tl-n">02</span><span class="tl-t">Check your machine</span><span class="tl-b">Seven checks you can paste into a terminal. Nothing to install.</span><span class="tl-m">3 min</span></a></li>
+    <li><a href="#infected"><span class="tl-n">03</span><span class="tl-t">If you&#x27;re infected</span><span class="tl-b">What to do, in the order that matters. Rotate first, repositories last.</span><span class="tl-m">4 min</span></a></li>
+    <li><a href="#install"><span class="tl-n">04</span><span class="tl-t">Install snare</span><span class="tl-b">macOS, Linux, Windows and WSL, plus a prompt for your coding agent.</span><span class="tl-m">3 min</span></a></li>
+    <li><a href="#docs"><span class="tl-n">05</span><span class="tl-t">How snare works</span><span class="tl-b">Blocks, updates, authentication, your own patterns, and where state lives.</span><span class="tl-m">4 min</span></a></li>
+    <li><a href="#commands"><span class="tl-n">06</span><span class="tl-t">Every command</span><span class="tl-b">The full reference, and what each command will not do.</span><span class="tl-m">8 min</span></a></li>
+    <li><a href="#community"><span class="tl-n">07</span><span class="tl-t">Community</span><span class="tl-b">Field reports, who found what, and the questions still open.</span><span class="tl-m">4 min</span></a></li>
+    <li><a href="#security"><span class="tl-n">08</span><span class="tl-t">Report a bug</span><span class="tl-b">A false clean result is the bug we most want to hear about.</span><span class="tl-m">2 min</span></a></li>
+    <li><a href="#changelog"><span class="tl-n">09</span><span class="tl-t">Changelog</span><span class="tl-b">Every release, and what was broken before it.</span><span class="tl-m">4 min</span></a></li>
+  </ol>
+</section>
+<div class="strip">
 <section class="stack whats-new" id="whats-new">
   <div class="sec-head">
     <span class="eyebrow">What's new</span>
-    <a class="sec-link" href="changelog.html">All releases →</a>
+    <a class="sec-link" href="#changelog">All releases →</a>
   </div>
-  <h2>What changed lately, in plain words</h2>
+  <h3>What changed lately, in plain words</h3>
   <p class="lede">snare ships often, and every release says what it fixes and why it matters
   to you. Already installed? <code>snare update</code> brings you current. To have snare install
   new versions itself, run <code>snare update --mode auto</code>.</p>
 <div class="latest">
-  <a class="latest-item" href="changelog.html#v1-9-0">
+  <a class="latest-item" href="#v1-9-0">
     <span class="latest-meta"><b>v1.9.0</b><span>7 Nov 2026</span><span class="tag now">Latest</span></span>
     <span class="latest-sum"><code>snare update</code> now restarts the guard and cleans up after itself. And snare tells you when there's a new version, or installs it for you.</span>
     <span class="latest-kind">Added · Changed</span>
   </a>
-  <a class="latest-item" href="changelog.html#v1-8-0">
+  <a class="latest-item" href="#v1-8-0">
     <span class="latest-meta"><b>v1.8.0</b><span>6 Nov 2026</span></span>
     <span class="latest-sum">When snare blocks something, it now tells you exactly what it caught, and gives it to you in a form you can copy.</span>
     <span class="latest-kind">Changed</span>
   </a>
-  <a class="latest-item" href="changelog.html#v1-7-1">
+  <a class="latest-item" href="#v1-7-1">
     <span class="latest-meta"><b>v1.7.1</b><span>6 Nov 2026</span></span>
     <span class="latest-sum">The "commit(s) behind" message now goes away after you update.</span>
     <span class="latest-kind">Fixed</span>
   </a>
 </div>
 </section>
+</div>
+<div class="manual">
+<nav class="rail" id="rail" aria-label="Chapters">
+  <button class="rail-now" type="button" aria-expanded="false" aria-controls="rail-list">
+    <span class="rn-n" id="rail-n">01</span><span class="rn-t" id="rail-t">The attack</span><span class="rn-left" id="rail-left">38 min left</span>
+    <span class="rn-bar" aria-hidden="true"><i id="rail-bar"></i></span>
+  </button>
+  <ol class="rail-list" id="rail-list">
+    <li><a href="#attack" data-min="6"><span class="rl-n">01</span><span class="rl-t">The attack</span><span class="rl-m">6′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#check" data-min="3"><span class="rl-n">02</span><span class="rl-t">Check your machine</span><span class="rl-m">3′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#infected" data-min="4"><span class="rl-n">03</span><span class="rl-t">If you&#x27;re infected</span><span class="rl-m">4′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#install" data-min="3"><span class="rl-n">04</span><span class="rl-t">Install snare</span><span class="rl-m">3′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#docs" data-min="4"><span class="rl-n">05</span><span class="rl-t">How snare works</span><span class="rl-m">4′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#commands" data-min="8"><span class="rl-n">06</span><span class="rl-t">Every command</span><span class="rl-m">8′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#community" data-min="4"><span class="rl-n">07</span><span class="rl-t">Community</span><span class="rl-m">4′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#security" data-min="2"><span class="rl-n">08</span><span class="rl-t">Report a bug</span><span class="rl-m">2′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#changelog" data-min="4"><span class="rl-n">09</span><span class="rl-t">Changelog</span><span class="rl-m">4′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+  </ol>
+</nav>
+<div class="chapters">
+<article class="chapter" id="attack" aria-labelledby="attack-t" data-min="6">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">01</span>
+  <div class="ch-meta"><span>Chapter 01</span><span>The attack</span><span>6 min read</span></div>
+  <h2 id="attack-t">How the attack works</h2>
+  
+</header>
+<div class="ch-body">
+
+<div class="wrap">
+
 
 <section class="stack" id="threat">
   <span class="eyebrow">The threat</span>
-  <h2>Four routes in, none of which you'd think to check</h2>
+  <h3>Four routes in, none of which you'd think to check</h3>
   <p class="lede">The same payload ships four ways. Every one of them fires from a completely
   ordinary developer action — opening a folder, starting the dev server, or just beginning a
   session with your coding assistant. That is exactly why this family works.</p>
   <div class="routes">
     <div class="route">
-      <h3>Opening the folder in your editor</h3>
+      <h4>Opening the folder in your editor</h4>
       <p class="filename">.vscode/tasks.json</p>
       <p class="d">A task labelled <code>eslint-check</code>, marked <code>"hide": true</code> and
       <code>"reveal": "never"</code> so it never appears in the terminal panel. It runs
@@ -154,7 +196,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
       <p class="trigger">▸ fires on <code>"runOn": "folderOpen"</code></p>
     </div>
     <div class="route">
-      <h3>Starting the dev server</h3>
+      <h4>Starting the dev server</h4>
       <p class="filename">postcss.config.js</p>
       <p class="d">The payload is appended to the last line after thousands of spaces. The file
       reads as four correct lines of config, because everything else is far off the right edge of
@@ -162,7 +204,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
       <p class="trigger">▸ fires on <code>next dev</code> / <code>next build</code></p>
     </div>
     <div class="route">
-      <h3>Running any npm script</h3>
+      <h4>Running any npm script</h4>
       <p class="filename">package.json</p>
       <p class="d">Every script you had is still there, each one now prefixed:
       <code>"dev": "node api.js &amp;&amp; next dev"</code>. The obfuscated <code>api.js</code> sits
@@ -171,7 +213,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
       <p class="trigger">▸ fires on <code>npm run dev</code> / <code>build</code> / <code>start</code></p>
     </div>
     <div class="route">
-      <h3>Opening a session with your AI assistant</h3>
+      <h4>Opening a session with your AI assistant</h4>
       <p class="filename">.claude/settings.json</p>
       <p class="d">A <code>SessionStart</code> hook runs <code>node .vscode/setup.mjs</code> every
       time a session opens. It survives removing the package that delivered it, npm never sees it,
@@ -181,7 +223,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
     </div>
   </div>
   <div class="callout" id="is-this-npm">
-    <h3>“Is this the npm supply-chain thing?”</h3>
+    <h4>“Is this the npm supply-chain thing?”</h4>
     <p>Same category, different delivery — and the difference is why people miss it.</p>
     <p>A classic npm supply-chain attack compromises a package you depend on. It arrives through
     <code>npm install</code>, it shows up in your lockfile, and <code>npm audit</code> or a
@@ -193,12 +235,12 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
     reading <code>NPM</code>, so the same operator appears to run registry-delivered variants as
     well.</p>
     <p>If you arrived here searching for the npm attack: run the
-    <a href="check.html">four checks</a> anyway. They take a minute and they cover the route a
+    <a href="#check">four checks</a> anyway. They take a minute and they cover the route a
     dependency scanner cannot see.</p>
   </div>
 
   <div class="callout">
-    <h3>The font is not a font</h3>
+    <h4>The font is not a font</h4>
     <p>A genuine <code>.woff2</code> file begins with the magic bytes <code>wOF2</code>. This one
     begins with 507 spaces, then JavaScript. Disguising a payload as a binary asset keeps it out of
     code review entirely — nobody opens a font in a diff.</p>
@@ -207,7 +249,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
 
 <section class="stack lead-in">
   <span class="eyebrow">Why nobody spotted it</span>
-  <h2>The file looks completely normal</h2>
+  <h3>The file looks completely normal</h3>
   <p class="lede">Here is the actual shape of an infected <code>postcss.config.js</code>. Four
   ordinary lines, then a gap wide enough to push the payload past any screen. Reveal the whitespace
   to see what your editor was not showing you.</p>
@@ -232,7 +274,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
 
 <section class="stack after-bleed" id="mechanism">
   <span class="eyebrow">How it works</span>
-  <h2>The address it phones home to is not in the code</h2>
+  <h3>The address it phones home to is not in the code</h3>
   <p class="lede">This is why blocking an IP achieves nothing. The loader ships with no server
   address at all — it derives a fresh one every run by reading the public Ethereum blockchain, a
   documented technique known as <em>EtherHiding</em>. The operator moves their infrastructure by
@@ -305,7 +347,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
 
   <div class="mech">
     <div class="mech-steps">
-      <h3>Step by step</h3>
+      <h4>Step by step</h4>
       <ol class="chain">
         <li><b>Query public Ethereum RPCs</b><span>Falls through 1rpc.io, drpc.org, publicnode and blastapi, so cutting off any one endpoint changes nothing.</span></li>
         <li><b>Read the wallet's newest transaction</b><span>Through the Blockscout API, sorted newest first.</span></li>
@@ -315,7 +357,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
       </ol>
     </div>
     <div class="mech-bytes">
-      <h3>Address → endpoints</h3>
+      <h4>Address → endpoints</h4>
       <div class="panel">
         <div class="panel-bar"><span class="label">20-byte destination address</span></div>
         <div class="scroller"><div class="bytepad">
@@ -341,7 +383,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
 
 <section class="stack" id="reports">
   <span class="eyebrow">Reports from the field</span>
-  <h2>This is not a one-off</h2>
+  <h3>This is not a one-off</h3>
   <p class="lede">The accounts below are what developers have described first-hand — an internship
   cohort of several thousand, engineers nearly dismissed over a compromise that was not their doing,
   and disrupted operations at several companies. <strong>These are reports, not audited figures.</strong>
@@ -372,7 +414,7 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
   </div>
 
   <div class="callout">
-    <h3>If it reached your team, say so</h3>
+    <h4>If it reached your team, say so</h4>
     <p>You do not have to name an employer or client — "a fintech I contract for" is a perfectly
     good data point. Redact tokens, keys and internal hostnames first. The reason to post is simple:
     the developers who lost work to this mostly had never heard of the technique, and the ones who
@@ -382,14 +424,14 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
 
 <section class="stack">
   <span class="eyebrow">What next</span>
-  <h2>Two minutes decides whether this is your problem</h2>
+  <h3>Two minutes decides whether this is your problem</h3>
   <div class="next">
-    <a class="next-card" href="check.html">
+    <a class="next-card" href="#check">
       <span class="step">Step 1</span>
       <b>Check your machine</b>
       <p>Four commands against any clone. No install, no tools, about a minute.</p>
     </a>
-    <a class="next-card" href="install.html">
+    <a class="next-card" href="#install">
       <span class="step">Step 2</span>
       <b>Install snare</b>
       <p>Does all four checks continuously, across every repository you can reach.</p>
@@ -402,43 +444,1874 @@ var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}docume
   </div>
 </section>
 </div>
-<div class="wrap"><nav class="pager" aria-label="Page">
-  <a class="next-a" href="check.html"><span class="dir">Next →</span><b>Check your machine</b></a>
-</nav></div>
-</main>
 
-<div class="foot-shell"><div class="wrap">
-<footer>
-  <div class="foot-grid">
-    <div class="foot-col">
-      <b>snare</b>
-      <p class="foot-note">Free and open source under the MIT licence. Indicators and analysis are
-      published so other developers can detect this family in their own repositories. Payload
-      excerpts are truncated and defanged.</p>
+</div>
+</article>
+<article class="chapter" id="check" aria-labelledby="check-t" data-min="3">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">02</span>
+  <div class="ch-meta"><span>Chapter 02</span><span>Check your machine</span><span>3 min read</span></div>
+  <h2 id="check-t">Seven checks you can run right now</h2>
+  <p class="ch-lede">No tools required, nothing to install. Run these against any clone on your
+  machine — the whole thing takes a couple of minutes. Every command is read-only; none of them change
+  anything.</p>
+</header>
+<div class="ch-body">
+
+<div class="wrap">
+<section class="stack" id="detect">
+  <div class="check">
+    <h3>1 · Is a loader running right now?</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">macOS · Linux</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>ps -eo pid,args | grep -E "node .*-e .*global\[" | grep -v grep</pre></div></div>
+    <p class="verdict">No output means nothing is running. Any output is a live process — kill it.</p>
+  </div>
+
+  <div class="check">
+    <h3>2 · Does any file carry the operator's wallet?</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">working tree</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>grep -rn "0xa322E5f3D311D3080e6f0121063e9aDC2490Ef1a" .</pre></div></div>
+    <div class="panel" style="margin-top:8px"><div class="panel-bar"><span class="label">and the full history — a deleted file still lives in Git</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>git log --all -S "0xa322E5f3" --pickaxe-regex --oneline</pre></div></div>
+  </div>
+
+  <div class="check">
+    <h3>3 · Is a task set to run when you open the folder?</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">editor auto-run</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>grep -rn "folderOpen" .vscode/tasks.json</pre></div></div>
+    <p class="verdict bad">Any hit executes the moment the folder opens. Treat it as hostile until proven otherwise.</p>
+  </div>
+
+  <div class="check">
+    <h3>4 · Are your font files actually fonts?</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">magic bytes</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>head -c 4 public/fonts/*.woff2</pre></div></div>
+    <p class="verdict">Every real font prints <code>wOF2</code>. Spaces mean you are looking at a script.</p>
+  </div>
+
+  <div class="check">
+    <h3>5 · Do your npm scripts run something extra?</h3>
+    <p>This family leaves every script you had and prefixes each one, so the file still looks
+    like yours. The payload runs on <code>npm run dev</code> — no install needed, which is why
+    <code>--ignore-scripts</code> does not help.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">run scripts</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>node -e 'const s=require("./package.json").scripts||{};
+for (const [k,v] of Object.entries(s)) if (/\bnode\s+\S+\.[cm]?js/.test(v)) console.log(k, "->", v)'</pre></div></div>
+    <p class="verdict">A build step calling your own <code>scripts/build.js</code> is normal. A root
+    <code>api.js</code> or <code>app.js</code> you did not write is not — open it and look at the
+    first line.</p>
+  </div>
+
+  <div class="check">
+    <h3>6 · Does your AI assistant run something at every session?</h3>
+    <p>An agent's own config is an execution vector, and removing the package that delivered the
+    hook does not remove the hook.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">agent hooks</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>cat .claude/settings.json .claude/settings.local.json 2>/dev/null
+ls -la .claude/setup.mjs .vscode/setup.mjs 2>/dev/null</pre></div></div>
+    <p class="verdict bad">A hook you wrote — a formatter, a linter — is fine. <code>node
+    .vscode/setup.mjs</code> is a dropper, and the copies in <code>.claude/</code> and
+    <code>.vscode/</code> re-create each other, so remove both.</p>
+  </div>
+
+  <div class="check">
+    <h3>7 · Has someone rewritten your remote?</h3>
+    <p>The remote tip comes back with your commit's subject, author and date under a different
+    hash. Git reports <code>1 ahead, 1 behind</code> with identical messages, which reads as
+    harmless — and then a pull merges it.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">forged force-push</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>git fetch &amp;&amp; git log --format='%H %cI %s' HEAD..@{u}
+git log --format='%H %cI %s' @{u}..HEAD</pre></div></div>
+    <p class="verdict">Same message and author date on both sides, but a different hash and a
+    committer timezone that is not yours? Do not pull.</p>
+  </div>
+
+  <div class="callout">
+    <h3>Look for the long line</h3>
+    <p>The most reliable giveaway is geometry, not content. This finds any file padded out to hide
+    something past the edge of the screen — a hand-written config has no business being 9,000
+    characters wide.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">hidden-payload heuristic</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>awk 'length > 1500 {print FILENAME": line "FNR" ("length" chars)"}' \
+  $(find . \( -name "*.js" -o -name "*.mjs" -o -name "*.cjs" \) -not -path "*/node_modules/*")</pre></div></div>
+  </div>
+</section>
+
+<section class="stack" id="results">
+  <span class="eyebrow">What the result means</span>
+  <h3>Read the outcome carefully</h3>
+  <div class="next">
+    <a class="next-card urgent" href="#infected">
+      <span class="step">Something matched</span>
+      <b>Go to the response plan</b>
+      <p>Do not clean the repository first. Rotate your credentials before anything else — the
+      order genuinely matters, and getting it wrong means doing the work twice.</p>
+    </a>
+    <a class="next-card" href="#install">
+      <span class="step">Nothing matched</span>
+      <b>Install snare to keep it that way</b>
+      <p>These seven checks cover one clone at one moment. snare runs them continuously, across
+      every repository you can reach, and blocks a push that would carry a payload out.</p>
+    </a>
+  </div>
+  <div class="callout">
+    <h3>A clean result is narrower than it looks</h3>
+    <p>Checks 2, 3 and 4 test <strong>one clone</strong> — not your other repositories, and not the
+    branches you do not have checked out. Check 1 reports what is running <em>right now</em>; the
+    loader fires when a build runs or an editor opens the folder, does its work, and exits, so a
+    quiet process list alongside an infected repository is the expected result, not a
+    contradiction.</p>
+    <p>These checks also key on <em>this</em> operator's wallet. A variant using a different address
+    passes check 2 and is still caught by the long-line heuristic above — which is why that one
+    matters most.</p>
+  </div>
+</section>
+</div>
+
+</div>
+</article>
+<article class="chapter" id="infected" aria-labelledby="infected-t" data-min="4">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">03</span>
+  <div class="ch-meta"><span>Chapter 03</span><span>If you&#x27;re infected</span><span>4 min read</span></div>
+  <h2 id="infected-t">What to do, in the order that matters</h2>
+  <p class="ch-lede">The instinct is to clean the repositories first. That is the wrong order, and on
+  an infected machine it is wasted work — this family injects into commits on their way out, so it
+  re-infects whatever you just cleaned.</p>
+</header>
+<div class="ch-body">
+
+<div class="wrap">
+<section class="stack" id="guided">
+  <span class="eyebrow">The short way</span>
+  <h3>One command walks you through all of it</h3>
+  <p class="lede">Everything on this page, asked one question at a time, in the right order.
+  Nothing is changed or pushed without you saying so, and it saves your place if you stop.</p>
+  <div class="panel"><div class="panel-bar"><span class="label">Start here</span><div class="bar-actions"></div></div>
+    <div class="scroller"><pre>snare respond</pre></div></div>
+  <div class="callout">
+    <h4>What it will and will not do</h4>
+    <p>It revokes what it safely can — npm tokens are one keypress, and they are the ones that
+    matter most — opens your browser at the pages it cannot act on, and asks before every push.
+    Anything that writes to a repository defaults to <strong>no</strong>. The destructive choice,
+    whether to purge history, is asked <strong>once</strong> rather than per repository, so a
+    rhythm of "yes" cannot carry you through it by accident.</p>
+    <p>It will not pretend to have rotated your credentials for you. It asks, and if you say no it
+    carries on — but it tells you again before anything is pushed, and again at the end. A step
+    that blocks you is a step you abandon.</p>
+    <p><code>snare respond --status</code> shows where you got to.
+    <code>snare respond --reset</code> starts again.</p>
+  </div>
+  <p class="note">The rest of this page is the same sequence done by hand. Read it if you would
+  rather drive, or if you want to know why the order is what it is.</p>
+</section>
+
+<section class="stack" id="order">
+  <span class="eyebrow">The order</span>
+  <h3>Four steps, and the sequence is the point</h3>
+  <ol class="chain">
+    <li><b>Rotate your credentials</b><span>Stealing them is the objective; the
+    file in your repository is delivery, not payload. Removing it does not un-steal
+    a token. <b>npm write tokens first</b> — a stolen one lets the worm publish
+    trojanised versions of your other packages under your name, which is how one
+    laptop becomes a supply-chain incident.</span></li>
+    <li><b>Clean the machine you push from</b><span>Before touching any
+    repository. If several repositories are flagged, the common factor is almost
+    always the machine that pushed to them, not several separate accidents.</span></li>
+    <li><b>Then clean the repositories</b><span><code>snare fix</code> is a dry
+    run by default and always backs up first. Only add <code>--push</code> once you
+    have read what it would change.</span></li>
+    <li><b>Then tell your collaborators</b><span>They may be infected from the
+    same source, and if you rewrote history their clones will break with no
+    explanation.</span></li>
+  </ol>
+</section>
+
+<section class="stack" id="rotate">
+  <span class="eyebrow">Step 1</span>
+  <h3>Rotate</h3>
+  <div class="panel"><div class="panel-bar"><span class="label">Do this first</span><div class="bar-actions"></div></div>
+    <div class="scroller"><pre>snare rotate        # the ordered checklist, plus a GitHub audit</pre></div></div>
+  <p class="note">In order: <strong>npm tokens</strong>
+  (<code>npmjs.com/settings/~/tokens</code> — write and "bypass 2FA" first), then
+  <strong>GitHub</strong> PATs, OAuth apps and SSH keys, then <strong>cloud keys</strong>
+  (AWS — including Secrets Manager in every region you use — GCP, Azure), then
+  everything else the process could read: <code>.env</code> files in any project you
+  had open, kubeconfig, Vault tokens, database URLs, VPN, AI-service keys, wallet
+  keys and seed phrases. Finally <strong>your clipboard</strong> — this family has a
+  documented clipboard stealer, so a password pasted out of a manager while infected
+  should be treated as seen.</p>
+</section>
+
+<section class="stack" id="machine">
+  <span class="eyebrow">Step 2</span>
+  <h3>Clean the machine</h3>
+  <div class="panel"><div class="panel-bar"><span class="label">Before touching any repo</span><div class="bar-actions"></div></div>
+    <div class="scroller"><pre>snare doctor          # machine, persistence spots, your GitHub account
+snare guard scan      # one-shot process check
+snare guard install   # kill the loader on sight, from login onwards</pre></div></div>
+  <p class="note"><strong><code>guard scan</code> saying "clean" does not mean you
+  were never infected.</strong> It reports what is running <em>right now</em>. The
+  loader fires when a build runs or an editor opens the folder, does its work, and
+  exits. A clean process check alongside infected repositories is the expected
+  result, not a contradiction.</p>
+</section>
+
+<section class="stack" id="repos">
+  <span class="eyebrow">Step 3</span>
+  <h3>Clean the repositories</h3>
+  <div class="panel"><div class="panel-bar"><span class="label">Dry run first — always</span><div class="bar-actions"></div></div>
+    <div class="scroller"><pre>snare fix owner/repo                        # dry run, changes nothing
+snare fix --all                             # dry run over everything flagged
+
+snare fix owner/repo --push                 # clean the branch tips
+snare fix owner/repo --purge-history --push # erase it from all history</pre></div></div>
+  <p class="note"><code>--purge-history</code> rewrites every commit, so <strong>every
+  SHA changes</strong>. Collaborators must delete their clone and re-clone; a
+  <code>git pull</code> will conflict or silently reintroduce old objects. Forks and
+  pull-request refs keep the old objects regardless — ask GitHub Support to
+  garbage-collect them if that matters to you.</p>
+  <p class="note">Afterwards, verify rather than assume. <code>snare scan github</code>
+  only reads branch tips; run <code>snare scan repo</code> against a fresh clone to
+  walk full history.</p>
+</section>
+
+<section class="stack" id="notify">
+  <span class="eyebrow">Step 4</span>
+  <h3>Tell the others</h3>
+  <div class="panel"><div class="panel-bar"><span class="label">Contacts and templates</span><div class="bar-actions"></div></div>
+    <div class="scroller"><pre>snare notify owner/repo             # list collaborators, preview the notice
+snare notify owner/repo --issue     # file a GitHub issue @-mentioning them
+snare notify owner/repo --mail      # open a pre-filled mail draft per person</pre></div></div>
+  <p class="note">Both templates lead with credential rotation and say plainly that
+  this is not an accusation: the malware injects from an already-infected machine, so
+  a collaborator whose commit carried it was almost certainly a victim rather than a
+  cause. Say that early, or you will not get the reply you need.</p>
+</section>
+
+<section class="stack" id="many">
+  <span class="eyebrow">If the count is high</span>
+  <h3>If a lot of repositories are flagged</h3>
+  <p>Fifteen infected repositories is not fifteen accidents. It points at one machine
+  that pushed to all of them. Work out which machine that is before cleaning anything,
+  or you will clean the same repositories twice.</p>
+  <p class="note">Worth knowing what you scaffold new projects with — a starter
+  template, a <code>create-*</code> command, a downloaded theme, an editor extension.
+  The delivery mechanism for this family is <strong>still unidentified</strong>, and
+  that is the single most useful thing anyone can contribute. If you find yours,
+  <a href="https://github.com/nexlabz/snare/discussions">say so in the
+  discussion</a>.</p>
+</section>
+</div>
+
+</div>
+</article>
+<article class="chapter" id="install" aria-labelledby="install-t" data-min="3">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">04</span>
+  <div class="ch-meta"><span>Chapter 04</span><span>Install snare</span><span>3 min read</span></div>
+  <h2 id="install-t">Pick your machine</h2>
+  <p class="ch-lede">Free and open source under the MIT licence. Requires <code>bash</code>,
+  <code>git</code>, <code>python3</code> and the GitHub CLI. About a minute end to end.</p>
+</header>
+<div class="ch-body">
+
+<div class="wrap">
+<section class="stack" id="platforms">
+  <div>
+    <div class="tabs" role="tablist" aria-label="Platform">
+      <button class="tab" role="tab" aria-selected="true"  data-p="mac" id="tab-mac" aria-controls="p-mac">macOS</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="linux" id="tab-linux" aria-controls="p-linux">Linux</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="win" id="tab-win" aria-controls="p-win">Windows</button>
+      <button class="tab" role="tab" aria-selected="false" data-p="wsl" id="tab-wsl" aria-controls="p-wsl">WSL</button>
     </div>
-    <div class="foot-col">
-      <b>The threat</b>
-      <a href="index.html">How it works</a>
-      <a href="check.html">Check your machine</a>
-      <a href="infected.html">If you're infected</a>
+
+    <div class="pane" id="p-mac" role="tabpanel" aria-labelledby="tab-mac" tabindex="0">
+      <div class="panel"><div class="panel-bar"><span class="label">macOS · Homebrew</span><div class="bar-actions"></div></div>
+        <div class="scroller"><pre>brew install git gh python3 git-filter-repo
+
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh
+gh auth login
+snare doctor</pre></div></div>
+      <p class="note" style="margin-top:9px">The guard runs as a <code>launchd</code> user agent,
+      started automatically at login.</p>
     </div>
-    <div class="foot-col">
-      <b>The tool</b>
-      <a href="install.html">Install</a>
-      <a href="docs.html">Documentation</a>
-      <a href="commands.html">Command reference</a>
-      <a href="changelog.html">Changelog</a>
-      <a href="community.html">Community</a>
-      <a href="security.html">Report a bug</a>
+
+    <div class="pane" id="p-linux" role="tabpanel" aria-labelledby="tab-linux" tabindex="0" hidden>
+      <div class="panel"><div class="panel-bar"><span class="label">Linux</span><div class="bar-actions"></div></div>
+        <div class="scroller"><pre># Debian / Ubuntu
+sudo apt install -y git python3
+# gh: github.com/cli/cli/blob/trunk/docs/install_linux.md
+#
+# Fedora:  sudo dnf install -y git python3 gh
+# Arch:    sudo pacman -S git python github-cli
+
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh
+gh auth login
+snare doctor</pre></div></div>
+      <p class="note" style="margin-top:9px">The guard runs as a <code>systemd --user</code> unit.
+      No systemd? Run <code>snare guard run --interval 1</code> yourself under your own supervisor.</p>
+    </div>
+
+    <div class="pane" id="p-win" role="tabpanel" aria-labelledby="tab-win" tabindex="0" hidden>
+      <div class="panel"><div class="panel-bar"><span class="label">Windows · Git Bash</span><div class="bar-actions"></div></div>
+        <div class="scroller"><pre>winget install Git.Git GitHub.cli Python.Python.3.12
+
+# then, from Git Bash — not cmd or PowerShell
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh
+gh auth login
+snare doctor</pre></div></div>
+      <p class="note" style="margin-top:9px">snare is written in bash, so it needs Git Bash or WSL.
+      <code>snare guard install</code> registers a logon Scheduled Task.</p>
+    </div>
+
+    <div class="pane" id="p-wsl" role="tabpanel" aria-labelledby="tab-wsl" tabindex="0" hidden>
+      <div class="panel"><div class="panel-bar"><span class="label">Windows Subsystem for Linux</span><div class="bar-actions"></div></div>
+        <div class="scroller"><pre>sudo apt install -y git python3
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh
+gh auth login
+snare doctor</pre></div></div>
+      <p class="note" style="margin-top:9px">The guard only sees processes inside WSL, not Windows
+      itself. If you develop on Windows proper, run snare from Git Bash instead.</p>
     </div>
   </div>
-  <div class="foot-bar">
-    <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.9.0</a> · MIT</span>
+
+  <div class="table-scroll">
+    <table>
+      <thead><tr><th>Requirement</th><th>Why it is needed</th></tr></thead>
+      <tbody>
+        <tr><td><code>bash</code> <code>git</code> <code>python3</code></td><td>Core. Already present on macOS and most Linux distributions.</td></tr>
+        <tr><td><code>gh</code></td><td>All GitHub access uses <em>your</em> credentials. snare ships no token and stores none.</td></tr>
+        <tr><td><code>git-filter-repo</code></td><td>Optional — only for <code>snare fix --purge-history</code>.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="stack" id="first-run">
+  <span class="eyebrow">After installing</span>
+  <h3>The four commands that matter on day one</h3>
+  <p class="lede">Four verbs. It uses your own GitHub credentials and ships no token of its own.</p>
+  <div class="verbs">
+    <div class="verb">
+      <span class="cmd">snare guard install</span>
+      <h4>Watch this machine</h4>
+      <p>Detects the loader and kills it — process and children — within about a second, then saves
+      the evidence. It only ever kills interpreters, so a shell that merely mentions an indicator is
+      left alone.</p>
+    </div>
+    <div class="verb">
+      <span class="cmd">snare scan github</span>
+      <h4>Scan every repo</h4>
+      <p>Checks every repository you can reach through the API without cloning any of them.
+      <code>snare scan repo .</code> goes deeper on a clone: working tree, every branch, full history.</p>
+    </div>
+    <div class="verb">
+      <span class="cmd">snare fix owner/repo</span>
+      <h4>Clean it out</h4>
+      <p>Writes a backup bundle first, always. Cleans branch tips, or purges the payload from every
+      commit in history. Dry run unless you explicitly say otherwise.</p>
+    </div>
+    <div class="verb">
+      <span class="cmd">snare notify owner/repo</span>
+      <h4>Warn your team</h4>
+      <p>Files a GitHub issue mentioning your collaborators and opens a pre-filled mail draft for
+      each one. It never sends anything — you send from your own account.</p>
+    </div>
+  </div>
+  <div class="callout">
+    <h4>Not sure where to start?</h4>
+    <p>Run <code>snare respond</code>. It walks you through the whole thing — check the machine,
+    rotate credentials, find what is infected, clean it, tell your collaborators — one question at
+    a time, in the order that actually works. Nothing is changed without you saying so, and it
+    remembers where you got to if you stop.</p>
+  </div>
+  <div class="callout">
+    <h4>Would you rather your AI assistant did this?</h4>
+    <p>Paste the prompt below into Claude Code, Cursor, Copilot or any assistant that can run
+    commands. It installs snare, checks your machine, and reports back — and it is written to stop
+    and ask you before anything is changed.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">Copy this</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>Please help me check my machine and my repositories for the supply-chain
+malware described at https://nexlabz.github.io/snare/
+
+1. Clone and install the scanner:
+     git clone https://github.com/nexlabz/snare ~/snare
+     cd ~/snare &amp;&amp; ./install.sh
+   It needs bash, git, python3 and the GitHub CLI (gh). Install whatever is
+   missing for my platform first.
+
+2. Confirm the scanner itself works before trusting any result:
+     snare selftest
+   If that fails, stop and tell me — a scanner whose detection is broken
+   reports "clean" on infected repositories.
+
+3. Check this machine and show me the output:
+     snare doctor
+     snare guard scan
+
+4. Scan my repositories and show me exactly what was found:
+     snare scan repo .        # the repo I am in: working tree, branches, history
+     snare scan github        # every repo my gh account can reach
+
+Important, please follow these:
+- Do NOT run "snare fix", "--push" or "--purge-history" without asking me
+  first and showing me what would change. They rewrite git history.
+- If anything is found, tell me to rotate my credentials BEFORE cleaning any
+  repository. Stealing credentials is what this malware is for, and cleaning
+  a repo from an infected machine just lets it re-inject.
+- "snare guard scan" saying "clean" does not mean I was never infected. The
+  loader runs when a build runs or an editor opens the folder, then exits.
+- Explain what you find in plain language, and tell me what you are unsure
+  about rather than guessing.</pre></div></div>
+    <p class="note">The prompt deliberately forbids the destructive commands. If your assistant
+    offers to run <code>snare fix --purge-history</code> unprompted, say no and read
+    <a href="#infected">the walkthrough</a> first — that rewrites every commit and breaks
+    every existing clone.</p>
+  </div>
+  <div class="callout">
+    <h4>Already had snare installed before 29 August 2026?</h4>
+    <p>Run <code>snare update</code> and then <code>snare selftest</code> before you trust a clean
+    result. Several defects in earlier versions made the scanner report <strong>clean on genuinely
+    infected repositories</strong> — they are listed first in the
+    <a href="#changelog">changelog</a>, because that is the failure that matters most in a
+    scanner.</p>
+  </div>
+</section>
+</div>
+
+</div>
+</article>
+<article class="chapter" id="docs" aria-labelledby="docs-t" data-min="4">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">05</span>
+  <div class="ch-meta"><span>Chapter 05</span><span>How snare works</span><span>4 min read</span></div>
+  <h2 id="docs-t">Everything there is to read</h2>
+  <p class="ch-lede">snare is a single <code>bash</code> program with no build step and no
+    dependencies from a package registry. That keeps the documentation short: install it, learn
+    about a dozen commands, and understand what it cannot do.</p>
+</header>
+<div class="ch-body">
+<div class="docs">
+  
+  <div class="docs-body">
+  
+  
+  <section class="stack" id="start">
+    <span class="eyebrow">Start here</span>
+    <h3>Four ways in, depending on why you are here</h3>
+    <div class="next">
+      <a class="next-card urgent" href="#infected">
+        <span class="step">Something is wrong</span>
+        <b>The response playbook</b>
+        <p>Rotate, clean the machine, clean the repositories, tell your collaborators — in that
+        order, and the order is the point.</p>
+      </a>
+      <a class="next-card" href="#check">
+        <span class="step">Not sure</span>
+        <b>Four checks by hand</b>
+        <p>Read-only commands against any clone. Nothing to install, about a minute.</p>
+      </a>
+      <a class="next-card" href="#install">
+        <span class="step">Set it up</span>
+        <b>Install and first run</b>
+        <p>macOS, Linux, Windows or WSL, plus the four commands that matter on day one.</p>
+      </a>
+      <a class="next-card" href="#commands">
+        <span class="step">Look something up</span>
+        <b>Command reference</b>
+        <p>Every command grouped by purpose, each with the limits written next to it.</p>
+      </a>
+    </div>
+  </section>
+
+  <section class="stack" id="blocked">
+    <span class="eyebrow">When snare stops a command</span>
+    <h3>A block tells you what it caught, and you decide</h3>
+    <p class="lede">With the agent gate on, snare checks code before a clone, pull, install or run
+    brings it onto your machine. When it stops something, the message says <strong>what it
+    caught</strong>: the file and line, why it is suspected, and the text that matched.
+    Nothing has run.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">a block, shortened</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>🔥 FIRE ON THE MOUNTAIN — snare stopped this before it ran:
+    npm run dev
+
+What snare caught (file:line — why it is suspected, then the matching text):
+  package.json:1 — "dev" runs api.js, a 29 KB obfuscated file
+
+Copy this whole message, or the saved report, into your agent or an issue
+to work out what it is:  ~/.snare/logs/last-block.txt  (snare gate report)
+
+  1. Look yourself, thoroughly. …
+  2. Only then, in your own terminal:  snare gate allow /path/to/repo
+
+  Not sure, or it is real?  snare respond</pre></div></div>
+    <ol class="chain">
+      <li><b>Read what it caught</b><span>Every finding names a file and a line. <code>snare gate report</code>
+      prints the last block again, word for word, to paste into your own agent or an issue.</span></li>
+      <li><b>If you think it is a mistake, read the code yourself</b><span>Open every flagged file in full, not just the
+      flagged line, and check who added it: <code>git log -p -- &lt;file&gt;</code>. An agent can help explain it,
+      but an agent reading a poisoned repository can be talked into calling it safe.</span></li>
+      <li><b>Then allow it, in your own terminal</b><span>Run the <code>snare gate allow …</code> command the block printed.
+      An approval covers that file's exact content; if the file changes, it is checked again.</span></li>
+      <li><b>If it looks real</b><span><code>snare respond</code> takes charge of the clean-up, in the right order.</span></li>
+    </ol>
+    <p class="note">A coding agent can never approve its own block. <code>snare gate allow</code> only
+    runs for a person at a terminal.</p>
+  </section>
+
+  <section class="stack" id="updates">
+    <span class="eyebrow">Staying up to date</span>
+    <h3>snare tells you when a new version is out, or installs it itself</h3>
+    <p class="lede">A scanner is only as good as its last fix, so snare checks in the background,
+    at most every six hours, and never slows a command down to do it. Choose what happens when it
+    finds something:</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Mode</th><th>What happens</th></tr></thead>
+        <tbody>
+          <tr><td><code>notify</code> <span class="note">default</span></td><td>One line the next time you use snare:
+          <em>snare 1.9.1 is out (you have 1.9.0) — update: snare update</em>.</td></tr>
+          <tr><td><code>auto</code></td><td>snare installs it, restarts the guard, clears the old version's leftovers,
+          then tells you once what changed. It only moves forward along <code>main</code>, never over local
+          edits, and logs to <code>~/.snare/logs/auto-update.log</code>.</td></tr>
+          <tr><td><code>off</code></td><td>Never checks. You run <code>snare update</code> yourself.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="panel"><div class="panel-bar"><span class="label">choose a mode, or update now</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare update --mode auto     # or notify, or off
+snare update                 # update now: pulls, restarts the guard, tidies up
+snare update --check         # just look</pre></div></div>
+    <p class="note"><code>snare update</code> restarts the background guard on the new version by itself
+    (from 1.9.0). Coming from an older version, run <code>snare guard restart</code> once after updating.
+    What each release changed is on the <a href="#changelog">changelog</a>.</p>
+  </section>
+
+  <section class="stack" id="auth">
+    <span class="eyebrow">Auth</span>
+    <h3>It uses your credentials, and stores none</h3>
+    <p class="lede">snare ships no token of its own. Every GitHub call goes through the GitHub CLI
+    using <em>your</em> account, which means it can only ever reach what you can already reach.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">authenticate</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>gh auth login              # browser, or paste your own token
+export GH_TOKEN=...        # or an env var</pre></div></div>
+    <p class="note">Scopes needed: <code>repo</code> and <code>workflow</code>. <strong>Do not use a
+    token with broader permissions.</strong> A scanner does not need to administer your account,
+    and a token that can do more is a token worth more to whoever steals it.</p>
+    <div class="callout">
+      <h4>If you are here because you were compromised</h4>
+      <p>Do not authenticate with a token that existed while the machine was infected. Rotate
+      first, then log in with the new credential — the <a href="#rotate">rotation
+      order is here</a>. This family harvests token files and environment variables, so a token
+      you reuse is a token the operator may already hold.</p>
+    </div>
+  </section>
+
+  <section class="stack" id="extend">
+    <span class="eyebrow">Extending</span>
+    <h3>Adding your own detection patterns</h3>
+    <p class="lede">All detection reads a single file. Add a pattern there and every command —
+    scan, guard, hook, shield, CI — picks it up, with no code change.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">iocs.txt — one extended regex per line, # for comments</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre># a wallet address seen in a new variant
+0x[0-9a-fA-F]{40}
+
+# a C2 hostname
+eth\.blockscout\.com</pre></div></div>
+    <p class="note">Patterns are extended regular expressions, one per line, <code>#</code> starts a
+    comment. The structural heuristic — code, a run of 50+ whitespace characters, then more code —
+    runs independently of this list, which is why a variant using an address nobody has seen before
+    is still caught.</p>
+    <p class="note">If you write a pattern that catches something new,
+    <a href="#security">send it in</a>. A variant nobody else can detect yet is the single most
+    useful thing to contribute.</p>
+  </section>
+
+  <section class="stack" id="state">
+    <span class="eyebrow">State</span>
+    <h3>Where snare keeps things</h3>
+    <p class="lede">Everything lives under <code>$SNARE_HOME</code>, which defaults to
+    <code>~/.snare</code>. Nothing is written outside it except the hooks and shield blocks you
+    explicitly install.</p>
+    <div class="table-scroll">
+      <table>
+        <thead><tr><th>Path</th><th>What is in it</th></tr></thead>
+        <tbody>
+          <tr><td><code>logs/</code></td><td>Scan and guard logs, plus saved reports.</td></tr>
+          <tr><td><code>logs/evidence/</code></td><td>What the guard captured when it killed something — keep this if you plan to report a variant.</td></tr>
+          <tr><td><code>backups/</code></td><td>Bundle backups written before any <code>fix</code> touches a repository.</td></tr>
+          <tr><td><code>logs/last-block.txt</code></td><td>The last thing the gate stopped, word for word. <code>snare gate report</code> prints it.</td></tr>
+          <tr><td><code>logs/auto-update.log</code></td><td>What each automatic update did, in <code>auto</code> mode.</td></tr>
+          <tr><td><code>update-mode</code></td><td><code>notify</code>, <code>auto</code> or <code>off</code>, as set by <code>snare update --mode</code>.</td></tr>
+          <tr><td><code>work/</code></td><td>Scratch clones used during scanning and history rewriting.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note"><code>SNARE_ROOT</code> overrides where snare looks for its own library files —
+    useful if you installed it somewhere unusual and the launcher cannot resolve
+    <code>lib/</code>.</p>
+  </section>
+
+    </div>
+</div>
+
+</div>
+</article>
+<article class="chapter" id="commands" aria-labelledby="commands-t" data-min="8">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">06</span>
+  <div class="ch-meta"><span>Chapter 06</span><span>Every command</span><span>8 min read</span></div>
+  <h2 id="commands-t">Every command, and what it will not do</h2>
+  <p class="ch-lede">snare is about 2,200 lines of <code>bash</code>. No framework, no
+    <code>npm install</code> — deliberately, because npm is the attack surface. The core heuristic
+    is language-agnostic; the config list is tuned for the JavaScript ecosystem, because that is
+    where this family lives.</p>
+</header>
+<div class="ch-body">
+<div class="docs">
+  
+  <div class="docs-body">
+  
+  
+  <section class="stack" id="cmd-start">
+    <span class="eyebrow">Start here</span>
+    <h3>The guided one</h3>
+    <p>If you do not want to choose between the commands below, this runs the whole sequence and
+    asks you at each step. It is the same work, in the order that actually helps.</p>
+    <div class="panel"><div class="panel-bar"><span class="label">Guided clean-up</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare respond                   walk through everything, one question at a time
+snare respond --status          where you got to
+snare respond --reset           start the walkthrough again</pre></div></div>
+    <p class="note">Six steps: check the machine, rotate credentials, clean the machine, find what
+    is infected, fix it, tell your collaborators — then a verification pass that re-reads rather
+    than trusting what just happened. Anything that writes to a repository defaults to
+    <strong>no</strong>, and the choice to purge history is asked once rather than per repository.
+    Progress is saved, so stopping and resuming is fine.</p>
+    <p class="note">It refuses to run unattended. With no terminal, or <code>CI</code> set, it
+    exits rather than prompting where nobody can answer — use the individual commands there.</p>
+  </section>
+
+  <section class="stack" id="find">
+    <span class="eyebrow">Find it</span>
+    <h3>Scanning</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">Scanning</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare scan                      scan the current directory
+snare scan repo [path]          one clone: working tree, all branches, full history
+snare scan repo [path] --new    only findings that are not in the baseline
+snare scan orgs                 list every org/account you can reach, with repo counts
+snare scan orgs --all           include individual accounts, not just organisations
+snare scan github               every repo you can reach, via the API (no cloning)
+snare scan github --pick        choose which orgs to scan, from a list
+snare scan github --owner a,b   only these orgs/accounts (comma-separated)
+snare scan github --mine        only repos you own
+snare scan github --all-branches
+snare doctor                    this machine, persistence spots, and your GitHub account
+snare selftest                  prove detection still works against known samples</pre></div></div>
+
+    <p class="note"><strong>Scanning everything is often the wrong first move.</strong>
+    A real account reaches further than people expect — one we tested sees 22
+    organisations and roughly 950 repositories, which is several thousand API calls.
+    <code>scan orgs</code> lists what is reachable and how big each owner is, so you can
+    start with the ones that matter; <code>scan github --pick</code> shows the same list
+    and lets you choose from it. The repo counts are the number
+    <code>--owner</code> will actually scan, not an estimate.</p>
+
+    <p class="note"><strong>Read this before trusting a clean result.</strong>
+    <code>scan github</code> reads <em>branch tips through the API</em>. It cannot see
+    history, and it fetches a bounded set of files. A payload that was committed and
+    later removed, or one hidden somewhere it does not look, will not appear.
+    <code>scan repo</code> against a real clone is the thorough check — it walks every
+    branch and every commit. The infection that started all of this survived a clean
+    127-repository API sweep and was only caught by <code>scan repo</code>.</p>
+
+    <p class="note"><code>selftest</code> exists because four defects once made snare
+    report <em>clean</em> on infected repositories. It builds a scratch repo of known-bad
+    and known-good samples, runs the real scanner, and exits non-zero on any mismatch.
+    If it fails, do not trust any clean result until it passes.</p>
+  </section>
+
+  <section class="stack" id="gate">
+    <span class="eyebrow">Stop it coming in</span>
+    <h3>The gate, for you and for coding agents</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">Gate · agents</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare agents install            gate every clone, pull, install and run an agent does
+snare agents status | uninstall
+snare agents install --project  also this repo's CLAUDE.md / AGENTS.md and a project hook
+snare gate -- &lt;command&gt;         scan first; exit 0 means safe to run it
+snare gate allow [dir [branch]|url]  you looked and it is yours: allow what was flagged,
+                                on disk or still incoming (a branch, a pull, a clone)
+snare gate allowed | forget     review or withdraw what you allowed
+snare gate report               the last block, word for word, to paste into an agent</pre></div></div>
+
+    <p class="note"><strong>A block is what snare suspects, not a verdict.</strong> It lists each
+    finding as the file, the line and what is suspected, so you can look — it can be a false
+    alarm. Then you decide: <code>snare gate allow</code> if it is yours, or
+    <code>snare respond</code> to let snare take charge. Approvals live in
+    <code>~/.snare</code>, never in the repository, and lapse if the file changes. A coding agent
+    cannot approve its own block: it is told to stop and show you, and an agent that tries is
+    refused.</p>
+
+    <p class="note">The <strong>gate</strong> answers one question before a command runs: does it
+    bring code in or execute it, and is that code clean? <code>git clone</code> is cloned to a
+    quarantine directory and scanned first. <code>git pull</code>, <code>merge</code>,
+    <code>rebase</code> and <code>checkout</code> fetch — which runs nothing — and scan the incoming
+    tree in a throwaway worktree before a file lands. Installs and <code>npm run</code> scan the
+    directory they would run in. It fails closed: if the scan cannot finish, the command does not
+    run.</p>
+
+    <p class="note"><strong>For coding agents</strong>, <code>snare agents install</code> adds a
+    Claude Code <code>PreToolUse</code> hook — enforced, so the agent cannot skip it — and a short
+    instruction block in <code>CLAUDE.md</code>, <code>AGENTS.md</code> and <code>GEMINI.md</code>
+    for agents without hooks. A block reads <em>"FIRE ON THE MOUNTAIN"</em>, tells the agent to stop
+    and tell you, and raises a desktop notification. Ordinary commands like <code>git status</code>
+    cost about 30ms. <code>install.sh</code> and <code>snare update</code> show what it would change
+    and <strong>ask first</strong>; after a yes, <code>snare update</code> keeps it current, and
+    <code>snare agents uninstall</code> removes it and keeps it removed.</p>
+  </section>
+
+  <section class="stack" id="deps">
+    <span class="eyebrow">Every ecosystem</span>
+    <h3>Known-malicious packages: npm, Python, Rust, Go and more</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">Deps</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare deps [dir]                 lockfiles, node_modules and virtualenvs against the list
+snare deps --system              also your global Python, pipx, npm and cargo installs
+snare deps fix [dir]             remove each one, or replace it with a version not listed
+snare deps update | status       refresh / show the known-malware list</pre></div></div>
+
+    <p class="note">The list is <a href="https://github.com/ossf/malicious-packages">OpenSSF's
+    malicious-packages</a> database — about 117,000 packages across npm, PyPI, crates.io, Go,
+    RubyGems, Packagist, NuGet and Maven — condensed every six hours into one small file.
+    <strong>Every snare downloads the same file and matches it on its own machine</strong>, so
+    nothing about your packages is ever sent. Lockfiles read: npm, pnpm, yarn, bun,
+    <code>requirements*.txt</code>, poetry, uv, pdm, <code>pylock.toml</code>, Pipfile,
+    <code>Cargo.lock</code>, <code>go.sum</code>, <code>Gemfile.lock</code>,
+    <code>composer.lock</code> and NuGet's <code>packages.lock.json</code>.</p>
+
+    <p class="note">The <strong>gate</strong> uses the same list: <code>npm i x@1.2.3</code>,
+    <code>npx</code>, <code>pip install x==1.0</code>, <code>uv add</code>, <code>cargo add</code>,
+    <code>go get</code>, <code>gem install</code> and <code>composer require</code> are stopped
+    when the version is listed, and a repository's lockfiles are checked before
+    <code>npm install</code> or <code>pip install -r</code>. It also treats the files other
+    languages run on their own as routes: <code>setup.py</code>, <code>conftest.py</code>,
+    <code>build.rs</code>, <code>sitecustomize.py</code>, <code>.pth</code> files (Python runs them at
+    every start — the LiteLLM 1.107.0 payload was one) and <code>//go:generate</code> lines.</p>
+  </section>
+
+  <section class="stack" id="stop">
+    <span class="eyebrow">Stop it running</span>
+    <h3>Guard and shield</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">Guard · shield</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare guard install             kill the loader on sight, from login onwards
+snare guard scan                one-shot check of this machine
+snare guard status | log | stop | start | restart | uninstall
+
+snare shield install            scan before npm/pnpm/yarn/bun/npx and git clone run
+snare shield status | uninstall
+snare shield check [path]       the fast check on its own (~22ms)</pre></div></div>
+
+    <p class="note">The <strong>guard</strong> is a background process (launchd on macOS,
+    a systemd user unit on Linux, a logon Scheduled Task on Windows). It polls once per
+    second, so a payload can still act before it is caught, and it cannot see code already
+    running inside another process.</p>
+
+    <p class="note">The <strong>shield</strong> wraps package managers in your shell so a
+    scan happens before they can execute anything. Honest limits: it is shell-only, so it
+    cannot see VS Code's own <code>folderOpen</code> task — that is the guard's job — and
+    anyone can bypass it with <code>command npm</code> or <code>SNARE_SKIP_SHIELD=1</code>.
+    It is a seatbelt, not a sandbox.</p>
+  </section>
+
+  <section class="stack" id="spread">
+    <span class="eyebrow">Stop it spreading</span>
+    <h3>Hook and CI</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">Hook · CI</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare hook install              block a push that carries a payload
+snare hook install --with-pre-commit
+snare hook status | uninstall
+
+snare ci install                write a GitHub Actions workflow into this repo
+snare ci status                 is the workflow installed, and is the check required?
+snare ci print                  print the workflow without writing it</pre></div></div>
+
+    <p class="note">This family injects into commits <em>from an already-infected machine</em>,
+    so the payload leaves before anyone scans a repository. The <strong>hook</strong> is the
+    only feature that prevents that rather than detecting it afterwards. It also refuses the
+    push when the machine itself has a live detection, because a clean repo pushed from an
+    infected machine can still carry the payload out.</p>
+
+    <p class="note"><strong>GitHub.com cannot reject a push outright</strong> — server-side
+    pre-receive hooks are an Enterprise feature. A required status check is the practical
+    equivalent: the merge button stays disabled until the scan passes. <code>ci install</code>
+    writes the workflow, but <em>you</em> must tick it as required under
+    Settings → Branches. Until you do, it reports and blocks nothing —
+    <code>snare ci status</code> will tell you when that is the case.</p>
+  </section>
+
+  <section class="stack" id="clean">
+    <span class="eyebrow">Clean up</span>
+    <h3>Fix, rotate and notify</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">Fix · rotate · notify</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare fix &lt;owner/repo&gt;                        dry run (always backs up first)
+snare fix &lt;owner/repo&gt; --push                 clean branch tips and push
+snare fix &lt;owner/repo&gt; --purge-history --push erase it from all history
+snare fix --all                               every repo the last scan flagged
+snare fix --pick                              choose orgs, scan them, then fix
+snare fix --pick --purge-history --push       ... and erase it from all history
+snare fix --owner a,b --push                  the same, without the prompt
+
+snare rotate                    what to revoke, in order, plus a GitHub audit
+snare notify &lt;owner/repo&gt;       list collaborators and preview the notice
+snare notify &lt;owner/repo&gt; --issue | --mail</pre></div></div>
+
+    <p class="note"><strong>Rotate before you clean.</strong> Stealing credentials is what
+    this family is <em>for</em>; the file in your repository is delivery, not payload.
+    Removing it does not un-steal a token. <code>snare rotate</code> lists what to revoke
+    in order — npm write tokens first, because a stolen one lets the worm publish
+    trojanised versions of your other packages under your name — and audits your GitHub
+    account for the repositories and secret-exporting workflows this family leaves behind.
+    The full sequence is on the <a href="#infected">response page</a>.</p>
+
+    <p class="note"><strong><code>fix --pick</code> is the whole clean-up in one pass:</strong>
+    choose organisations from the same list <code>scan orgs</code> prints, scan them, then
+    remediate what was found. It is a dry run unless you add <code>--push</code>, and the
+    destructive flags stay on the command line rather than hiding inside a friendlier verb —
+    force-pushing rewritten history across an organisation should be legible in your shell
+    history. <code>--owner a,b</code> is the same thing without the prompt, for a script or a
+    timer. With <code>--purge-history</code> it checks for <code>git-filter-repo</code>
+    <em>before</em> scanning, rather than after asking you to choose and then failing on the
+    first repository.</p>
+
+    <p class="note"><code>--purge-history</code> rewrites every commit, so every SHA changes.
+    Collaborators must <em>re-clone</em>, not pull, and forks and pull-request refs still
+    hold the old objects. <code>fix --all</code> is a dry run by default and requires you to
+    type the repository count to confirm, because it can force-push.</p>
+  </section>
+
+  <section class="stack" id="watch">
+    <span class="eyebrow">Keep watch</span>
+    <h3>Reports, baseline and update</h3>
+    <div class="panel"><div class="panel-bar"><span class="label">Reports · baseline · update</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>snare report                    scan, save a timestamped report
+snare report --json             machine-readable; exits non-zero on findings
+snare schedule install --daily  run it on a timer and notify on findings
+snare schedule status | uninstall
+
+snare baseline set              accept the current findings as known
+snare baseline status | clear
+
+snare update                    pull the latest version
+snare update --check            is a newer version available?
+snare update --mode auto        install new versions itself (default: notify, or off)
+snare update --relink           point ~/.local/bin/snare at this checkout
+snare version                   version and commit</pre></div></div>
+
+    <p class="note">Reports write to <code>$SNARE_HOME/reports</code> and exit non-zero when
+    something is found, so a timer or a CI job can act on the result. There is deliberately
+    <strong>no email</strong>: SMTP credentials in a security tool are a liability, and a
+    report file plus a native notification does the same job with nothing worth stealing.</p>
+
+    <p class="note"><strong>Accepting a finding into a baseline silences it — it does not
+    make it safe.</strong> Only baseline what you have actually read.</p>
+
+    <p class="note"><code>snare update</code> matters more than it looks. Every clone made
+    before 27 August 2026 contains defects that made the working-tree scan report
+    <em>clean</em> on infected repositories. If you installed snare before then, update
+    before you trust it, and run <code>snare selftest</code> afterwards. The
+    <a href="#changelog">changelog</a> lists every one of them.</p>
+  </section>
+
+  <section class="stack" id="limits">
+    <span class="eyebrow">Limits</span>
+    <h3>What snare does not do</h3>
+    <p class="lede">A security tool that oversells itself is worse than no tool at all.</p>
+    <div class="stack-s">
+      <p>The guard polls once per second, so a payload can still act before it is caught. It cannot
+      see code already running inside another process, and it will miss variants built on different
+      infrastructure. <strong>Removing the malware from the repository is the actual fix</strong> — a
+      running guard is never permission to open a repo you do not trust.</p>
+      <p>Scanning through the GitHub API sees <strong>branch tips only</strong>. A payload that was
+      committed and later deleted survives in history; use <code>snare scan repo</code> on a clone to
+      catch that.</p>
+      <p>Rewriting history does not touch <strong>forks, pull-request refs, or objects still
+      reachable by SHA</strong>. Ask GitHub Support to garbage-collect after a purge.</p>
+    </div>
+    <div class="next">
+      <a class="next-card" href="#security">
+        <span class="step">Found a hole?</span>
+        <b>Report it — that is the whole ask</b>
+        <p>A false clean is the worst failure a scanner can have, and the one we most want to hear about.</p>
+      </a>
+      <a class="next-card" href="#changelog">
+        <span class="step">History</span>
+        <b>What changed, and what was broken</b>
+        <p>Every defect that made snare report clean on an infected repository, listed first.</p>
+      </a>
+    </div>
+  </section>
+  </div>
+</div>
+
+</div>
+</article>
+<article class="chapter" id="community" aria-labelledby="community-t" data-min="4">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">07</span>
+  <div class="ch-meta"><span>Chapter 07</span><span>Community</span><span>4 min read</span></div>
+  <h2 id="community-t">One conversation, in two places</h2>
+  <p class="ch-lede">Comments on this page are <strong>GitHub Discussions</strong>. Post here and the
+  thread appears on the repository; reply on GitHub and it appears here. There is no separate
+  account, no second inbox, and nothing to moderate twice.</p>
+</header>
+<div class="ch-body">
+
+<div class="wrap">
+<section class="stack" id="where">
+  <span class="eyebrow">Where things live</span>
+  <h3>Pick the room that fits</h3>
+  <div class="reports">
+    <a class="report-link" href="https://github.com/nexlabz/snare/discussions">
+      <span class="ic"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></span>
+      <span><b>Discussions</b><span>Open questions, ideas, show and tell. Start a thread with a GitHub account.</span></span>
+    </a>
+    <a class="report-link" href="https://github.com/nexlabz/snare/discussions/categories/q-a">
+      <span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M6 6a2 2 0 1 1 2.6 1.9c-.4.15-.6.5-.6.9v.7" stroke-linecap="round"/><circle cx="8" cy="12.2" r=".8" fill="currentColor" stroke="none"/></svg></span>
+      <span><b>Q&amp;A</b><span>"Is this thing in my repo?" — answerable questions, with accepted answers.</span></span>
+    </a>
+    <a class="report-link" href="https://github.com/nexlabz/snare/issues/1">
+      <span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M8 4.5v4.2M8 11.4h.01" stroke-linecap="round"/><circle cx="8" cy="8" r="6.4"/></svg></span>
+      <span><b>Field reports</b><span>What you saw, what it cost, any variant you found. Redact tokens first.</span></span>
+    </a>
+    <a class="report-link" href="https://github.com/nexlabz/snare/issues/new">
+      <span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" stroke-linecap="round"/></svg></span>
+      <span><b>Bugs and variants</b><span>A false clean is the one we most want to hear about.</span></span>
+    </a>
+  </div>
+</section>
+
+<section class="stack" id="credit">
+  <span class="eyebrow">Credit</span>
+  <h3>Who found what</h3>
+  <p class="lede">Every detection snare has for this campaign came from someone finding it on their
+  own machine first and writing up what they saw. None of it was found by reading code.</p>
+  <ol class="chain">
+    <li><b><a href="https://github.com/kleenpulse">@kleenpulse</a> — campaign 4738-2, from a live
+    Windows host</b><span>The patched <code>cli.js</code> Defender did not flag, the PowerShell
+    clipboard stealer, the <code>api.js</code> wired into the run scripts, and the forged
+    force-pushes that read as <code>1 ahead, 1 behind</code> with identical messages. Snare now
+    detects all four, and the forged-push check is a direct implementation of the method in that
+    report. <a href="https://github.com/nexlabz/snare/issues/47">#47</a></span></li>
+    <li><b><a href="https://github.com/ibraheembello">@ibraheembello</a> — npm on Windows was
+    never checked</b><span><code>snare doctor</code> printed <em>no npm installation found to
+    check</em> on every Windows host while a trojanised <code>cli.js</code> sat in
+    <code>%APPDATA%\npm</code> and ran on every command. Also suggested the size heuristic that
+    now catches this without knowing the malware at all.
+    <a href="https://github.com/nexlabz/snare/issues/46">#46</a></span></li>
+    <li><b><a href="https://github.com/SamuelOshin">@SamuelOshin</a> — four remediation
+    bugs</b><span>A 0-byte fake font that <code>fix</code> skipped, a <code>tasks.json</code> with
+    comments that <code>fix</code> deleted whole, a phantom <code>origin</code> branch pushed to
+    the remote, and a failed push reported as a success. All four reproduced exactly as described.
+    <a href="https://github.com/nexlabz/snare/issues/44">#44</a></span></li>
+    <li><b><a href="https://github.com/phoenixdahdev">@phoenixdahdev</a> — remediation deleted the
+    files it was meant to clean</b><span><code>snare fix</code> removed build configs instead of
+    stripping them, so the fix was its own outage.
+    <a href="https://github.com/nexlabz/snare/pull/39">#39</a></span></li>
+  </ol>
+</section>
+
+<section class="stack" id="open">
+  <span class="eyebrow">Still unanswered</span>
+  <h3>The two questions nobody has answered</h3>
+  <p class="lede">These are not rhetorical. Nine infections across five contributor identities over
+  two years is not one laptop, and no delivery mechanism has been established.</p>
+  <ol class="chain">
+    <li><b>How does this family actually reach developer machines?</b><span>Every payload seen so
+    far was a <em>modification</em> of an already-clean config, never a fresh file — which rules
+    out a contaminated template as the whole story. A shared upstream source (a scaffold, a
+    <code>create-*</code> command, a downloaded theme, an editor extension) is the leading theory
+    and remains unproven. If you can say what you scaffolded an infected project with, that is the
+    most useful thing you can contribute. <b>One concrete chain is now on record</b>
+    (<a href="https://github.com/nexlabz/snare/issues/47">#47</a>): an IDE language server ran
+    <code>npx -y chrome-devtools-mcp@latest</code>, which went through the already-patched npm in
+    the global prefix. That explains how the payload keeps <em>running</em> — including from
+    MCP servers an editor starts on its own — but not how it got onto that machine to begin
+    with.</span></li>
+    <li><b>Can a defence propagate the way the infection does?</b><span>Without becoming a dropper
+    itself. This is an open design question, and a genuinely uncomfortable one.</span></li>
+  </ol>
+  <div class="callout">
+    <h4>Before you post details</h4>
+    <p>Redact tokens, keys, internal hostnames and anything that identifies a client. You do not
+    have to name an employer — "a fintech I contract for" is a perfectly good data point. If you
+    would rather not post publicly at all, <a href="#security">open an issue saying so without
+    the specifics</a> and we will find another way.</p>
+  </div>
+</section>
+
+<section class="stack" id="comments">
+  <span class="eyebrow">Comments</span>
+  <h3>Say something here</h3>
+  <p class="lede">This thread is a GitHub Discussion. Signing in with GitHub is only needed to
+  post — reading requires nothing.</p>
+
+  <noscript>
+    <div class="callout">
+      <h4>Comments need JavaScript</h4>
+      <p>The thread lives on GitHub either way —
+      <a href="https://github.com/nexlabz/snare/discussions">read and post it there</a>.</p>
+    </div>
+  </noscript>
+
+  <div id="giscus-mount" class="giscus-mount"
+       data-repo="nexlabz/snare"
+       data-repo-id="R_kgDOUDI78A"
+       data-category="General"
+       data-category-id="DIC_kwDOUDI78M4DEUOy">
+    <p class="note" id="giscus-fallback">Loading the discussion thread…</p>
+  </div>
+
+  <p class="note">Comments are powered by <a href="https://giscus.app">giscus</a>, which stores
+  every comment as a GitHub Discussion on this repository. It is the only third-party code on this
+  site, and it is loaded on this page alone — never on the pages that carry commands you might
+  paste into a shell.</p>
+</section>
+</div>
+
+</div>
+</article>
+<article class="chapter" id="security" aria-labelledby="security-t" data-min="2">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">08</span>
+  <div class="ch-meta"><span>Chapter 08</span><span>Report a bug</span><span>2 min read</span></div>
+  <h2 id="security-t">Tell us — that is the whole ask</h2>
+  <p class="ch-lede">This tool has shipped bugs that made it report clean on genuinely
+  infected repositories. Every one was found by someone actually testing it rather than
+  reading it. If you find another, that is the most useful contribution there is.</p>
+</header>
+<div class="ch-body">
+
+<div class="wrap">
+<section class="stack" id="what">
+  <span class="eyebrow">What to report</span>
+  <h3>In rough order of how much we want to hear about it</h3>
+  <ol class="chain">
+    <li><b>A false clean</b><span>A repository or sample snare says is fine and is not.
+    This is the worst failure a scanner can have, and the one we most want reported.</span></li>
+    <li><b>An evasion</b><span>A payload shaped so the heuristics miss it, or a way to hide
+    from the guard, the hook or the shield. One such hole let any process hide from the
+    guard simply by having the word <code>snare</code> in its command line.</span></li>
+    <li><b>A false positive</b><span>Noisy enough that people would learn to ignore the
+    output. That is a real failure too — a scanner nobody reads protects nobody.</span></li>
+    <li><b>A variant we do not detect</b><span>A different config file, a different
+    execution route, a different obfuscation.</span></li>
+    <li><b>Anything destructive</b><span>A case where <code>fix</code> removes something it
+    should not, or reports success without having done anything.</span></li>
+  </ol>
+</section>
+
+<section class="stack" id="how">
+  <span class="eyebrow">How</span>
+  <h3>Open an issue. That is enough.</h3>
+  <p><strong>You do not need a fix, a pull request, or a polished write-up</strong> — a repository
+  name, a file, or "this sample is not caught" is plenty. If you would rather not post details
+  publicly, open an issue saying so without the specifics and we will find another way.</p>
+
+  <div class="panel"><div class="panel-bar"><span class="label">Report it</span><div class="bar-actions"></div></div>
+    <div class="scroller"><pre>https://github.com/nexlabz/snare/issues/new
+
+# helpful, if you have it:
+snare selftest          # does detection still work on your machine?
+snare version
+bash --version          # macOS ships bash 3.2; several bugs were 3.2-specific</pre></div></div>
+
+  <p class="note">Known-good starting points if you want to poke at it: the heuristics
+  live in <code>lib/scan.sh</code>, the process matching in <code>lib/guard.sh</code>,
+  and the history rewriting in <code>lib/fix.sh</code>. <code>snare selftest</code>
+  shows the shape of a test case; adding one that fails is a perfectly good bug report.</p>
+
+  <p class="note">There is also an open discussion on the two questions we cannot answer
+  ourselves: how this family actually reaches developer machines, and whether a defence
+  can propagate the way the infection does without becoming a dropper itself.
+  <a href="https://github.com/nexlabz/snare/discussions">Join it here.</a></p>
+</section>
+</div>
+
+</div>
+</article>
+<article class="chapter" id="changelog" aria-labelledby="changelog-t" data-min="4">
+<header class="ch-head">
+  <span class="ch-n" aria-hidden="true">09</span>
+  <div class="ch-meta"><span>Chapter 09</span><span>Changelog</span><span>4 min read</span></div>
+  <h2 id="changelog-t">Every release, and what was broken before it</h2>
+  <p class="ch-lede">Versions follow <a href="https://semver.org">semantic versioning</a>. Anything
+    that made snare report <strong>clean on an infected repository</strong> is listed first in its
+    release, because that is the failure that matters most in a scanner.</p>
+</header>
+<div class="ch-body">
+<div class="docs">
+  
+  <div class="docs-body">
+  
+  
+  <section class="stack" id="how-to-check">
+    <div class="callout">
+      <h3>Checking what you are running</h3>
+      <p><code>snare version</code> shows your version and commit.
+      <code>snare update --check</code> compares <strong>commits</strong>, not just version
+      numbers — the version once stood still for 33 commits, so a user 14 commits behind was
+      being told they were up to date.</p>
+      <div class="panel"><div class="panel-bar"><span class="label">check and update</span><div class="bar-actions"></div></div>
+        <div class="scroller"><pre>snare version
+snare update --check
+snare update && snare selftest</pre></div></div>
+    </div>
+  </section>
+
+<section class="stack" id="v1-9-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.9.0</h3>
+      <span class="rel-date">7 Nov 2026</span>
+        <span class="tag now">Current</span>
+      <a class="rel-gh" href="https://github.com/nexlabz/snare/releases/tag/v1.9.0">Release notes ↗</a>
+    </div>
+    <p class="rel-sum"><code>snare update</code> now restarts the guard and cleans up after itself. And snare tells you when there's a new version, or installs it for you.</p>
+    <div class="rel-group">
+      <h4>Changed — <code>snare update</code> finishes the job</h4>
+      <ul class="rel-list">
+        <li><strong>The background guard is restarted for you.</strong> After every update people were told to run <code>snare guard stop &amp;&amp; snare guard start</code>, and a guard nobody restarted kept running the previous version. <code>snare update</code> now restarts it on the new code, rewriting its service file first. It also catches a guard that is still on an older version even when there is nothing new to pull. The guard records its version when it starts, and <code>snare guard restart</code> does the same by hand.</li>
+        <li><strong>Leftovers are cleared.</strong> The gate's cached verdicts from the old version are removed, since they are keyed by version and can never be used again. So are blocks waiting for <code>snare respond</code> in repositories that no longer exist, logs past 1 MB (trimmed to their most recent part) and stale refresh markers. Backups, reports and evidence are never touched.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — snare tells you when a new version is out, or installs it</h4>
+      <ul class="rel-list">
+        <li><code>snare update --mode notify|auto|off</code>. - <strong>notify</strong> (the default): snare checks in the background at most every six hours and tells you "snare X is out (you have Y) — update: snare update". - <strong>auto</strong>: snare installs new versions itself, then says once what changed. It only fast-forwards from main, never touches an install with local edits, and logs to <code>~/.snare/logs/auto-update.log</code>. - <strong>off</strong>: never check.</li>
+        <li>The background check now also runs when snare is used by a coding agent. Before, it ran only at a terminal, so installs used mostly through agents never learned about a new version.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-8-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.8.0</h3>
+      <span class="rel-date">6 Nov 2026</span>
+      <a class="rel-gh" href="https://github.com/nexlabz/snare/releases/tag/v1.8.0">Release notes ↗</a>
+    </div>
+    <p class="rel-sum">When snare blocks something, it now tells you exactly what it caught, and gives it to you in a form you can copy.</p>
+    <div class="rel-group">
+      <h4>Changed — a block now explains itself, and you can copy it</h4>
+      <ul class="rel-list">
+        <li>When the gate stops a command, it starts with <strong>what snare caught</strong>: each file and line, why it is suspected, and the matching text. The same message is saved to <code>~/.snare/logs/last-block.txt</code>, and <code>snare gate report</code> prints it again, so you can paste it into your own agent or an issue to work out what it is. An agent's transcript scrolls; the report does not.</li>
+        <li>Before the allow command, the block now says plainly: if you think it is a mistake, read every flagged file yourself, in full, and check who added it (<code>git log -p -- &lt;file&gt;</code>), and only then run <code>snare gate allow</code> in your own terminal. An agent can help explain the code, but an agent reading a poisoned repository can be talked into calling it safe.</li>
+        <li>The instructions <code>snare agents install</code> writes now tell agents to show the whole message, not a summary of it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-7-1">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.7.1</h3>
+      <span class="rel-date">6 Nov 2026</span>
+      <a class="rel-gh" href="https://github.com/nexlabz/snare/releases/tag/v1.7.1">Release notes ↗</a>
+    </div>
+    <p class="rel-sum">The "commit(s) behind" message now goes away after you update.</p>
+    <div class="rel-group">
+      <h4>Fixed — "N commit(s) behind" kept showing after updating</h4>
+      <ul class="rel-list">
+        <li>snare caches whether it is behind, so commands need not ask the network each time. That cache was never told about an update: right after <code>snare update</code> succeeded, every command still said "1 commit(s) behind — run: snare update". The cache refreshed only once a day, and only in an interactive terminal, so under a coding agent it never refreshed at all. One install showed a "behind" from 19 days and three releases earlier.</li>
+        <li>The cache now records the commit and version it describes and is ignored as soon as the install moves, by <code>snare update</code>, a <code>git pull</code> or a reinstall. <code>snare update</code> writes what it just established. <code>snare version</code> keeps what its live check learned. A self-test covers it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<details class="older"><summary>Show 15 older releases</summary>
+<section class="stack" id="v1-7-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.7.0</h3>
+      <span class="rel-date">6 Nov 2026</span>
+      <a class="rel-gh" href="https://github.com/nexlabz/snare/releases/tag/v1.7.0">Release notes ↗</a>
+    </div>
+    <p class="rel-sum"><code>snare update</code> now actually updates.</p>
+    <div class="rel-group">
+      <h4>Fixed — <code>snare update</code> said "already up to date" and never updated</h4>
+      <ul class="rel-list">
+        <li><code>snare update</code> updated whichever branch the install happened to be on. An install left on any other branch (an old work branch, a branch someone checked out to test a fix) fetched that branch, found nothing new, and answered "already up to date" on every run. Meanwhile <code>snare version</code> compared against <code>main</code> and said "behind". Both were right about different branches, and the install never moved.</li>
+        <li>Updates now always come from <code>main</code>, where releases are published. An install on another branch is moved to <code>main</code> when everything on that branch is already in <code>main</code>. A branch carrying commits <code>main</code> does not have is someone's work: it is left alone, and snare prints the exact command to switch. <code>snare update --check</code> and the "behind" notice now measure against <code>main</code> as well, so they agree with what <code>snare update</code> does.</li>
+        <li>If you are stuck on an older version that has this bug, run once: <code>cd ~/snare &amp;&amp; git checkout main &amp;&amp; snare update</code>.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — on Linux, every agent command re-downloaded the malware list</h4>
+      <ul class="rel-list">
+        <li>The list's age was read with <code>stat -f %m … || stat -c %Y …</code>. On Linux, <code>stat -f</code> means "file system": it prints a block of text and then fails, so the age came out unreadable and the gate's hook started a fresh 2.3 MB download on every agent command (at most once per ten minutes). GNU <code>stat</code> is now tried first, and a non-numeric age is treated as unknown. The self-test checks the age reads as a number. It also stops one test's hook from fetching the real list in the background, which had been making CI fail at random.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — snare's own repository tripped its own gate</h4>
+      <ul class="rel-list">
+        <li>The website's "hidden payload" demo carried the campaign's markers verbatim, so cloning or pulling snare under the agent gate stopped with "fire on the mountain" for everyone, and the only way through was to approve a block unread. That is the one habit the gate depends on nobody having. The demo text is now stored reversed and restored by the page, so the page looks the same and the file carries no live marker. snare still does not exempt its own repository from branch and pull checks. A self-test checks the website file the way a fresh clone would see it.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — what only the owner can do <a href="https://github.com/nexlabz/snare/pull/54">#54</a></h4>
+      <ul class="rel-list">
+        <li>When <code>snare fix &lt;owner/repo&gt;</code> cleans a branch that turns out to have existed only for the payload (cleaned, it adds nothing to the default branch), it names it under <strong>What only you can do</strong> with the exact delete command and the GitHub branches page, for the owner to run. It also says when forks still hold the old history. snare itself still never deletes a repository, an organisation or a remote branch, and the backup bundle is the way back.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-6-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.6.0</h3>
+      <span class="rel-date">25 Oct 2026</span>
+      <a class="rel-gh" href="https://github.com/nexlabz/snare/releases/tag/v1.6.0">Release notes ↗</a>
+    </div>
+    <p class="rel-sum">snare now knows which package versions are malware, for npm, Python, Rust, Go and more, and stops them before they install.</p>
+    <div class="rel-group">
+      <h4>Added — known-malicious package versions, in every ecosystem</h4>
+      <ul class="rel-list">
+        <li><strong>A known-malware list, the same for everyone.</strong> <code>.github/workflows/intel.yml</code> condenses [OpenSSF's malicious-packages](https://github.com/ossf/malicious-packages) database, about 117,000 packages across npm, PyPI, crates.io, Go, RubyGems, Packagist, NuGet and Maven, into one small file every six hours. It publishes the file as the <code>intel</code> release's assets. Every snare downloads that same file and matches it on its own machine, so nothing about anyone's packages is sent anywhere. A download that fails its checksum is refused, and the old list is kept. A build with implausibly few entries is never published, because an empty list would read as "nothing is malicious".</li>
+        <li><strong><code>snare deps [dir] [--system]</code></strong> reads lockfiles and installed packages and names each known-malicious one, with where it is and its OSV advisory. - npm, pnpm, yarn and bun lockfiles, plus <code>node_modules</code> - <code>requirements*.txt</code>, <code>poetry.lock</code>, <code>uv.lock</code>, <code>pdm.lock</code>, <code>pylock.toml</code> and <code>Pipfile.lock</code>, plus the site-packages of every virtualenv in the project - <code>Cargo.lock</code>, <code>go.sum</code>, <code>Gemfile.lock</code>, <code>composer.lock</code> and NuGet's <code>packages.lock.json</code> - with <code>--system</code>, also the user's Python, pipx, global npm and <code>cargo install</code></li>
+        <li><strong><code>snare deps fix</code></strong> asks about each one: remove it, or replace it with the newest version that is not listed. Replacements install with scripts off (<code>npm --ignore-scripts</code>, <code>pip --only-binary :all:</code>), so they cannot run code while installing. It points to <code>snare rotate</code> when something malicious was actually installed. A package whose every version is malicious gets a warning about lookalike names. It is person-only, like <code>snare gate allow</code>.</li>
+        <li><strong>The gate stops installs of a listed version.</strong> This covers <code>npm</code>/<code>pnpm</code>/ <code>yarn</code>/<code>bun</code> <code>install</code>/<code>add</code>, <code>npx</code>, <code>dlx</code>, <code>pip</code>/<code>pip3</code>/<code>python -m pip</code>, <code>uv add</code>, <code>uv pip</code>, <code>uvx</code>, <code>pipx</code>, <code>poetry</code>/<code>pdm</code>/<code>rye add</code>, <code>cargo add</code> and <code>install</code>, <code>go get</code>/<code>install</code>/<code>run</code>, <code>gem install</code> and <code>composer require</code>. It also checks a requirements file named with <code>-r</code>, and a repository's lockfiles on <code>npm install</code>. For an unpinned install of a package with some bad versions, it asks the registry which version would install, the same request the install was about to make, and stops only if that version is listed. A wrong list entry in a lockfile is approvable with <code>snare gate allow</code>, tied to content as always.</li>
+        <li><strong>Files other languages run on their own</strong> are now repository routes, like <code>package.json</code> scripts: - <code>setup.py</code> (on install), <code>conftest.py</code> (on test), <code>build.rs</code> (on build), <code>sitecustomize.py</code> and <code>usercustomize.py</code> (at every Python start), and <code>.pth</code> files (Python runs their import lines at every start): flagged when a line downloads, or decodes and runs, code. - <code>//go:generate</code> lines that fetch or pipe into a shell. - An ordinary <code>setup.py</code> that calls cmake through subprocess, a <code>build.rs</code> that compiles C, <code>stringer</code> and coverage's <code>.pth</code> are left alone. All 77 local repositories in the false-alarm sweep stay clean.</li>
+        <li><code>snare doctor</code> shows the list's age and size, <code>snare update</code> refreshes it, and the agent hook refreshes it in the background when it is a day old, never making a command wait.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — from automated review of the above, before release</h4>
+      <ul class="rel-list">
+        <li><strong>Version ranges, tags and aliases</strong> such as <code>npm i x@^0.7.0</code>, <code>x<a href="https://github.com/latest">@latest</a></code>, <code>pip install 'x&gt;=1.0'</code> and <code>alias<a href="https://github.com/npm">@npm</a>:real<a href="https://github.com/1">@1</a>.0</code> were checked only as "unpinned". They now resolve the way the package manager would, through <code>npm view name<a href="https://github.com/range">@range</a></code>, or the newest PyPI release the spec allows, before matching.</li>
+        <li><strong>Package tools run by path</strong> (<code>./venv/bin/pip install …</code>) or through a launcher (<code>mise exec -- pip …</code>) skipped the package check. Both are read now, and so is pip's glued <code>-rfile</code>.</li>
+        <li><strong>Partial versions counted as exact.</strong> npm's <code>x<a href="https://github.com/0">@0</a>.7</code> means the newest 0.7.x, cargo's <code>x<a href="https://github.com/1">@1</a>.2.3</code> means <code>^1.2.3</code>, and pip's <code>==1.107</code> equals 1.107.0. Each now goes to the resolver, or compares the way pip does. npm ranges resolve as npm resolves them: the <code>latest</code> tag when it fits, otherwise the highest version that does. An alias is unwrapped before the path and URL checks.</li>
+        <li><strong>Removing a Python package ran its payload.</strong> <code>snare deps fix</code> used to run the environment's own <code>pip uninstall</code>, which starts that Python, and a malicious <code>.pth</code> runs at startup, first. snare now moves the files listed in the package's <code>RECORD</code> into quarantine itself, refusing any path outside site-packages, and runs nothing from that environment. Every Python snare starts for these checks uses <code>-S</code>, so it does not run the startup files it is looking for. Cargo's <code>=1.2</code> (every 1.2.x) and <code>=1.2.3, &lt;2</code> are no longer read as one exact version.</li>
+        <li><strong>A repository could run code through snare's own Python.</strong> <code>python3 -c</code> puts the current directory first on the import path, and snare runs from inside the repository it is checking, the gate's hook included. A <code>json.py</code> or <code>re.py</code> planted at a repo's root would have run on snare's first import. Every Python snare starts now runs isolated (<code>-I</code>); the selftest plants seven stdlib-named modules and checks none is imported.</li>
+        <li><strong>An empty field shifted every column after it,</strong> because bash's <code>read</code> collapses consecutive tabs. <code>snare deps fix</code> would have failed to move a malicious <code>.pth</code> aside, and <code>respond</code> misread a blocked clone. A gate finding with an empty excerpt could not be approved. Empty fields are now written as <code>-</code>.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — a block on incoming code could not be approved</h4>
+      <ul class="rel-list">
+        <li><code>snare gate allow</code> now also looks at the code a block stopped before it arrived: the branch a checkout would bring, the upstream a pull would merge, and anything the gate recorded for this repository. <code>snare gate allow &lt;dir&gt; &lt;ref&gt;</code> names a branch. <code>snare gate allow &lt;url&gt;</code> approves a blocked clone. Each finding says it is "not on disk yet". Approvals are still tied to the file's content, so if the file changes it is flagged again.</li>
+        <li>The block now prints the exact allow command for each thing it stopped, for example <code>snare gate allow /path/to/repo main</code>. Before, it printed <code>snare gate allow 'main in /path/to/repo'</code>, which is not a path.</li>
+        <li><code>snare respond</code> re-checks incoming blocks, shows each file and line, and offers <strong>allow</strong> or <strong>leave</strong>, with a pointer to <code>snare fix</code> if it really is infected at the source. It no longer prints the raw command.</li>
+        <li>Considered and rejected: exempting snare's own repository from branch and pull checks, the way its working copy is exempt. Those checks are where incoming code is examined, so the exemption would let a poisoned upstream of snare through unseen. Making it approvable fixes the dead end without that cost.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-5-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.5.0</h3>
+      <span class="rel-date">14 Oct 2026</span>
+      <a class="rel-gh" href="https://github.com/nexlabz/snare/releases/tag/v1.5.0">Release notes ↗</a>
+    </div>
+    <p class="rel-sum">snare now checks code before your coding agent pulls it in or runs it, and shows you what it found.</p>
+    <div class="rel-group">
+      <h4>Added — the gate: scan before code comes in or runs</h4>
+      <ul class="rel-list">
+        <li><strong><code>git clone</code></strong> clones to a quarantine directory first and scans that. The clone you asked for only happens if it is clean.</li>
+        <li><strong><code>git pull</code>, <code>merge</code>, <code>rebase</code>, <code>checkout</code>, <code>switch</code></strong> run <code>git fetch</code> — which executes nothing — then scan the incoming tree in a throwaway worktree, plus the forged-force-push check, before a single file lands in your working copy.</li>
+        <li><strong><code>npm</code>/<code>pnpm</code>/<code>yarn</code>/<code>bun install</code>, <code>npm ci</code>, <code>npx</code>, <code>npm run …</code>, <code>node</code>, <code>next</code>, <code>vite</code>, <code>tsx</code>, <code>turbo</code></strong> scan the directory they would run in. Anything in the npm family that is not on a short read-only list (<code>view</code>, <code>ls</code>, <code>--version</code>…) is gated: an unknown subcommand is treated as one that runs code.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — <code>snare agents</code>: the gate in front of every coding agent</h4>
+      <ul class="rel-list">
+        <li><strong>A Claude Code <code>PreToolUse</code> hook</strong> in <code>~/.claude/settings.json</code>. This is the part that actually protects you: it runs whether or not the agent reads or agrees with its instructions, and exit 2 stops the command and hands the findings to the agent. A block reads <strong>"FIRE ON THE MOUNTAIN"</strong>, tells the agent to stop and tell you, and raises a desktop notification in case it does not.</li>
+        <li><strong>An instruction block</strong> in <code>~/.claude/CLAUDE.md</code>, <code>~/.claude/AGENTS.md</code>, <code>~/AGENTS.md</code>, Codex's <code>~/.codex/AGENTS.md</code> and Gemini's <code>GEMINI.md</code> — only for tools that are installed. Advisory, for agents with no hook mechanism: run <code>snare gate -- &lt;command&gt;</code> first, and on a block, stop and tell the user rather than route around it.</li>
+        <li><strong><code>--project [dir]</code></strong> writes the same block into a repository's own <code>CLAUDE.md</code>, <code>AGENTS.md</code>, <code>GEMINI.md</code> and Copilot instructions, plus a project hook that calls <code>snare</code> by name, so teammates who have snare are covered too.</li>
+        <li>The plugin ships the hook as well. Installed both ways, the plugin defers to the global hook rather than scanning twice.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Measured</h4>
+      <ul class="rel-list">
+        <li>An agent's everyday commands — <code>ls</code>, <code>git status</code>, <code>git diff</code>, <code>rg</code> — pay <strong>~30ms</strong>, because a pure-bash pre-filter answers before snare loads. The first version cost ~370ms on every one.</li>
+        <li>A clean repository costs ~1.2s the first time and ~0.4s after, because clean verdicts are cached against HEAD, upstream, working-tree status and the files the known routes live in — including gitignored ones, since a payload dropped into an ignored <code>.vscode/</code> changes nothing <code>git status</code> sees. Findings are never cached.</li>
+        <li><code>snare scan repo</code> gained <code>SNARE_FAST</code>, which the gate uses: the repository's own files and the forged-push check, without <code>node_modules</code> or the full history walk. <code>snare scan repo</code> itself is unchanged and remains the full check.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Changed — a block shows what is suspected and where; the person decides</h4>
+      <ul class="rel-list">
+        <li><strong>It is fine, it is mine:</strong> <code>snare gate allow [dir]</code>, in their own terminal. It walks through each finding and asks. An approval is stored in <code>~/.snare/gate-allow</code> — never in the repository, where a payload could ship its own — and is tied to the file's <strong>content</strong>: change the file and it is flagged again. <code>snare gate allowed</code> lists approvals; <code>snare gate forget</code> withdraws them.</li>
+        <li><strong>Let snare take charge:</strong> <code>snare respond</code>, the guided clean-up.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Changed — the agent setup asks first</h4>
+      <ul class="rel-list">
+        <li>The installer, the first run after upgrading and <code>snare update</code> each show what would change and ask once (<code>[Y/n]</code>). They read the answer from the terminal, so <code>curl … | bash</code> can still ask.</li>
+        <li>No terminal, CI, or a coding agent running snare: nothing is installed and nothing is recorded, so a person is asked next time.</li>
+        <li>A "no" is remembered. <code>snare agents install</code> is the yes, typed by hand.</li>
+        <li><code>snare agents sync</code> only refreshes a setup someone already agreed to; it never installs one.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — snare never deletes a repository, an organization or a remote branch</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — <code>snare respond</code> replayed an old run and never said what it found</h4>
+      <ul class="rel-list">
+        <li>The gate now records each place it stops. respond opens with them, re-checked now: every location with its line, the suspicion and the code. For each one the person chooses <strong>c</strong>lean (snare strips or removes what it flagged, backs up uncommitted files first, and stages the change for review; nothing is committed or pushed), <strong>a</strong>llow (it is theirs), or <strong>l</strong>eave (it stays blocked and stays on the list).</li>
+        <li>If nothing was confirmed as real, respond offers to stop there rather than pushing someone through a full credential rotation over a false alarm.</li>
+        <li>A finished run starts a fresh check, and its record is kept as <code>respond-state.prev</code>.</li>
+        <li>Flagged repositories are named in the scan step and the summary, with "cleaned" or "NOT cleaned yet". A repo you said no to stays listed.</li>
+        <li>Cleaning a local checkout pins the git settings that can run a program (<code>core.fsmonitor</code> and the rest), the same set the gate uses.</li>
+        <li><code>snare respond</code> approves and cleans, so an agent is refused it, the same as <code>snare gate allow</code>. <code>snare respond --status</code> stays open.</li>
+        <li>The selftest no longer writes test entries into the real gate state.</li>
+        <li><strong>Gate:</strong> a script that <em>sourced</em> a library had only refusals kept from it. Sourcing runs every top-level line, so <code>bash run.sh</code> that sources a lib which clones and installs another repository checked neither. Sourced and nested scripts are now classified in full (found by automated review).</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — the gate could run the code it was checking</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — more ways past the gate, from further review passes</h4>
+      <ul class="rel-list">
+        <li><code>curl … | bash</code> runs whatever arrives; it is reported as unverifiable, for the person to decide.</li>
+        <li><code>curl -o x.sh … &amp;&amp; bash x.sh</code>: the script does not exist until the same command creates it, so it cannot be read in advance — unverifiable.</li>
+        <li><code>git fetch --upload-pack=…</code> and <code>--receive-pack</code> run a program for a local remote; <code>git config</code> writes (<code>core.hooksPath</code>, <code>alias.x '!…'</code>) arm one for later; <code>export NODE_OPTIONS=…</code> and similar arm the next command. All are checked now — and the fast path no longer waves through any command with a quote or an exec-style option.</li>
+        <li>A planted script in <code>.git/hooks</code> (or a configured <code>core.hooksPath</code>) fires on the next commit, and is now read like any other route.</li>
+        <li><code>bash /path/to/snare gate allow</code> is still snare, and is still refused.</li>
+        <li>An agent's own file tools never pass through the shell hook, so it could have written an approval straight into <code>~/.snare/gate-allow</code>. <code>snare agents install</code> now adds Claude Code permission rules denying the agent <code>Edit</code> and <code>Write</code> on <code>~/.snare</code>, which Claude Code enforces on every tool; they are removed on uninstall, and your other permissions are left exactly as they were. Writing that directory from the shell is refused by the gate — reading it is fine, and so is any other <code>SNARE_HOME</code>.</li>
+        <li><strong>The narrower check had dropped coverage.</strong> It only looked at routes, so a payload hidden in an ordinary source file the app imports — which the full scan always found — went unseen. A bounded pass over the source (6000 files, 64MB) now looks for campaign markers and code hidden past whitespace, requiring the hidden part to look obfuscated so aligned comments and minified bundles are not reported. Re-measured on all 67 local repositories: still no false alarms.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — a sixth review pass</h4>
+      <ul class="rel-list">
+        <li><strong>A repository could exempt itself.</strong> The route check skipped any directory holding a <code>.snare-tool</code> file, as snare's own source does — so a repository that shipped that one empty file was never checked. Only snare's actual install is exempt now.</li>
+        <li><strong>A cached clean outlived a source change.</strong> The source pass reads every script, but the cache key only covered the routes; it now covers every file the check reads.</li>
+        <li><strong><code>n\&lt;newline&gt;pm install</code></strong> is <code>npm install</code> to bash, which deletes a backslash-newline; the tokenizer had turned it into a space.</li>
+        <li><strong>A redirect glued to a word</strong> — <code>echo x&gt;~/.snare/gate-allow</code> — and an interpreter writing snare's state from inside a quoted string were not seen as writes. Any write into the state directory, not only the named files, is refused. (An HMAC over approvals was considered and not done: on a single-user machine there is nowhere to keep the key that the agent cannot also read, so the boundary that holds is Claude Code's deny rules.)</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — the gate's check was the full scan, and timed out</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — husky was reported as malware</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — "read-only" programs that can run a command</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Changed — the gate decides what is safe, not what is dangerous</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — upgrading did not install the gate</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — the gate's own bypasses, before it shipped</h4>
+      <ul class="rel-list">
+        <li><strong>A newline before the command.</strong> The hook receives the command JSON-encoded, so a newline is the two characters <code>\n</code>; <code>cd app\nnpm install</code> put the letter <code>n</code> directly before <code>npm</code>, the word boundary failed, and <strong>every multi-line agent command skipped the gate entirely</strong>. The same for a tab.</li>
+        <li><strong>The agent could switch it off.</strong> <code>SNARE_SKIP_GATE=1 npm install</code> was honoured when it appeared in the command — and the agent writes the command, so a README or issue that talked it into that prefix turned the gate off. An in-command bypass no longer exists. The environment variable still works, because it is set where Claude Code was launched, which the agent cannot change, and it is logged and announced every time.</li>
+        <li><strong>Wrapping it.</strong> <code>sh -c "npm install"</code>, <code>bash -lc '…'</code>, <code>eval "…"</code>, and a heredoc fed to <code>bash</code>. The gate now reads inside them.</li>
+        <li><strong>Launchers.</strong> <code>corepack pnpm install</code>, <code>volta run npm install</code>, <code>cross-env … npm run dev</code>, <code>timeout 60 npm install</code>, and similar. The gate looks through them to the program they start.</li>
+        <li><strong>Checking out a branch that exists only on the remote.</strong> <code>git checkout feat</code> creates <code>feat</code> from <code>origin/feat</code>; the gate read "no such local ref" as "nothing to check". It now resolves the remote copy and scans it.</li>
+        <li><strong><code>gh pr checkout</code> and <code>gh repo clone</code></strong>, which bring code in — a pull request's head can come from anyone's fork — and were not seen at all.</li>
+        <li><strong>A slow scan let the command through.</strong> When Claude Code's hook timeout fires it treats the hook as failed and runs the command anyway. The gate now keeps its own shorter deadline and blocks when it is hit, and kills the whole scan tree — the first attempt killed only the direct child and left a timed-out <code>git clone</code> of the Linux kernel downloading in the background.</li>
+        <li><strong>The installed hook command</strong> embedded snare's path in hand-written quotes; a path containing a quote would have become code that runs before every agent command. It is <code>%q</code>-quoted now, and tested with a hostile path.</li>
+        <li><strong>A clone URL could be read as an option.</strong> <code>--</code> now separates them.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — the shell shield broke npm for every coding agent</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed while building it</h4>
+      <ul class="rel-list">
+        <li><strong>The first version called an empty clone clean.</strong> A remote whose <code>HEAD</code> names a branch that does not exist clones to an empty checkout, and the gate scanned that empty directory and let it through — a verdict about code it never looked at. It now fetches and scans every branch tip when nothing is checked out.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Known limits</h4>
+      <ul class="rel-list">
+        <li>The hook covers Claude Code. Codex, Cursor and Gemini get the instruction block, which they can ignore; Cursor's own shell hooks are a natural next step.</li>
+        <li>It reads commands, not intent: a script file that runs <code>npm install</code> inside it is checked only as far as the command that launches it shows. A value assembled at run time is reported as unverifiable rather than guessed.</li>
+        <li><code>npm install &lt;package&gt;</code> from a registry or a git URL runs that package's own lifecycle scripts; the gate checks the repository you are in, not the package you are adding.</li>
+        <li>The gate checks the repository's own files. <code>node_modules</code> is left to <code>snare scan repo</code>, and npm itself to <code>snare doctor</code>.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-4-3">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.4.3</h3>
+      <span class="rel-date">13 Oct 2026</span>
+    </div>
+    <p class="rel-sum"><code>--purge-history</code> reported zero while a payload stayed in history.</p>
+    <div class="rel-group">
+      <h4>Fixed — <code>--purge-history</code> reported zero while a payload stayed in history</h4>
+      <ul class="rel-list">
+        <li><strong>The file OPENED with the whitespace wall.</strong> 424 tabs, then 28KB of code on the same line, and that was the whole file. Rule A needs real code <em>in front of</em> the run; rule B needs the payload to look obfuscated by the markers below. This shape satisfied neither. A line that begins with 50+ spaces or tabs, runs long and dense, and carries a hard campaign marker is now dropped on that basis alone — the whitespace prefix is the structural tell, and no honest file opens that way.</li>
+        <li><strong>The obfuscation was a style nothing recognised.</strong> No <code>_0x</code> identifiers, no <code>\u00</code> escapes, no <code>eval(</code>, no <code>atob(</code> — just long random identifiers (<code>RvJq_qacMrKUHEOocOXlFJqDe</code>) and an array of hex strings decoded at runtime. Two adjacent hex strings of eight or more characters inside an array literal is now an obfuscation signal in its own right.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-4-2">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.4.2</h3>
+      <span class="rel-date">13 Oct 2026</span>
+    </div>
+    <p class="rel-sum">False positives.</p>
+    <div class="rel-group">
+      <h4>Fixed — false positives</h4>
+      <ul class="rel-list">
+        <li><strong><code>node -e</code> matched two letters inside a filename.</strong> The pattern was <code>node\s+.*(-e|--eval)</code>, with the flag unanchored, so <code>atlas-engine</code> matched and an honest <code>PostToolUse</code> hook running <code>packages/atlas-engine/hooks/atlas-tag.ts</code> was reported as a dropper. The same pattern sat in the <code>package.json</code> install-hook check and the API scan, where it would equally have fired on <code>node scripts/build-extract.js</code>, <code>node --experimental-vm-modules test.js</code> or anything else with a hyphenated word beginning in <code>e</code>. The flag must now stand on its own.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — and four ways to run code that nothing caught</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-4-1">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.4.1</h3>
+      <span class="rel-date">13 Oct 2026</span>
+    </div>
+    <p class="rel-sum"><code>update</code> took over the launcher it did not own.</p>
+    <div class="rel-group">
+      <h4>Fixed — <code>update</code> took over the launcher it did not own</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-4-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.4.0</h3>
+      <span class="rel-date">12 Oct 2026</span>
+    </div>
+    <p class="rel-sum">False clean results.</p>
+    <p class="lede">Three people found this campaign on their own machines and wrote up what they saw: [<a href="https://github.com/kleenpulse">@kleenpulse</a>](https://github.com/kleenpulse) <a href="https://github.com/nexlabz/snare/pull/47">#47</a>, [<a href="https://github.com/ibraheembello">@ibraheembello</a>](https://github.com/ibraheembello) <a href="https://github.com/nexlabz/snare/pull/46">#46</a> and [<a href="https://github.com/SamuelOshin">@SamuelOshin</a>](https://github.com/SamuelOshin) <a href="https://github.com/nexlabz/snare/pull/44">#44</a>. Every item below is a sample or a bug they reported, with the reproduction and the measurement taken here before and after.</p>
+    <div class="rel-group">
+      <h4 class="crit">Fixed — false clean results</h4>
+      <ul class="rel-list">
+        <li class="crit"><strong>The run scripts, not the install hooks.</strong> <code>package.json</code> keeps every script it had and gains <code>"dev": "node api.js &amp;&amp; next dev"</code> (and the same for <code>build</code> and <code>start</code>), so nothing has to be installed for the loader to run and <code>--ignore-scripts</code> is irrelevant. Section 2 only ever read <code>preinstall</code>/<code>postinstall</code>/<code>prepare</code>. The shape on its own is an ordinary build step — <code>node scripts/build.js &amp;&amp; tsc</code> is honest work — so the check fires only when the file being run is itself obfuscated: one line over 5,000 characters, a <code>_0x</code> identifier array, or an assignment to <code>global[..]</code>.</li>
+        <li class="crit"><strong>The AI agent's own config is the persistence.</strong> A <code>SessionStart</code> hook in <code>.claude/settings.json</code> runs a dropper every time a session opens. It survives removing the package that delivered it, npm never sees it, and the <code>.claude/setup.mjs</code> and <code>.vscode/setup.mjs</code> copies re-create each other, so removing one directory fixes nothing. Hooks are a real feature — snare ships a plugin itself — so the command decides: a <code>prettier</code> hook is a note, <code>node .vscode/setup.mjs</code> is a finding.</li>
+        <li class="crit"><strong>The obfuscated loader set <code>global['!']</code>, not <code>global.i</code>.</strong> The marker list and the history cleaner both keyed on <code>global\.i</code>, so the obfuscated half of this campaign matched nothing and <code>--purge-history</code> rewrote nothing while reporting success. The campaign tags <code>4738-2</code> and <code>2503-2</code>, the push-forging artefacts (<code>temp_auto_push.bat</code>, <code>temp_interactive_push.bat</code>, <code>branch_structure.json</code> — added to <code>.gitignore</code> so they stay out of <code>git status</code>) and the Windows clipboard stealer (<code>GetClipboardSequenceNumber</code> under a hidden <code>-EncodedCommand</code>) are IOCs now.</li>
+        <li class="crit"><strong><code>doctor</code> never looked at npm on Windows.</strong> It printed <code>no npm installation found to check</code> on every Windows host: it knew only the Unix <code>lib/node_modules</code> layout, never <code>%APPDATA%\npm\node_modules\npm</code>. That is also the copy that <em>runs</em> — the <code>npm</code> and <code>npx</code> shims prefer a global-prefix install over the one bundled in Program Files, so a single <code>npm i -g npm</code> is enough. A live infection sat there while <code>doctor</code> reported clean <a href="https://github.com/nexlabz/snare/pull/46">#46</a>. Size is checked first, because it needs no knowledge of the malware at all: measured 407 bytes here and 419 bytes on the reference host, against 503,857 and 1,332,948 bytes in the two reported infections.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — parser differentials</h4>
+      <ul class="rel-list">
+        <li><strong><code>.vscode/tasks.json</code> was gated on <code>grep -q folderOpen</code>.</strong> The verdict now comes from the parsed document and compares resolved strings, so the escape has nothing to hide behind.</li>
+        <li><strong>An agent config that could not be parsed was silently skipped.</strong> One <code>//</code> comment in <code>.claude/settings.json</code> made <code>json.loads</code> throw, the check exited 0, and a <code>SessionStart</code> dropper went unreported while the agent still ran it. Both files are read as JSONC, and a config nothing here can parse is a finding of its own — VS Code is more tolerant than any parser snare ships, so silence is the wrong default.</li>
+        <li><strong>The history cleaner had its own byte-level pre-filter</strong> in front of the same parse, with the same result for <code>--purge-history</code>. Four review passes found four variants of that one gate — an escaped <code>"\u0074asks"</code> key, a UTF-8 BOM, 2,000 leading spaces, and a UTF-16 file that VS Code reads and runs while the same bytes decode to mojibake as UTF-8. The lesson is the gate, not the variants: it now tests nothing but shape, on text decoded the way an editor decodes it, and every verdict is taken after parsing. All four have regression tests, as do the controls — <code>package.json</code>, <code>tsconfig.json</code>, an honest <code>tasks.json</code> and a PNG are asserted untouched, because a shape-only gate parses more blobs than a byte-matched one.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4 class="crit">Fixed — destructive behaviour</h4>
+      <ul class="rel-list">
+        <li class="crit"><strong>A 0-byte fake font was treated as a genuine font.</strong> <code>magic4</code> returns nothing for a file with no bytes to read, and <code>is_font</code> read that as "font", so a dropper committed as an empty <code>public/fonts/fa-solid-500.woff2</code> was skipped by <code>fix</code> and left in place along with the task that overwrites and runs it <a href="https://github.com/nexlabz/snare/pull/44">#44</a>.</li>
+        <li class="crit"><strong><code>tasks.json</code> is JSONC, and that deleted people's build tasks.</strong> Real VS Code files carry <code>//</code> comments, <code>/<em> </em>/</code> blocks and a trailing comma; <code>json.loads</code> rejects all three, and the caller read "cannot parse" as "nothing legitimate in it" and removed the file. A project with honest build tasks plus one injected <code>folderOpen</code> task lost every task it had <a href="https://github.com/nexlabz/snare/pull/44">#44</a>. Both cleaners now parse JSONC, and the history cleaner identifies a <code>tasks.json</code> blob by content — <code>git filter-repo</code> hands its blob callback no filename, which is why a purge rewrote payload lines but left every injected task sitting in history.</li>
+        <li class="crit"><strong><code>fix</code> invented a branch called <code>origin</code> and pushed it.</strong> <code>refs/remotes/origin/HEAD</code> short-names to plain <code>origin</code>, which passes <code>grep -v HEAD</code>; <code>${ref#origin/}</code> then leaves <code>origin</code> unchanged, so the tip-cleaning loop created a local branch of that name and force-pushed it as <code>refs/heads/origin</code> on the remote being remediated <a href="https://github.com/nexlabz/snare/pull/44">#44</a>.</li>
+        <li class="crit"><strong>A failed push was reported as a success.</strong> <code>git push ... | tail -2</code> discards the exit status, so a 443 timeout printed its error into the pipe while the purge reported success and the rewritten history had never left the machine <a href="https://github.com/nexlabz/snare/pull/44">#44</a>.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — false positives</h4>
+      <ul class="rel-list">
+        <li><strong>The whitespace heuristic fired on block comments.</strong> Measured on a real 53,740-file project: 5 findings, every one of them aligned prose inside a <code>/<em> </em>/</code> comment, where nothing after the whitespace run can execute. That project now reports clean. A line whose first non-space character is <code>*</code>, <code>//</code> or <code>#</code> is skipped.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — forged force-pushes</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Changed — being behind is now a visible risk</h4>
+      <ul class="rel-list">
+        <li><strong>A clean verdict says when it came from an outdated scanner.</strong> This is the one output that stops someone looking further, so <code>scan repo</code> now prints the commit distance and what that version could not see. Cache only — no network on that path.</li>
+        <li><strong>The notice reaches installs that are not git checkouts.</strong> The refresh returned early without a <code>.git</code> directory, so anyone who downloaded a zip or tarball was never told anything at all. The version in the remote's <code>bin/snare</code> is recorded as well, which works without a repository.</li>
+        <li><strong>The notice says what is missing, not just that something is.</strong> It named 1.1.0 forever; it now names the release that fixed the false-clean bug the running version still has.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Changed — the repository moved to github.com/nexlabz/snare</h4>
+      <ul class="rel-list">
+        <li>The update channel, the reusable CI workflow, the plugin manifests, the skill and the field-guide links all name the canonical path.</li>
+        <li>A stale <code>origin</code> is repointed wherever snare talks to its own remote — not only in <code>snare update</code>, but in the background refresh that feeds the "you are behind" notice, which reaches the network first. A notice sourced from a hijacked remote would be worse than no notice at all. <code>snare update</code> says so out loud; the refresh does it silently, because it must never write to the terminal. It runs before the local-modifications guard, so a checkout with edits still gets repointed, and matches case-insensitively because GitHub treats owner names that way and <code>clone github.com/avioflagos/snare</code> produces a working remote that a case-sensitive match would miss. An <code>ssh://</code> remote on the old path is moved to the canonical HTTPS URL.</li>
+        <li>The site moved with it. <code>avioflagos.github.io/snare</code> now returns 404 and the field guide is at <strong>nexlabz.github.io/snare</strong> — which also means every canonical URL, <code>og:url</code> and sitemap entry on the published site had been pointing at a dead host.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — the website could not drift, but it did</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Not fixed</h4>
+      <ul class="rel-list">
+        <li><code>--purge-history</code> still cannot remove a <em>fake font</em> from history by name: <code>git filter-repo</code>'s blob callback is given no filename, and a font-named payload has no reliable content signature. Injected <code>folderOpen</code> tasks are handled by content; for a font, remove the path explicitly: <code>git filter-repo --invert-paths --path public/fonts/&lt;file&gt;</code>.</li>
+        <li>How this family reaches a machine in the first place is still unidentified. #47 documents npm's own <code>cli.js</code> rewritten on disk, but not what put it there.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-3-4">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.3.4</h3>
+      <span class="rel-date">2 Oct 2026</span>
+    </div>
+    <p class="rel-sum"><code>scan repo</code> did not finish on a real project.</p>
+    <div class="rel-group">
+      <h4>Fixed — <code>scan repo</code> did not finish on a real project</h4>
+      <ul class="rel-list">
+        <li><strong>The IOC set is split by whether it needs a regex engine at all.</strong> 42 of the 53 patterns are plain strings once backslash-escapes are removed — <code>global\['_t_s'\]</code> and <code>setup_bun\.js</code> look like regexes but are literals — and those go through <code>-F</code>, which is Aho-Corasick and indifferent to how many patterns there are. Only 11 genuinely need <code>-E</code>.</li>
+        <li><strong>ripgrep is used when it is installed</strong>, falling back to grep when it is not. Measured on the same tree, a literal pass over <code>node_modules</code>: BSD grep &gt;120s, ripgrep 1.6s.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Known, not fixed</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-3-3">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.3.3</h3>
+      <span class="rel-date">2 Oct 2026</span>
+    </div>
+    <p class="rel-sum">The guard cost about a third of a core to do nothing.</p>
+    <div class="rel-group">
+      <h4>Fixed — the guard cost about a third of a core to do nothing</h4>
+      <ul class="rel-list">
+        <li><strong>The network scan walked every open socket in bash</strong>, testing each C2 IP with <code>case</code>. That is 1.75s a call. A single <code>grep -F -f</code> pass does the same filtering in C and normally matches nothing, so the loop body — and its per-connection <code>snare_net_pid</code> / <code>snare_ps_cmd</code> forks — is never entered.</li>
+        <li><strong>The process scan read every process on the machine.</strong> Only interpreters can execute an inline payload, which the <code>case</code> already enforced exactly, so a <code>grep -E</code> pre-filter now drops the other few hundred before bash sees one.</li>
+        <li><strong>The C2 IP list was re-resolved inside the per-connection loop</strong>, costing a fork for every open socket on each scan.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Changed — the two checks now tick at different rates</h4>
+      <ul class="rel-list">
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Also</h4>
+      <ul class="rel-list">
+        <li><code>91.218.183.174</code> added to the kill pattern, not just the scan IOCs. The guard's cmdline pattern is separate from <code>iocs.txt</code> and had been missed.</li>
+        <li>Verified end to end rather than by inspection: the live daemon detected and SIGKILLed <code>node -e "global['_t_u']=..."</code> within 3 seconds, with evidence written, after each change.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-3-2">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.3.2</h3>
+      <span class="rel-date">2 Oct 2026</span>
+    </div>
+    <p class="rel-sum">False positives, measured on real repos.</p>
+    <div class="rel-group">
+      <h4>Fixed — false positives, measured on real repos</h4>
+      <ul class="rel-list">
+        <li><strong><code>_H2</code>, <code>_t_s</code>, <code>_t_u</code> were matched bare.</strong> <code>bwip-js</code> names generated variables <code>_H0</code>..<code>_H4</code> and <code><a href="https://github.com/edge-runtime">@edge-runtime</a>/primitives</code> contains <code>PAUSED_H2_UPGRADE</code>, so any project with those dependencies lit up. The loader always sets these as globals, so they are now anchored (<code>global['_H2']</code>, <code>_global._H2</code>, …). Checked against the plaintext sample: the anchored forms hit it exactly as the bare token did, so no detection was traded away.</li>
+        <li><strong><code>changeCount</code> was matched bare.</strong> <code>NSPasteboard.changeCount</code> is the real clipboard-stealer signal, but the bare word matched vitest's diff printer (<code>changeCounts.a</code>) and fired on anything with a test runner. Now anchored to the pasteboard API. <code>generalPasteboard</code> and <code>NSPasteboard</code> were added on their own — Apple-specific, near-zero false positive — so a stealer dropped as a plain <code>.js</code> with no <code>osascript</code> on the line is caught, which it was not before. Net: fewer false positives and better coverage.</li>
+        <li><strong>The whitespace heuristic read generated output.</strong> <code>node_modules</code> was excluded but <code>.next/</code> was not, and a bundler legitimately emits long whitespace runs — three findings per build in a clean repo. Now also skips <code>.nuxt</code>, <code>.turbo</code>, <code>.svelte-kit</code>, <code>.output</code>, <code>.vercel</code>, <code>.cache</code>, <code>coverage</code>. <code>dist/</code> and <code>build/</code> are deliberately still scanned: those get committed, and are a real place to hide a payload.</li>
+        <li><strong>The new stray-asset check flagged <code>.gitkeep</code>.</strong> Empty files and the usual placeholders are now skipped — a task has to execute something, and an empty file cannot be it.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-3-1">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.3.1</h3>
+      <span class="rel-date">2 Oct 2026</span>
+    </div>
+    <p class="rel-sum"><code>scan github</code> reported clean on an infected repo.</p>
+    <div class="rel-group">
+      <h4>Fixed — <code>scan github</code> reported clean on an infected repo</h4>
+      <ul class="rel-list">
+        <li><strong><code>producer | grep -q X</code> could report NO MATCH when X was present.</strong> <code>grep -q</code> exits on the first match, which SIGPIPEs whatever is still writing. <code>bin/snare</code> runs under <code>set -o pipefail</code>, so that 141 became the pipeline's status and every caller read it as "not found". The failure is size-dependent, which is why it survived: it only bites once the producer has more to write than the pipe buffer holds, so small fixtures always passed.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-3-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.3.0</h3>
+      <span class="rel-date">2 Oct 2026</span>
+    </div>
+    <p class="rel-sum">Scanner reported clean on an infected repo.</p>
+    <div class="rel-group">
+      <h4>Fixed — scanner reported clean on an infected repo</h4>
+      <ul class="rel-list">
+        <li><strong>A payload wearing an extension snare did not glob was invisible.</strong> The 2026-10 sample shipped as <code>public/fonts/fa-solid-300.llf</code> — about 2000 tab characters followed by an obfuscated loader. Section 3 globs only <code>.woff2/.woff/.ttf/.otf</code>, and section 4 only <code>.js/.mjs/.cjs/.ts</code>, so the file was read by neither and the scan printed "no code hidden past whitespace". The same campaign's <code>.woff2</code> drop was caught immediately, so the extension was the whole evasion. Section 3 now also reports any file in a <code>fonts/</code>, <code>assets/</code> or <code>static/</code> directory whose extension is not an asset or script type, and previews it with whitespace squeezed. Known residual gap, recorded in the code: <code>.eot</code> and <code>.svg</code> still pass, because they are real asset types here and their magic is not verified.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — the guard follows a rotating C2</h4>
+      <ul class="rel-list">
+        <li><strong><code>snare c2</code></strong> resolves the live C2 from the blockchain dead drop the loader itself reads, so a shipped IP list no longer goes stale by design. The loader takes the latest transaction from a fixed Ethereum sender and reads the first 8 bytes of that transaction's <code>to</code> address as two IPv4 addresses; the operator rotates by signing a new transaction. snare reads the same drop and feeds it into the guard's kill list. <code>91.218.183.174</code> — live at the time of writing, and absent from the previous hardcoded list — is now covered both dynamically and as a builtin. The lookup is read-only against a public explorer, refreshes at most once a day in a detached process, and the 1-second guard loop only ever reads a cached file, so the hot path stays fork-free.</li>
+        <li><code>snare_py</code> picks python3 / python / <code>py -3</code>, for Git Bash hosts that only ship the launcher.</li>
+        <li>New IOCs for the 2026-10 campaign: the C2, both staging paths, the sender address, the <code>helloipbot</code> dead-drop marker, the second XOR key and <code>NONCE_FANOUT</code>. Patterns generic enough to fire on ordinary web3 code were deliberately left out.</li>
+        <li>Five selftest checks covering the decoder, the kill list without a cache, and that the stray-asset check flags the <code>.llf</code> shape while leaving a real font and an ordinary script in an asset directory alone. 32 checks total.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-2-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.2.0</h3>
+      <span class="rel-date">10 Sep 2026</span>
+    </div>
+    <p class="rel-sum">Destructive behaviour.</p>
+    <p class="lede">Remediation could delete the file it was meant to clean. If you ran <code>snare fix --push</code> on a release before this one, check the repository: a build config may have been removed rather than repaired.</p>
+    <div class="rel-group">
+      <h4 class="crit">Fixed — destructive behaviour</h4>
+      <ul class="rel-list">
+        <li class="crit"><strong><code>fix</code> deleted the build config instead of cleaning it.</strong> The delete pass removed any file matching an IOC string, and a payload appended to <code>postcss.config.mjs</code> <em>is</em> an IOC string — so the file was gone before the strip pass further down the same function could reach it. It pushed a commit that removed the malware and the project's build with it. Stripping runs first now, and a file the project needs is cleaned and kept, never deleted. Reported and fixed by <a href="https://github.com/phoenixdahdev">@phoenixdahdev</a>. <a href="https://github.com/nexlabz/snare/pull/39">#39</a></li>
+        <li class="crit"><strong><code>.vscode/tasks.json</code> was deleted whole</strong>, losing honest build tasks along with the injected <code>folderOpen</code> one. Only the malicious task goes now. <a href="https://github.com/nexlabz/snare/pull/39">#39</a></li>
+        <li class="crit"><strong>A payload on a line of its own was never removed.</strong> Both cleaners keyed on the one-line signature. The new rule is gated narrowly — long, minified in shape, a hard campaign marker <em>and</em> obfuscated code — because dropping a whole line on a weaker signal is itself destructive. <a href="https://github.com/nexlabz/snare/pull/39">#39</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — detection and coverage</h4>
+      <ul class="rel-list">
+        <li><strong>Worm artifacts and fake assets are now found by filename and magic bytes</strong> during remediation, not only during scanning: <code>scan</code> reported them and <code>fix</code> walked straight past. <a href="https://github.com/nexlabz/snare/pull/39">#39</a></li>
+        <li><strong>npm's own <code>lib/cli.js</code> is checked.</strong> A live host was found with ~1.4MB appended to it after 200 spaces, so every <code>npm</code> invocation ran the loader — <code>--ignore-scripts</code> does not help, because it is the package manager itself and not a package script. New campaign <code>A8-4893-2</code>, with two C2 addresses and a socket.io RAT held by a crontab <code><a href="https://github.com/reboot">@reboot</a></code> line. <a href="https://github.com/nexlabz/snare/pull/39">#39</a></li>
+        <li>The doctor fixture path is normalised, so the npm check no longer failed on macOS while passing on Linux — the suite reported "detection is broken" for a detector that was working correctly. <a href="https://github.com/nexlabz/snare/pull/39">#39</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — contribution and platform</h4>
+      <ul class="rel-list">
+        <li><strong>No pull request from a fork could ever pass CI.</strong> <code>ci.yml</code> passed <code>github.head_ref</code> to the reusable workflow, which then tried to check that ref out of this repository — a fork's branch does not exist here, so checkout failed three times before a single check ran. The first outside contribution hit it, and the failure looked like the contributor's fault rather than ours. It uses <code>refs/pull/N/head</code> now. <a href="https://github.com/nexlabz/snare/pull/40">#40</a></li>
+        <li><strong>Windows <code>guard install</code> failed with no explanation.</strong> <code>schtasks.exe</code> needs a Windows path and was handed an MSYS one, and every error was discarded. It now converts the path, prints the real error, and falls back to a Startup entry that needs no administrator rights. <a href="https://github.com/nexlabz/snare/pull/32">#32</a></li>
+        <li>snare flagged its own plugin manifest and skill, which quote the malware's keywords because they describe it. <a href="https://github.com/nexlabz/snare/pull/38">#38</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added</h4>
+      <ul class="rel-list">
+        <li><strong><code>snare respond</code></strong> — one guided clean-up instead of nine commands, in the order that actually works: rotate credentials, clean the machine you push from, then the repositories, then tell your collaborators. Resumable, asks before every action, refuses to run unattended. <a href="https://github.com/nexlabz/snare/pull/33">#33, #34</a></li>
+        <li><strong>A passive update notice.</strong> Every command now says, at most once a day and in one line, when the installation is behind. It never blocks — the check is cached and refreshed off the command path — sends nothing, and is off with <code>SNARE_NO_UPDATE_CHECK=1</code>. The people who most need the fixes are the ones who cloned once and never thought about it again. <a href="https://github.com/nexlabz/snare/pull/41">#41</a></li>
+        <li><strong>snare ships as a Claude Code plugin</strong>, so a coding agent can find and run it. <a href="https://github.com/nexlabz/snare/pull/38">#38</a></li>
+        <li>An incident-response walkthrough on the site, and a copy-paste prompt for people who would rather have an AI assistant do the work — written to forbid the assistant from running anything destructive without asking. <a href="https://github.com/nexlabz/snare/pull/36">#36</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Changed</h4>
+      <ul class="rel-list">
+        <li>Post-scan guidance leads with rotating credentials and cleaning your machine, not with <code>snare fix</code>. Cleaning repositories first is wasted work while the machine that pushes to them is still infected. <a href="https://github.com/nexlabz/snare/pull/31">#31</a></li>
+        <li>The notify templates lead with rotation too, and carry the full list including the clipboard and the Actions workflow that keeps exfiltrating after the dropper is gone. <a href="https://github.com/nexlabz/snare/pull/32">#32</a></li>
+        <li><code>snare version</code> no longer runs a live fetch to decide whether to nudge; a one-line command took about five seconds on a slow link. <a href="https://github.com/nexlabz/snare/pull/41">#41</a></li>
+        <li>The site is a multi-page field guide with corrected document semantics, a crawler policy naming 29 search and AI crawlers, <code>llms.txt</code>, and structured data on every page. <a href="https://github.com/nexlabz/snare/pull/33">#33, #35, #37</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — <code>snare doctor</code> was macOS-only, and said so in neither place</h4>
+      <ul class="rel-list">
+        <li><strong>The guard check asked <code>launchctl</code> on every platform.</strong> On Linux the guard is a systemd user unit and on Windows a scheduled task, so doctor reported "guard not installed" no matter what it was actually doing. It now asks the right supervisor per platform, distinguishes <em>installed but stopped</em> from <em>not installed</em>, and counts a hand-started <code>snare guard run</code> as running.</li>
+        <li><strong>"Persistence spots" checked three macOS paths that do not exist on Linux</strong>, found nothing in them, and printed <code>empty</code> three times — a clean bill of health from having looked nowhere. This is the same false-clean shape as the scanner bugs in 1.1.0, in the one command whose entire job is answering "is this machine compromised". It now checks the locations that platform actually uses — systemd user units, autostart, <code>/etc/cron.d</code> — and lists what it finds rather than only counting. The user crontab is checked everywhere, which is where the RAT on the reference host lived.</li>
+        <li><strong>Added a Node and npm integrity check</strong>, because the package manager is a file like any other and nothing was looking at it. It finds every npm on the system without <em>running</em> npm to ask — running npm was the thing that executed the loader — and flags <code>lib/*.js</code> carrying a hidden payload or a known IOC. It also reports <code>~/.node_modules</code> (a legacy global resolution path, rarely deliberate, and where the RAT's dependencies were planted) and a <code>NODE_OPTIONS</code> <code>--require</code>/<code>--import</code> injection in the environment or a shell profile.</li>
+        <li><code>cmd_doctor</code> moved out of <code>bin/snare</code> into <code>lib/doctor.sh</code>, like every other command.</li>
+        <li><code>snare selftest</code> covers all of it: 3 checks asserting a patched npm is flagged, an intact one is not, and <code>guard_state</code> answers for the host platform. 27 in total.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — where a detection came from</h4>
+      <ul class="rel-list">
+        <li><strong><code>snare guard origins</code></strong> — an append-only provenance log (<code>$SNARE_HOME/logs/origins.log</code>) recording, per detection: the file responsible, the working directory, the full parent chain, and a link to the evidence dump. It ends with the most frequent origins, because a source that keeps re-launching shows up as a count.</li>
+        <li>The guard now walks the <strong>parent chain</strong> at detection time and records it. <code>node -e &lt;payload&gt;</code> names no file on disk; its parent almost always does, and that parent is the thing that needs cleaning. On the host above this resolves in one line to <code>.../node_modules/npm/lib/cli.js</code>.</li>
+        <li>Ancestry is captured <strong>before</strong> anything else in the handler. These processes exit in well under a second, and a parent that has already gone is a dead end.</li>
+        <li>A dropper that deletes itself is still reported, as <code>&lt;path&gt; (no longer on disk)</code>. Reporting a path that is gone beats reporting nothing, which is what the first version did.</li>
+        <li>Evidence dumps gain an <code>origin</code> section and the parent chain. They do <strong>not</strong> record the process environment: on a machine being investigated for credential theft, writing every environment variable into a log file is its own leak.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — IOCs from a live host, 2026-09-06..08</h4>
+      <ul class="rel-list">
+        <li><code>193.247.144.38</code> — the EtherHiding loader's C2. Not the address in the existing IOC list; the operator rotates it from the blockchain, which is the whole point of that design and the reason blocking one IP is not a fix.</li>
+        <li><code>194.11.226.41</code> — a <strong>second, separate implant</strong>: an obfuscated socket.io RAT dropped to <code>~/.local/share/&lt;random&gt;.js</code>, held by a <code>crontab <a href="https://github.com/reboot">@reboot</a></code> line, writing to a decoy <code>VSCodeUpdater.log</code>, with its dependencies (<code>axios</code>, <code>socket.io-client</code>) installed into <code>~/.node_modules</code> so Node's legacy global resolution would find them. Its command line contained <strong>no loader string at all</strong> — the guard would not have caught it. It is matched now by the shape of its argument: <code>--token "http://IP:PORT|SECRET"</code>.</li>
+        <li><code>/<em>RS260605</em>/</code>, <code>/<em>M260630A</em>/</code> — markers the payload writes into what it patches, and the ones that identify a patched file at rest.</li>
+        <li>The npm-patch route matters on its own: <code>ignore-scripts=true</code> was set on that host and did not help, because the package manager itself was modified rather than any package's install script.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — one command from picking to fixing</h4>
+      <ul class="rel-list">
+        <li><strong><code>snare fix --pick</code></strong> chooses organisations from the same list <code>scan orgs</code> prints, scans them, and remediates what it finds, in one pass. It is a dry run unless you add <code>--push</code>; <code>--purge-history --push</code> also erases the payload from all history. <code>--owner a,b</code> is the same thing without the prompt, for a script or a timer. The destructive flags stay on the command line rather than hiding inside a friendlier-sounding verb — force-pushing rewritten history across an organisation should be legible in your shell history.</li>
+        <li>With <code>--purge-history</code> it checks for <code>git-filter-repo</code> <strong>before</strong> the picker and the scan. The check previously lived inside the per-repository purge, so you chose an organisation, waited out a full scan and a clone, and only then found out it could not proceed.</li>
+        <li>It repeats the rotate-first warning at the last point before anything is written to a repository other people depend on.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — choosing what to scan</h4>
+      <ul class="rel-list">
+        <li><strong><code>snare scan orgs</code></strong> lists every account and organisation your token can reach, largest first, with how many repositories each holds and how many of those are private. Until now the only way to narrow a scan was to already know an organisation's exact login; the only alternative was scanning everything, which on a real account is 22 organisations and around 950 repositories — several thousand API calls. Individual accounts you hold a single collaborator bit on are collapsed into a count; <code>--all</code> lists them.</li>
+        <li><strong><code>snare scan github --pick</code></strong> shows that same list and lets you choose from it — <code>2</code>, <code>2,5</code>, <code>1-4</code>, <code>2,7-9</code> or <code>all</code>. It refuses to run without a terminal and tells you the non-interactive equivalent instead.</li>
+        <li><strong><code>snare scan github --owner</code> takes a list</strong>: <code>--owner a,b,c</code>. This is what <code>--pick</code> resolves to, so a selection made once can be re-run from a script or a timer.</li>
+        <li>The repository counts are the number <code>--owner</code> will <em>actually</em> scan, taken from the same call the scan uses. Deriving them from the affiliation endpoint was cheaper but wrong — it counts only repositories you are directly attached to, so one organisation listed as holding 1 repository actually held 5, and another listed as 4 held 123. Counting runs in bounded parallel batches (<code>SNARE_COUNT_JOBS</code>, default 8); sequentially it took 41 seconds.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — scanning</h4>
+      <ul class="rel-list">
+        <li><strong>An unrecognised flag to <code>scan github</code> was ignored in silence.</strong> <code>--all-branch</code> instead of <code>--all-branches</code>, or any other typo, quietly scanned every repository you can reach rather than the narrower thing you asked for. Unknown flags are now an error, as they already were in <code>report</code> and <code>respond</code>.</li>
+        <li><strong>The local <code>scan repo</code> lost its primary detector on Debian and Ubuntu.</strong> The structural test — code, a long whitespace run, then more code, the signal that catches a variant carrying none of the IOC strings — was an <code>awk</code> interval expression, <code>{50,}</code>. <code>mawk</code>, the default <code>awk</code> on Debian and Ubuntu, accepts that syntax and matches nothing, so the test never fired there: a repository whose only infection was a payload padded past a run of whitespace came back <code>No IOC matches</code>, exit 0. It reported clean on an infected repository, which is the failure this changelog lists first. The test now runs through <code>grep -E</code>, the same engine <code>scan github</code>, <code>fix</code> and <code>hook</code> already use for that pattern, and the <code>selftest</code> sample it is checked against no longer carries an IOC string of its own — it did, so the test passed through the working-tree IOC grep and never exercised the structural test at all.</li>
+        <li><strong>The by-hand long-line command on the inspection page never looked at the file types the payload lands in.</strong> It globbed <code><em>.js</code>, so <code>postcss.config.mjs</code> and <code>tailwind.config.mjs</code> — the file every live infection of this campaign sits in — were not passed to <code>awk</code> at all. It now also matches <code></em>.mjs</code> and <code>*.cjs</code>, the same set <code>scan repo</code> walks.</li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added — test coverage</h4>
+      <ul class="rel-list">
+        <li><code>snare selftest</code> now covers remediation, not just detection: 14 checks asserting that a build config and <code>package.json</code> survive with the payload gone and still parse, that a dropper, a fake font and a worm artifact are removed, and that a genuine font, a clean source file and an honest build task are left alone. 24 checks in total.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-1-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.1.0</h3>
+      <span class="rel-date">29 Aug 2026</span>
+    </div>
+    <p class="rel-sum">False clean results.</p>
+    <p class="lede">Everything since the initial release. If you installed snare before this, <strong>update before you trust a clean result</strong> — several defects below made the scanner report clean on genuinely infected repositories.</p>
+    <div class="rel-group">
+      <h4 class="crit">Fixed — false clean results</h4>
+      <ul class="rel-list">
+        <li class="crit"><strong>The working-tree scan never ran.</strong> <code>"${EXCL[@]}"</code> on an empty array is fatal under <code>set -u</code> on bash 3.2, which is what macOS ships. The substitution died, the output came back empty, and the <code>else</code> branch printed <code>clean</code>. Only snare's own repository populated that array, so it was the only repository section 1 ever actually scanned. <a href="https://github.com/nexlabz/snare/pull/2">#2, #3</a></li>
+        <li class="crit"><strong>The API scan never looked at build configs.</strong> <code>postcss.config.<em></code> and <code>next.config.</em></code> were never fetched and the hidden-payload heuristic was never applied, so one of the two execution routes documented in the README could not be detected over the API. A real infection survived a clean 127-repository sweep this way. <a href="https://github.com/nexlabz/snare/pull/2">#2, #3</a></li>
+        <li class="crit"><strong>The heuristic keyed on raw line length.</strong> <code>length &gt; 1500</code> missed a 664-char payload. The structural signature — code, a run of 50+ whitespace, then more code — is now the primary test and catches a payload of any length. <a href="https://github.com/nexlabz/snare/pull/2">#2, #3</a></li>
+        <li class="crit"><strong><code>fix --purge-history</code> could force-push while removing nothing.</strong> The blob callback only rewrote blobs containing a hardcoded marker, and the completeness check grepped for one of those same markers. On an obfuscated variant it stripped nothing, verified nothing, reported success, and pushed. <a href="https://github.com/nexlabz/snare/pull/2">#2, #3</a></li>
+        <li class="crit"><strong>Missing <code>xxd</code> made every genuine font look like a payload.</strong> <code>xxd</code> ships with vim and is absent from minimal Linux images and some Git Bash installs. When it was missing the magic-byte read returned empty and fell through to the failure case — and in the pre-push hook that blocked every push from any repository containing fonts. Now uses POSIX <code>od</code>, and an unreadable magic counts as <em>cannot tell</em> rather than an accusation. <a href="https://github.com/nexlabz/snare/pull/29">#29</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — evasion and detection</h4>
+      <ul class="rel-list">
+        <li><strong>The guard could be evaded by putting <code>snare</code> in a process argv.</strong> It skipped any process whose command line contained the substring <code>snare</code> anywhere, so a payload hid from it by being named <code>node /tmp/snare-helper.js</code>. Matching is now against the real install path. <a href="https://github.com/nexlabz/snare/pull/17">#17</a></li>
+        <li><strong>Every legitimate <code>.ttf</code> was flagged.</strong> The TrueType magic case compared against <code>$'\x00\x01\x00\x00'</code>, but bash cannot hold NUL bytes, so that branch could never match. <a href="https://github.com/nexlabz/snare/pull/2">#2, #3</a></li>
+        <li><strong>Long minified files were reported as findings.</strong> Raw line length is now an informational note, not a finding — a scanner nobody reads protects nobody. <a href="https://github.com/nexlabz/snare/pull/10">#10</a></li>
+        <li>Actions workflow persistence is now detected by content (whole-secret-context dumps, known exfiltration endpoints), not just by filename. <a href="https://github.com/nexlabz/snare/pull/22">#22, #23</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Fixed — platform and upgrade</h4>
+      <ul class="rel-list">
+        <li><strong>Install was broken on Windows Git Bash.</strong> The installer fell back to copying when <code>ln -s</code> failed, and a copy cannot resolve its own library directory. It now writes a launcher stub instead, and verifies the symlink actually exists rather than trusting <code>ln</code>'s exit status. <a href="https://github.com/nexlabz/snare/pull/26">#26</a></li>
+        <li><strong>An old shell shield kept a silent bypass.</strong> An early version gated on <code>[ -t 1 ]</code>, so <code>npm install &gt; log 2&gt;&amp;1</code> skipped the check entirely — and <code>shield install</code> refused to touch an existing block. It now detects an outdated block and refreshes it in place. <a href="https://github.com/nexlabz/snare/pull/27">#27</a></li>
+        <li><strong>Hooks written before the version marker became invisible</strong> to <code>status</code>, <code>uninstall</code> and <code>install</code>. Legacy hooks are now recognised and upgraded in place. <a href="https://github.com/nexlabz/snare/pull/27">#27</a></li>
+        <li><code>snare update</code> now reports what it could <em>not</em> update for you — a running guard, a stale shield, an old hook — instead of leaving stale copies running. <a href="https://github.com/nexlabz/snare/pull/27">#27</a></li>
+        <li><code>mktemp</code> templates are GNU-safe; without <code>XXXXXX</code> the scanner recorded no findings at all on Linux. <a href="https://github.com/nexlabz/snare/pull/16">#16</a></li>
+        <li><code>shasum</code> is no longer assumed present; without it every repository collided onto a single baseline key. <a href="https://github.com/nexlabz/snare/pull/29">#29</a></li>
+        <li>Missing library files now produce one actionable message instead of thirteen cryptic errors. <code>SNARE_ROOT</code> overrides the location. <a href="https://github.com/nexlabz/snare/pull/26">#26</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Added</h4>
+      <ul class="rel-list">
+        <li><code>snare selftest</code> — asserts known-bad samples are flagged and known-good ones are not, including with <code>xxd</code> and <code>shasum</code> unavailable. Ten checks. <a href="https://github.com/nexlabz/snare/pull/5">#5, #29</a></li>
+        <li><code>snare update</code> — self-update, fast-forward only, refuses to discard local edits without <code>--force</code>. <a href="https://github.com/nexlabz/snare/pull/4">#4</a></li>
+        <li><code>snare shield</code> — scans before <code>npm</code>/<code>pnpm</code>/<code>yarn</code>/<code>bun</code>/<code>npx</code> and <code>git clone</code> can execute anything. <a href="https://github.com/nexlabz/snare/pull/18">#18</a></li>
+        <li><code>snare hook</code> — pre-push (and optional pre-commit) block, the only feature that prevents spread rather than detecting it afterwards. <a href="https://github.com/nexlabz/snare/pull/9">#9</a></li>
+        <li><code>snare ci</code> — writes a GitHub Actions workflow; a required status check is the closest thing to rejecting a push, since GitHub.com has no pre-receive hooks. <a href="https://github.com/nexlabz/snare/pull/15">#15</a></li>
+        <li><code>snare rotate</code> — what to revoke and in what order, plus a GitHub audit for the repositories and secret-exporting workflows this family leaves behind. npm write tokens first, because a stolen one is how a single machine becomes a supply-chain event. <a href="https://github.com/nexlabz/snare/pull/22">#22</a></li>
+        <li><code>snare report</code> / <code>snare schedule</code> — timestamped reports, <code>--json</code>, meaningful exit codes, and an opt-in timer. No email, deliberately. <a href="https://github.com/nexlabz/snare/pull/7">#7</a></li>
+        <li><code>snare baseline</code> — accept known findings so scheduled scans surface only what is new. Accepting a finding silences it; it does not make it safe. <a href="https://github.com/nexlabz/snare/pull/8">#8</a></li>
+        <li><code>snare fix --all</code> — dry run by default, and the confirmation requires typing the repository count. <a href="https://github.com/nexlabz/snare/pull/6">#6</a></li>
+      </ul>
+    </div>
+    <div class="rel-group">
+      <h4>Changed</h4>
+      <ul class="rel-list">
+        <li><code>snare update --check</code> compares <strong>commits</strong>, not version strings. The version stood still for 33 commits, so a user 14 commits behind — carrying the font bug, the shield bypass and broken hook detection — was told "up to date".</li>
+        <li><code>snare version</code> reports the commit alongside the version.</li>
+        <li><code>snare ci</code> with no subcommand shows status instead of attempting an install.</li>
+        <li><code>snare help</code> documents every dispatched command; CI fails if one is missing.</li>
+        <li><code>require_gh</code> offers to run <code>gh auth login</code> when a human is present, and prints a platform-specific install command when <code>gh</code> is absent. Scripts, hooks, timers and CI keep the old message and exit code.</li>
+        <li>shellcheck runs on every push; it found the guard evasion hole that eight rounds of manual review had missed.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+<section class="stack" id="v1-0-0">
+  <div class="rel">
+    <div class="rel-head">
+      <h3 class="rel-v">1.0.0</h3>
+      <span class="rel-date">25 Aug 2026</span>
+    </div>
+    <p class="rel-sum">Initial release. Guard, repository and GitHub scanning, <code>fix</code>, <code>notify</code>.</p>
+    <p class="lede">Initial release. Guard, repository and GitHub scanning, <code>fix</code>, <code>notify</code>.</p>
+  </div>
+</section>
+</details>
+
+  <section class="stack">
+    <p class="note">Full commit history:
+    <a href="https://github.com/nexlabz/snare/commits/main">github.com/nexlabz/snare/commits/main</a>.
+    These notes are generated from
+    <a href="https://github.com/nexlabz/snare/blob/main/CHANGELOG.md">CHANGELOG.md</a>, so this
+    page cannot drift from the release it describes.</p>
+  </section>
+  </div>
+</div>
+
+</div>
+</article>
+<div class="end">
+  <p class="end-k">End of manual</p>
+  <p class="end-v">That is all of it. If snare caught something, or just made you look, a star is how
+  the next developer finds it.</p>
+  <div class="cover-actions"><a class="cta cta-hot" href="https://github.com/nexlabz/snare/stargazers"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg> Star snare on GitHub</a><a class="cta" href="#top">Back to the cover</a></div>
+</div>
+</div>
+</div>
+</main>
+<footer class="foot">
+  <div class="foot-in">
+    <span>snare 1.9.0. MIT licence. Findings from a first-hand investigation, August 2026. Payload excerpts are truncated and defanged.</span>
+    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a></span>
   </div>
 </footer>
-</div></div>
-
-<script src="assets/site.js"></script>
+<script src="assets/site.js?v=6cdaa85e"></script>
 </body>
 </html>

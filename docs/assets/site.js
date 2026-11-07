@@ -96,63 +96,12 @@
     }, 8000);
   }
 
-  /* ------------------------------------------------------------ mobile nav
-     The old site simply hid every link under 720px, leaving phones with no
-     navigation at all. This is a real drawer: Escape closes it, focus returns
-     to the button, and a resize past the breakpoint resets the state. */
-  var navToggle = document.querySelector(".nav-toggle"),
-      navLinks = document.getElementById("nav-links");
-
-  if (navToggle && navLinks) {
-    var setNav = function (open) {
-      navLinks.dataset.open = String(open);
-      navToggle.setAttribute("aria-expanded", String(open));
-      navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-    };
-
-    setNav(false);
-
-    navToggle.addEventListener("click", function () {
-      setNav(navLinks.dataset.open !== "true");
-    });
-
-    navLinks.addEventListener("click", function (e) {
-      if (e.target.closest("a")) setNav(false);
-    });
-
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && navLinks.dataset.open === "true") {
-        setNav(false);
-        navToggle.focus();
-      }
-    });
-
-    document.addEventListener("click", function (e) {
-      if (navLinks.dataset.open !== "true") return;
-      if (!navLinks.contains(e.target) && !navToggle.contains(e.target)) setNav(false);
-    });
-
-    window.addEventListener("resize", function () {
-      if (window.innerWidth > 860 && navLinks.dataset.open === "true") setNav(false);
-    });
-  }
-
   /* --------------------------------------------------- legacy hash redirect
-     The site used to be one long page, so links like /snare/#infected are
-     already published in GitHub issues, an X thread and a dev.to article.
-     Those anchors now live on their own pages — forward them rather than
-     dropping people at the top of the home page with no idea why. */
-  var MOVED = {
-    "#detect": "check.html",
-    "#install": "install.html",
-    "#infected": "infected.html",
-    "#commands": "commands.html",
-    "#security": "security.html"
-  };
-  if (document.body.dataset.page === "index" && MOVED[location.hash]) {
-    location.replace(MOVED[location.hash]);
-    return; // stop initialising a page we are leaving
-  }
+     Links like /snare/#detect predate the chapter names. Forward them to the
+     chapter that now holds the same content. (The old page URLs, check.html
+     and friends, are redirect stubs written by assemble.py.) */
+  var MOVED = { "#detect": "#check" };
+  if (MOVED[location.hash]) location.replace(MOVED[location.hash]);
 
   /* ------------------------------------------------- hero whitespace reveal */
   var code = document.getElementById("code");
@@ -306,64 +255,67 @@
     }
   }
 
-  /* -------------------------------------------------------------- scroll spy
-     Highlights the sidebar entry for whatever section is currently in view. */
-  var tocLinks = Array.prototype.slice.call(
-    document.querySelectorAll(".toc a[href^='#'], .jump a[href^='#']")
-  );
-  if (tocLinks.length && "IntersectionObserver" in window) {
-    var byId = {};          // one section id can be pointed at by both the sidebar and the chips
-    var targets = [];
-    tocLinks.forEach(function (a) {
-      var el = document.getElementById(a.getAttribute("href").slice(1));
-      if (!el) return;
-      if (!byId[el.id]) { byId[el.id] = []; targets.push(el); }
-      byId[el.id].push(a);
-    });
+  /* ------------------------------------------------------------------ rail
+     Shows where you are on the one long page and how much is left: the
+     current chapter, a progress bar per chapter, and minutes remaining,
+     estimated from each chapter's reading time. Below the wide breakpoint
+     the rail collapses to a strip; tapping it opens the full list. */
+  var rail = document.getElementById("rail");
+  var chapters = Array.prototype.slice.call(document.querySelectorAll(".chapter"));
+  if (rail && chapters.length) {
+    var links = Array.prototype.slice.call(rail.querySelectorAll(".rail-list a"));
+    var nowBtn = rail.querySelector(".rail-now"),
+        nowN = document.getElementById("rail-n"),
+        nowT = document.getElementById("rail-t"),
+        nowLeft = document.getElementById("rail-left"),
+        nowBar = document.getElementById("rail-bar");
+    var minsOf = chapters.map(function (c) { return +c.dataset.min || 1; });
+    var current = -1, ticking = false;
 
-    var jumpBar = document.querySelector(".jump");
-    var visible = {};
-
-    var highlight = function (current) {
-      if (!current) return;
-      tocLinks.forEach(function (a) { a.classList.remove("on"); });
-      byId[current.id].forEach(function (a) {
-        a.classList.add("on");
-        // keep the active chip in view in the horizontally scrolling bar
-        if (jumpBar && jumpBar.contains(a)) {
-          var barBox = jumpBar.getBoundingClientRect(), chip = a.getBoundingClientRect();
-          if (chip.left < barBox.left || chip.right > barBox.right) {
-            jumpBar.scrollTo({
-              left: jumpBar.scrollLeft + (chip.left - barBox.left) - 16,
-              behavior: reduce ? "auto" : "smooth"
-            });
-          }
-        }
+    var setOpen = function (open) {
+      rail.dataset.open = String(open);
+      nowBtn.setAttribute("aria-expanded", String(open));
+    };
+    if (nowBtn) {
+      setOpen(false);
+      nowBtn.addEventListener("click", function () { setOpen(rail.dataset.open !== "true"); });
+      rail.addEventListener("click", function (e) { if (e.target.closest(".rail-list a")) setOpen(false); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && rail.dataset.open === "true") { setOpen(false); nowBtn.focus(); }
       });
-    };
+    }
 
-    var sync = function () {
-      highlight(targets.filter(function (t) { return visible[t.id]; })[0]);
-    };
-
-    // the observer only reports on change, so nothing is marked until the first
-    // scroll — pick a starting section from geometry so the bar is never blank,
-    // and so a deep link like docs.html#state lands already highlighted
-    var pickByGeometry = function () {
-      var line = 96, best = null;
-      targets.forEach(function (t) {
-        var r = t.getBoundingClientRect();
-        if (r.top <= line && r.bottom > line) best = t;
+    var update = function () {
+      ticking = false;
+      var line = window.innerHeight * 0.35, idx = 0, left = 0;
+      chapters.forEach(function (c, i) {
+        var r = c.getBoundingClientRect();
+        if (r.top <= line) idx = i;
+        // fraction of this chapter scrolled past the reading line
+        var p = Math.min(1, Math.max(0, (line - r.top) / Math.max(1, r.height)));
+        links[i] && links[i].style.setProperty("--p", p.toFixed(3));
+        links[i] && links[i].classList.toggle("done", p >= 1);
+        left += minsOf[i] * (1 - p);
       });
-      return best || targets[0];
+      if (chapters[0].getBoundingClientRect().top > line) idx = -1;
+      var total = minsOf.reduce(function (a, b) { return a + b; }, 0);
+      if (nowBar) nowBar.style.setProperty("--p", (1 - left / total).toFixed(3));
+      if (nowLeft) nowLeft.textContent = Math.max(0, Math.round(left)) + " min left";
+      if (idx !== current) {
+        current = idx;
+        links.forEach(function (a, i) {
+          if (i === idx) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+        });
+        var shown = Math.max(0, idx);
+        if (nowN) nowN.textContent = links[shown].querySelector(".rl-n").textContent;
+        if (nowT) nowT.textContent = links[shown].querySelector(".rl-t").textContent;
+      }
     };
-    highlight(pickByGeometry());
-
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
-      sync();
-    }, { rootMargin: "-88px 0px -65% 0px", threshold: 0 });
-
-    targets.forEach(function (t) { io.observe(t); });
+    var onScroll = function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    update();
   }
 })();

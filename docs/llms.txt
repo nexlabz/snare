@@ -45,14 +45,15 @@ repository is delivery. Removing it does not un-steal a token.
   history or build configs. `snare scan repo` against a real clone is the
   thorough check.
 
-## Pages
+## Sections (all on one page)
 
-- [Home](https://nexlabz.github.io/snare/): the threat, how it works, why npm audit misses it
-- [Check your machine](https://nexlabz.github.io/snare/check.html): four commands, nothing to install
-- [If you are infected](https://nexlabz.github.io/snare/infected.html): the response walkthrough
-- [Install](https://nexlabz.github.io/snare/install.html): every platform, plus a prompt for AI assistants
-- [Command reference](https://nexlabz.github.io/snare/commands.html): every command and its honest limits
-- [Changelog](https://nexlabz.github.io/snare/changelog.html): every release, and what was broken before it
-- [Report a bug](https://nexlabz.github.io/snare/security.html): false clean results wanted most of all
-- [Community](https://nexlabz.github.io/snare/community.html): field reports and the open questions
+- [The attack](https://nexlabz.github.io/snare/#attack): how it gets in, why npm audit misses it
+- [Check your machine](https://nexlabz.github.io/snare/#check): seven checks, nothing to install
+- [If you are infected](https://nexlabz.github.io/snare/#infected): the response walkthrough
+- [Install](https://nexlabz.github.io/snare/#install): every platform, plus a prompt for AI assistants
+- [How snare works](https://nexlabz.github.io/snare/#docs): blocks, updates, auth, state
+- [Command reference](https://nexlabz.github.io/snare/#commands): every command and its honest limits
+- [Community](https://nexlabz.github.io/snare/#community): field reports and the open questions
+- [Report a bug](https://nexlabz.github.io/snare/#security): false clean results wanted most of all
+- [Changelog](https://nexlabz.github.io/snare/#changelog): every release, and what was broken before it
 - [Source](https://github.com/nexlabz/snare)
