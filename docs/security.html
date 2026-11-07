@@ -4,154 +4,135 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Report a bug — a false clean is the one we most want — snare</title>
-<meta name="description" content="snare has shipped bugs that made it report clean on genuinely infected repositories. If you find another, that is the most useful contribution there is. What to report, and how.">
+<meta name="description" content="snare has shipped bugs that made it report clean on infected repositories. If you find another, report it on GitHub in one click. No fix or write-up needed.">
 <meta name="author" content="AviOfLagos">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://nexlabz.github.io/snare/security.html">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="snare">
 <meta property="og:title" content="Report a bug — a false clean is the one we most want — snare">
-<meta property="og:description" content="snare has shipped bugs that made it report clean on genuinely infected repositories. If you find another, that is the most useful contribution there is. What to report, and how.">
+<meta property="og:description" content="snare has shipped bugs that made it report clean on infected repositories. If you find another, report it on GitHub in one click. No fix or write-up needed.">
 <meta property="og:url" content="https://nexlabz.github.io/snare/security.html">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Report a bug — a false clean is the one we most want — snare">
-<meta name="twitter:description" content="snare has shipped bugs that made it report clean on genuinely infected repositories. If you find another, that is the most useful contribution there is. What to report, and how.">
-<meta name="theme-color" content="#C2410C" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101319" media="(prefers-color-scheme: dark)">
+<meta name="twitter:description" content="snare has shipped bugs that made it report clean on infected repositories. If you find another, report it on GitHub in one click. No fix or write-up needed.">
+<meta name="theme-color" content="#121311">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪤</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="assets/site.css">
-<link rel="expect" href="#main" blocking="render">
-<script>/* apply a pinned theme before first paint so the page never flashes */
-try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
- {"@type":"ListItem","position":1,"name":"snare","item":"https://nexlabz.github.io/snare/"},
- {"@type":"ListItem","position":2,"name":"Report a bug","item":"https://nexlabz.github.io/snare/security.html"}]}
-</script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Doto:wght@700..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css?v=2e004c8a">
+<script>/* dark unless the reader picked light; set before first paint so nothing flashes */
+var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}document.documentElement.dataset.theme=t;</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"snare","item":"https://nexlabz.github.io/snare/"},{"@type":"ListItem","position":2,"name":"Report a bug","item":"https://nexlabz.github.io/snare/security.html"}]}</script>
 </head>
 <body data-page="security">
 <a class="skip" href="#main">Skip to content</a>
-<header class="site-header">
-<nav class="nav" aria-label="Primary">
-  <div class="nav-in">
-    <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.9.0">v1.9.0</a>
-    <div class="nav-links" id="nav-links">
-      <a href="index.html">The threat</a>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"></span>snare</a>
+    <a class="bar-ver" href="changelog.html">v1.9.0</a>
+    <nav class="bar-nav" id="bar-nav" aria-label="Primary">
+      <a href="attack.html">The attack</a>
       <a href="check.html">Check</a>
       <a href="infected.html">If infected</a>
-      <a href="install.html">Install</a>
       <a href="docs.html">Docs</a>
-      <a href="community.html">Community</a>
-      <a class="nav-cta" href="install.html">Install snare</a>
-    </div>
-    <div class="nav-tools">
-      <button class="icon-btn theme-toggle" type="button" aria-label="Switch theme">
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
-      </button>
-      <button class="icon-btn nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line class="bar-top" x1="3" y1="6" x2="21" y2="6"/><line class="bar-mid" x1="3" y1="12" x2="21" y2="12"/><line class="bar-bot" x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-    </div>
-  </div>
-</nav>
-</header>
-
-<main id="main">
-<div class="wrap page-head">
-  <span class="eyebrow">Found a hole?</span>
-  <h1>Tell us — that is the whole ask</h1>
-  <p class="lede">This tool has shipped bugs that made it report clean on genuinely
-  infected repositories. Every one was found by someone actually testing it rather than
-  reading it. If you find another, that is the most useful contribution there is.</p>
-</div>
-
-<div class="wrap">
-<section class="stack" id="what">
-  <span class="eyebrow">What to report</span>
-  <h2>In rough order of how much we want to hear about it</h2>
-  <ol class="chain">
-    <li><b>A false clean</b><span>A repository or sample snare says is fine and is not.
-    This is the worst failure a scanner can have, and the one we most want reported.</span></li>
-    <li><b>An evasion</b><span>A payload shaped so the heuristics miss it, or a way to hide
-    from the guard, the hook or the shield. One such hole let any process hide from the
-    guard simply by having the word <code>snare</code> in its command line.</span></li>
-    <li><b>A false positive</b><span>Noisy enough that people would learn to ignore the
-    output. That is a real failure too — a scanner nobody reads protects nobody.</span></li>
-    <li><b>A variant we do not detect</b><span>A different config file, a different
-    execution route, a different obfuscation.</span></li>
-    <li><b>Anything destructive</b><span>A case where <code>fix</code> removes something it
-    should not, or reports success without having done anything.</span></li>
-  </ol>
-</section>
-
-<section class="stack" id="how">
-  <span class="eyebrow">How</span>
-  <h2>Open an issue. That is enough.</h2>
-  <p><strong>You do not need a fix, a pull request, or a polished write-up</strong> — a repository
-  name, a file, or "this sample is not caught" is plenty. If you would rather not post details
-  publicly, open an issue saying so without the specifics and we will find another way.</p>
-
-  <div class="panel"><div class="panel-bar"><span class="label">Report it</span><div class="bar-actions"></div></div>
-    <div class="scroller"><pre>https://github.com/nexlabz/snare/issues/new
-
-# helpful, if you have it:
-snare selftest          # does detection still work on your machine?
-snare version
-bash --version          # macOS ships bash 3.2; several bugs were 3.2-specific</pre></div></div>
-
-  <p class="note">Known-good starting points if you want to poke at it: the heuristics
-  live in <code>lib/scan.sh</code>, the process matching in <code>lib/guard.sh</code>,
-  and the history rewriting in <code>lib/fix.sh</code>. <code>snare selftest</code>
-  shows the shape of a test case; adding one that fails is a perfectly good bug report.</p>
-
-  <p class="note">There is also an open discussion on the two questions we cannot answer
-  ourselves: how this family actually reaches developer machines, and whether a defence
-  can propagate the way the infection does without becoming a dropper itself.
-  <a href="https://github.com/nexlabz/snare/discussions">Join it here.</a></p>
-</section>
-</div>
-<div class="wrap"><nav class="pager" aria-label="Page">
-  <a href="community.html"><span class="dir">← Previous</span><b>Community</b></a>
-</nav></div>
-</main>
-
-<div class="wrap">
-<footer>
-  <div class="foot-grid">
-    <div class="foot-col">
-      <b>snare</b>
-      <p class="foot-note">Free and open source under the MIT licence. Indicators and analysis are
-      published so other developers can detect this family in their own repositories. Payload
-      excerpts are truncated and defanged.</p>
-    </div>
-    <div class="foot-col">
-      <b>The threat</b>
-      <a href="index.html">How it works</a>
-      <a href="check.html">Check your machine</a>
-      <a href="infected.html">If you're infected</a>
-    </div>
-    <div class="foot-col">
-      <b>The tool</b>
-      <a href="install.html">Install</a>
-      <a href="docs.html">Documentation</a>
-      <a href="commands.html">Command reference</a>
       <a href="changelog.html">Changelog</a>
       <a href="community.html">Community</a>
-      <a href="security.html">Report a bug</a>
+      <a href="security.html" aria-current="page">Report a bug</a>
+      <a class="bar-cta" href="install.html">Install</a>
+    </nav>
+    <div class="bar-tools">
+      <a class="icon-btn" href="https://github.com/nexlabz/snare" aria-label="snare on GitHub"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></a>
+      <button class="icon-btn theme-toggle" type="button" aria-label="Switch theme"><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
+      <button class="icon-btn nav-toggle" type="button" aria-expanded="false" aria-controls="bar-nav" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
     </div>
   </div>
-  <div class="foot-bar">
-    <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.9.0</a> · MIT</span>
+</header>
+<main id="main">
+<header class="ph ph-page">
+  <p class="ph-meta">Report a bug</p>
+  <h1>Found a hole? Tell us.</h1>
+  <p class="ph-lede">No fix or write-up needed. A repository, a file or "this isn't caught" is enough.</p>
+</header>
+<div class="page-body ch-body">
+
+<div class="wrap">
+<section class="stack" id="pick">
+  <h2>What did you find?</h2>
+  <div class="report-grid">
+    <a class="report-card hot" href="https://github.com/nexlabz/snare/issues/new?title=False%20clean%3A%20&body=%23%23%20What%20snare%20said%0Aclean%0A%0A%23%23%20What%20is%20actually%20there%0A%3C!--%20file%2C%20repository%20or%20sample%3B%20redact%20tokens%20and%20hostnames%20--%3E%0A%0A%23%23%20Command%20I%20ran%0A%60%60%60%0Asnare%20...%0A%60%60%60%0A%0A%23%23%20Version%0A%3C!--%20output%20of%20snare%20version%20--%3E%0A">
+      <span class="rc-k">Worst case</span><b>It said clean, and it isn't</b>
+      <span class="rc-p">A false clean. The bug we most want to hear about.</span>
+    </a>
+    <a class="report-card" href="https://github.com/nexlabz/snare/issues/new?title=Missed%20variant%3A%20&body=%23%23%20How%20it%20hides%20or%20runs%0A%0A%23%23%20Where%20I%20saw%20it%0A%0A%23%23%20Sample%20(defanged)%0A">
+      <span class="rc-k">Evasion</span><b>A variant it doesn't catch</b>
+      <span class="rc-p">A different file, trigger or obfuscation, or a way to hide from the guard.</span>
+    </a>
+    <a class="report-card" href="https://github.com/nexlabz/snare/issues/new?title=False%20positive%3A%20&body=%23%23%20What%20snare%20flagged%0A%0A%23%23%20Why%20it%20is%20harmless%0A%0A%23%23%20Version%0A">
+      <span class="rc-k">Noise</span><b>It flags something harmless</b>
+      <span class="rc-p">Enough of these and people stop reading the output.</span>
+    </a>
+    <a class="report-card" href="https://github.com/nexlabz/snare/issues/new?title=Bug%3A%20&body=%23%23%20What%20I%20ran%0A%0A%23%23%20What%20happened%0A%0A%23%23%20What%20I%20expected%0A%0A%23%23%20Version%20and%20OS%0A">
+      <span class="rc-k">Bug</span><b>Something else broke</b>
+      <span class="rc-p">A crash, a wrong message, or <code>fix</code> touching what it shouldn't.</span>
+    </a>
   </div>
-</footer>
+  <p class="note">Can't share details in public? Open an issue that says so, without the details, and we'll arrange another way.</p>
+</section>
+
+<section class="stack" id="write">
+  <h2>Or let this write it for you</h2>
+  <form class="report-form" id="report-form" novalidate>
+    <label>Type
+      <select name="kind">
+        <option value="False clean">It said clean, and it isn't</option>
+        <option value="Missed variant">A variant it doesn't catch</option>
+        <option value="False positive">It flags something harmless</option>
+        <option value="Bug">Something else broke</option>
+      </select>
+    </label>
+    <label>What happened
+      <textarea name="what" rows="5" required placeholder="I ran snare scan repo on a clone with a padded postcss.config.js, and it said clean."></textarea>
+    </label>
+    <div class="rf-row">
+      <label>snare version
+        <input name="version" placeholder="output of: snare version" autocomplete="off">
+      </label>
+      <label>System
+        <select name="os"><option>macOS</option><option>Linux</option><option>Windows (Git Bash)</option><option>WSL</option></select>
+      </label>
+    </div>
+    <label class="rf-check"><input type="checkbox" name="selftest"> <span><code>snare selftest</code> passes on this machine</span></label>
+    <button class="cta cta-hot" type="submit">Open it on GitHub</button>
+    <p class="note" id="rf-msg">This opens a new GitHub issue with your text filled in. Nothing is sent until you press Submit there. Redact tokens and internal hostnames first.</p>
+  </form>
+</section>
+
+<section class="stack" id="help">
+  <h2>Useful to include</h2>
+  <div class="panel"><div class="panel-bar"><span class="label">paste the output</span><div class="bar-actions"></div></div>
+    <div class="scroller"><pre>snare version
+snare selftest
+bash --version    # macOS ships bash 3.2; several bugs were 3.2-specific</pre></div></div>
+  <p class="note">Want to dig in? Heuristics live in <code>lib/scan.sh</code>, process matching in
+  <code>lib/guard.sh</code>, history rewriting in <code>lib/fix.sh</code>. A failing
+  <code>snare selftest</code> case is a perfect bug report.</p>
+</section>
 </div>
 
-<script src="assets/site.js"></script>
+<a class="next-up" href="community.html"><span>Next</span><b>Community</b></a>
+</div>
+</main>
+<footer class="foot">
+  <div class="foot-in">
+    <div class="fc fc-wide"><span class="brand"><span class="brand-mark" aria-hidden="true"></span>snare</span>
+      <p>Free and open source, MIT. Findings from a first-hand investigation, August 2026. Payload
+      excerpts are truncated and defanged.</p></div>
+    <div class="fc"><b>Read</b><a href="attack.html">The attack</a><a href="check.html">Check</a><a href="infected.html">If infected</a></div><div class="fc"><b>Use</b><a href="install.html">Install</a><a href="docs.html">Docs</a><a href="changelog.html">Changelog</a></div><div class="fc"><b>Talk</b><a href="community.html">Community</a><a href="security.html">Report a bug</a></div>
+  </div>
+  <div class="foot-bar"><span>snare 1.9.0</span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a></div>
+</footer>
+<script src="assets/site.js?v=d0607feb"></script>
 </body>
 </html>

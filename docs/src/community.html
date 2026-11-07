@@ -35,18 +35,14 @@
   </div>
 </section>
 
-<section class="stack" id="open">
+<section class="stack" id="credit">
   <span class="eyebrow">Credit</span>
   <h2>Who found what</h2>
   <p class="lede">Every detection snare has for this campaign came from someone finding it on their
   own machine first and writing up what they saw. None of it was found by reading code.</p>
   <ol class="chain">
     <li><b><a href="https://github.com/kleenpulse">@kleenpulse</a> — campaign 4738-2, from a live
-    Windows host</b><span>The patched <code>cli.js</code> Defender did not flag, the PowerShell
-    clipboard stealer, the <code>api.js</code> wired into the run scripts, and the forged
-    force-pushes that read as <code>1 ahead, 1 behind</code> with identical messages. Snare now
-    detects all four, and the forged-push check is a direct implementation of the method in that
-    report. <a href="https://github.com/nexlabz/snare/issues/47">#47</a></span></li>
+    Windows host</b><span>The patched <code>cli.js</code> Defender missed, the PowerShell clipboard stealer, <code>api.js</code> wired into run scripts, and forged force-pushes reading <code>1 ahead, 1 behind</code>. snare now detects all four. <a href="https://github.com/nexlabz/snare/issues/47">#47</a></span></li>
     <li><b><a href="https://github.com/ibraheembello">@ibraheembello</a> — npm on Windows was
     never checked</b><span><code>snare doctor</code> printed <em>no npm installation found to
     check</em> on every Windows host while a trojanised <code>cli.js</code> sat in
@@ -71,26 +67,13 @@
   <p class="lede">These are not rhetorical. Nine infections across five contributor identities over
   two years is not one laptop, and no delivery mechanism has been established.</p>
   <ol class="chain">
-    <li><b>How does this family actually reach developer machines?</b><span>Every payload seen so
-    far was a <em>modification</em> of an already-clean config, never a fresh file — which rules
-    out a contaminated template as the whole story. A shared upstream source (a scaffold, a
-    <code>create-*</code> command, a downloaded theme, an editor extension) is the leading theory
-    and remains unproven. If you can say what you scaffolded an infected project with, that is the
-    most useful thing you can contribute. <b>One concrete chain is now on record</b>
-    (<a href="https://github.com/nexlabz/snare/issues/47">#47</a>): an IDE language server ran
-    <code>npx -y chrome-devtools-mcp@latest</code>, which went through the already-patched npm in
-    the global prefix. That explains how the payload keeps <em>running</em> — including from
-    MCP servers an editor starts on its own — but not how it got onto that machine to begin
-    with.</span></li>
+    <li><b>How does this family actually reach developer machines?</b><span>Every payload so far modified an existing clean config, so a contaminated template isn't the whole story. A shared upstream (scaffold, <code>create-*</code>, theme, extension) is the leading, unproven theory. <b>One chain is on record</b> (<a href="https://github.com/nexlabz/snare/issues/47">#47</a>): an IDE language server ran <code>npx -y chrome-devtools-mcp@latest</code> through an already-patched global npm. That explains how it keeps <em>running</em>, not how it arrived.</span></li>
     <li><b>Can a defence propagate the way the infection does?</b><span>Without becoming a dropper
     itself. This is an open design question, and a genuinely uncomfortable one.</span></li>
   </ol>
   <div class="callout">
     <h3>Before you post details</h3>
-    <p>Redact tokens, keys, internal hostnames and anything that identifies a client. You do not
-    have to name an employer — "a fintech I contract for" is a perfectly good data point. If you
-    would rather not post publicly at all, <a href="security.html">open an issue saying so without
-    the specifics</a> and we will find another way.</p>
+    <p>Redact tokens, keys and hostnames. "A fintech I contract for" is fine. Rather not post publicly? <a href="security.html">Open an issue saying so</a>.</p>
   </div>
 </section>
 
@@ -116,9 +99,6 @@
     <p class="note" id="giscus-fallback">Loading the discussion thread…</p>
   </div>
 
-  <p class="note">Comments are powered by <a href="https://giscus.app">giscus</a>, which stores
-  every comment as a GitHub Discussion on this repository. It is the only third-party code on this
-  site, and it is loaded on this page alone — never on the pages that carry commands you might
-  paste into a shell.</p>
+  <p class="note">Comments are GitHub Discussions via <a href="https://giscus.app">giscus</a>, the only third-party code on this site, loaded on this page alone.</p>
 </section>
 </div>

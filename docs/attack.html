@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How the attack works — the dropper npm audit cannot see — snare</title>
+<meta name="description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
+<meta name="author" content="AviOfLagos">
+<meta name="robots" content="index,follow">
+<link rel="canonical" href="https://nexlabz.github.io/snare/attack.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="snare">
+<meta property="og:title" content="How the attack works — the dropper npm audit cannot see — snare">
+<meta property="og:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
+<meta property="og:url" content="https://nexlabz.github.io/snare/attack.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="How the attack works — the dropper npm audit cannot see — snare">
+<meta name="twitter:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
+<meta name="theme-color" content="#121311">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪤</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Doto:wght@700..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css?v=2e004c8a">
+<script>/* dark unless the reader picked light; set before first paint so nothing flashes */
+var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}document.documentElement.dataset.theme=t;</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"TechArticle",
+ "headline":"How a dropper hides in your own repository","url":"https://nexlabz.github.io/snare/attack.html",
+ "author":{"@type":"Person","name":"AviOfLagos"}}
+</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"snare","item":"https://nexlabz.github.io/snare/"},{"@type":"ListItem","position":2,"name":"The attack","item":"https://nexlabz.github.io/snare/attack.html"}]}</script>
+</head>
+<body data-page="attack">
+<a class="skip" href="#main">Skip to content</a>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"></span>snare</a>
+    <a class="bar-ver" href="changelog.html">v1.9.0</a>
+    <nav class="bar-nav" id="bar-nav" aria-label="Primary">
+      <a href="attack.html" aria-current="page">The attack</a>
+      <a href="check.html">Check</a>
+      <a href="infected.html">If infected</a>
+      <a href="docs.html">Docs</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="community.html">Community</a>
+      <a href="security.html">Report a bug</a>
+      <a class="bar-cta" href="install.html">Install</a>
+    </nav>
+    <div class="bar-tools">
+      <a class="icon-btn" href="https://github.com/nexlabz/snare" aria-label="snare on GitHub"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></a>
+      <button class="icon-btn theme-toggle" type="button" aria-label="Switch theme"><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
+      <button class="icon-btn nav-toggle" type="button" aria-expanded="false" aria-controls="bar-nav" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
+    </div>
+  </div>
+</header>
+<main id="main">
+<header class="ph ph-long">
+  <p class="ph-meta">The attack <span>/</span> 4 min read <span>/</span> 3 sections</p>
+  <h1>How a dropper hides in your own repository</h1>
+  <p class="ph-lede">Four routes in, a file that looks untouched, and a server address read from the
+  blockchain. Why <code>npm audit</code> never sees any of it.</p>
+</header>
+<div class="manual">
+<nav class="rail" id="rail" aria-label="On this page">
+  <button class="rail-now" type="button" aria-expanded="false" aria-controls="rail-list">
+    <span class="rn-n" id="rail-n">01</span><span class="rn-t" id="rail-t">The threat</span><span class="rn-left" id="rail-left">4 min left</span>
+    <span class="rn-bar" aria-hidden="true"><i id="rail-bar"></i></span>
+  </button>
+  <p class="rail-head">On this page<span>4 min</span></p>
+  <ol class="rail-list" id="rail-list">
+    <li><a href="#threat"><span class="rl-n">01</span><span class="rl-t">The threat</span><span class="rl-m">2′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#mechanism"><span class="rl-n">02</span><span class="rl-t">How it works</span><span class="rl-m">1′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+    <li><a href="#reports"><span class="rl-n">03</span><span class="rl-t">Reports from the field</span><span class="rl-m">1′</span><i class="rl-p" aria-hidden="true"></i></a></li>
+  </ol>
+</nav>
+<div class="chapters ch-body">
+
+
+<div class="wrap">
+
+<section class="stack chapter" id="threat" data-min="2">
+  <span class="eyebrow">The threat</span>
+  <h2>Four routes in, none of which you'd think to check</h2>
+  <p class="lede">The same payload ships four ways. Every one of them fires from a completely
+  ordinary developer action — opening a folder, starting the dev server, or just beginning a
+  session with your coding assistant. That is exactly why this family works.</p>
+  <div class="routes">
+    <div class="route">
+      <h3>Opening the folder in your editor</h3>
+      <p class="filename">.vscode/tasks.json</p>
+      <p class="d">A task labelled <code>eslint-check</code>, marked <code>"hide": true</code> and
+      <code>"reveal": "never"</code> so it never appears in the terminal panel. It runs
+      <code>node ./public/fonts/fa-solid-400.woff2</code>.</p>
+      <p class="trigger">▸ fires on <code>"runOn": "folderOpen"</code></p>
+    </div>
+    <div class="route">
+      <h3>Starting the dev server</h3>
+      <p class="filename">postcss.config.js</p>
+      <p class="d">The payload is appended to the last line after thousands of spaces. The file
+      reads as four correct lines of config, because everything else is far off the right edge of
+      the viewport.</p>
+      <p class="trigger">▸ fires on <code>next dev</code> / <code>next build</code></p>
+    </div>
+    <div class="route">
+      <h3>Running any npm script</h3>
+      <p class="filename">package.json</p>
+      <p class="d">Every script gains a prefix: <code>"dev": "node api.js &amp;&amp; next dev"</code>. These aren't install hooks, so <code>--ignore-scripts</code> doesn't help.</p>
+      <p class="trigger">▸ fires on <code>npm run dev</code> / <code>build</code> / <code>start</code></p>
+    </div>
+    <div class="route">
+      <h3>Opening a session with your AI assistant</h3>
+      <p class="filename">.claude/settings.json</p>
+      <p class="d">A <code>SessionStart</code> hook runs <code>node .vscode/setup.mjs</code> every
+      time a session opens. It survives removing the package that delivered it, npm never sees it,
+      and the two copies in <code>.claude/</code> and <code>.vscode/</code> re-create each other —
+      so deleting one directory fixes nothing.</p>
+      <p class="trigger">▸ fires on every new agent session</p>
+    </div>
+  </div>
+  <div class="callout" id="is-this-npm">
+    <h3>“Is this the npm supply-chain thing?”</h3>
+    <p>Same category, different delivery — and the difference is why people miss it.</p>
+    <p>A classic npm supply-chain attack compromises a package you depend on. It arrives through
+    <code>npm install</code>, it shows up in your lockfile, and <code>npm audit</code> or a
+    dependency scanner has a chance of catching it.</p>
+    <p><strong>This one never touches the registry.</strong> It's committed into your repo, so <code>npm audit</code>, your lockfile and Dependabot all stay clean. (The loader is tagged <code>NPM</code> internally, so registry variants likely exist too.)</p>
+    <p>If you arrived here searching for the npm attack: run the
+    <a href="check.html">four checks</a> anyway. They take a minute and they cover the route a
+    dependency scanner cannot see.</p>
+  </div>
+
+  <div class="callout">
+    <h3>The font is not a font</h3>
+    <p>A genuine <code>.woff2</code> file begins with the magic bytes <code>wOF2</code>. This one
+    begins with 507 spaces, then JavaScript. Disguising a payload as a binary asset keeps it out of
+    code review entirely — nobody opens a font in a diff.</p>
+  </div>
+</section>
+
+<section class="stack lead-in">
+  <span class="eyebrow">Why nobody spotted it</span>
+  <h2>The file looks completely normal</h2>
+  <p class="lede">Here is the actual shape of an infected <code>postcss.config.js</code>. Four
+  ordinary lines, then a gap wide enough to push the payload past any screen. Reveal the whitespace
+  to see what your editor was not showing you.</p>
+</section>
+</div>
+
+<div class="bleed">
+  <div class="panel">
+    <div class="panel-bar">
+      <span class="label">postcss.config.js — as committed</span>
+      <div class="bar-actions">
+        <button class="btn" id="reveal" type="button" aria-pressed="false" aria-controls="code">reveal whitespace</button>
+      </div>
+    </div>
+    <div class="scroller" id="scroller"><pre id="code"></pre></div>
+  </div>
+  <p class="note" style="margin-top:9px" id="hint">Line 5 is 9,135 characters long. Scroll it
+  sideways — or reveal the whitespace.</p>
+</div>
+
+<div class="wrap">
+
+<section class="stack after-bleed chapter" id="mechanism" data-min="1">
+  <span class="eyebrow">How it works</span>
+  <h2>The address it phones home to is not in the code</h2>
+  <p class="lede">Blocking an IP does nothing. The loader reads a fresh server address from the Ethereum blockchain on every run (<em>EtherHiding</em>), and the operator moves with one transaction.</p>
+
+  <figure class="fig">
+    <svg viewBox="0 0 940 340" role="img" xmlns="http://www.w3.org/2000/svg"
+         aria-label="The loader asks the Ethereum blockchain for the attacker's latest transaction, decodes an IP address from it, then fetches stage two from that address. The attacker moves the server by sending a new transaction.">
+      <defs>
+        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" class="ah"/>
+        </marker>
+        <marker id="ard" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" class="ah dim"/>
+        </marker>
+      </defs>
+
+      <!-- lookup row -->
+      <rect x="330" y="26" width="290" height="60" rx="9" class="bx hot"/>
+      <text x="475" y="50" class="t1 hot" text-anchor="middle">Ethereum · Blockscout API</text>
+      <text x="475" y="70" class="t2" text-anchor="middle">latest transaction from 0xa322…</text>
+
+      <rect x="682" y="26" width="228" height="60" rx="9" class="bx dash"/>
+      <text x="796" y="50" class="t1" text-anchor="middle">Attacker</text>
+      <text x="796" y="70" class="t2" text-anchor="middle">sends one tx to move the C2</text>
+      <line x1="676" y1="56" x2="628" y2="56" class="ln dash" marker-end="url(#ard)"/>
+
+      <!-- lookup arrows -->
+      <path d="M362 214 L362 150 Q362 132 380 132 L420 132 L420 92" class="ln hot" marker-end="url(#ar)"/>
+      <text x="376" y="126" class="t3 hot">① ask for the latest tx</text>
+
+      <path d="M556 92 L556 132 L596 132 Q614 132 614 150 L614 214" class="ln hot" marker-end="url(#ar)"/>
+      <text x="628" y="126" class="t3 hot">② decode bytes 0–3 → IPv4</text>
+
+      <!-- machine zone -->
+      <rect x="10" y="196" width="466" height="120" rx="11" class="zone"/>
+      <text x="26" y="308" class="t4">YOUR MACHINE</text>
+
+      <!-- main flow -->
+      <rect x="26" y="214" width="180" height="60" rx="9" class="bx"/>
+      <text x="116" y="238" class="t1" text-anchor="middle">postcss.config.js</text>
+      <text x="116" y="258" class="t2" text-anchor="middle">or .vscode/tasks.json</text>
+
+      <rect x="272" y="214" width="180" height="60" rx="9" class="bx"/>
+      <text x="362" y="238" class="t1" text-anchor="middle">node loader</text>
+      <text x="362" y="258" class="t2" text-anchor="middle">detached, reparented</text>
+
+      <rect x="524" y="214" width="180" height="60" rx="9" class="bx hot"/>
+      <text x="614" y="238" class="t1 hot" text-anchor="middle">C2 server</text>
+      <text x="614" y="258" class="t2" text-anchor="middle">address known only at runtime</text>
+
+      <rect x="754" y="214" width="170" height="60" rx="9" class="bx"/>
+      <text x="839" y="238" class="t1" text-anchor="middle">clipboard stealer</text>
+      <text x="839" y="258" class="t2" text-anchor="middle">polls every 200 ms</text>
+
+      <line x1="206" y1="244" x2="266" y2="244" class="ln" marker-end="url(#ar)"/>
+      <text x="236" y="234" class="t3" text-anchor="middle">runs</text>
+
+      <line x1="452" y1="244" x2="518" y2="244" class="ln" marker-end="url(#ar)"/>
+      <text x="485" y="234" class="t3" text-anchor="middle">③ GET</text>
+
+      <line x1="704" y1="244" x2="748" y2="244" class="ln" marker-end="url(#ar)"/>
+      <text x="726" y="234" class="t3" text-anchor="middle">④</text>
+      <text x="726" y="292" class="t3" text-anchor="middle">eval'd in memory</text>
+    </svg>
+    <figcaption>The loader carries no server address. It reads one off the blockchain at run time,
+    which is why an IP blocklist cannot keep up: the operator repoints every infected machine at
+    once by sending a single transaction.</figcaption>
+  </figure>
+
+  <div class="mech">
+    <div class="mech-steps">
+      <h3>Step by step</h3>
+      <ol class="chain">
+        <li><b>Query public Ethereum RPCs</b><span>Falls through 1rpc.io, drpc.org, publicnode and blastapi, so cutting off any one endpoint changes nothing.</span></li>
+        <li><b>Read the wallet's newest transaction</b><span>Through the Blockscout API, sorted newest first.</span></li>
+        <li><b>Decode an IP from the destination address</b><span>The first eight bytes are read as two IPv4 addresses — a primary and a fallback.</span></li>
+        <li><b>Fetch stage two over plain HTTP</b><span>From <code>/0x/clb</code>, <code>/0x/cls</code> or <code>/0x/ls</code>, on port 443 to look like TLS to a port-based filter.</span></li>
+        <li><b>Decode and spawn it detached</b><span>XOR-decoded and evaluated in memory — nothing is written to disk — then <code>spawn(…, {detached:true})</code> and <code>unref()</code>, so it outlives the editor that started it.</span></li>
+      </ol>
+    </div>
+    <div class="mech-bytes">
+      <h3>Address → endpoints</h3>
+      <div class="panel">
+        <div class="panel-bar"><span class="label">20-byte destination address</span></div>
+        <div class="scroller"><div class="bytepad">
+          <div class="bytes">
+            <span class="byte a">a3</span><span class="byte a">22</span><span class="byte a">e5</span><span class="byte a">f3</span>
+            <span class="byte b">d3</span><span class="byte b">11</span><span class="byte b">d3</span><span class="byte b">08</span>
+            <span class="byte">e6</span><span class="byte">f0</span><span class="byte">12</span><span class="byte">10</span>
+            <span class="byte">63</span><span class="byte">e9</span><span class="byte">aD</span><span class="byte">C2</span>
+            <span class="byte">49</span><span class="byte">0E</span><span class="byte">f1</span><span class="byte">a…</span>
+          </div>
+          <div class="legend">
+            <span><span class="swatch" style="background:var(--accent)"></span>bytes 0–3 → primary C2</span>
+            <span><span class="swatch" style="background:var(--safe)"></span>bytes 4–7 → fallback</span>
+            <span><span class="swatch" style="background:var(--hair)"></span>remainder unused</span>
+          </div>
+        </div></div>
+      </div>
+      <p class="note">The payload observed in the wild stole clipboard contents — passwords, access
+      tokens and wallet seed phrases — from the moment the editor opened.</p>
+    </div>
+  </div>
+</section>
+
+<section class="stack chapter" id="reports" data-min="1">
+  <span class="eyebrow">Reports from the field</span>
+  <h2>This is not a one-off</h2>
+  <p class="lede">First-hand accounts: an internship cohort of thousands, engineers nearly dismissed, operations disrupted. <strong>Reports, not audited figures.</strong> One sample sat unnoticed for five months.</p>
+
+  <div class="reports">
+    <a class="report-link" href="https://github.com/nexlabz/snare/issues/1">
+      <span class="ic"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></span>
+      <span><b>Add your account on GitHub</b><span>Open thread — what you saw, what it cost, any variant you found.</span></span>
+    </a>
+    <a class="report-link" href="https://github.com/nexlabz/snare/issues/new">
+      <span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" stroke-linecap="round"/></svg></span>
+      <span><b>Report a variant</b><span>A different wallet, filename or trigger goes straight into the detection patterns.</span></span>
+    </a>
+<!-- LINK:tweet:start -->
+    <a class="report-link" href="https://x.com/Nexprove/status/2092146004250218783">
+      <span class="ic"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.6 1.5h2.3l-5 5.8 5.9 7.8h-4.6l-3.6-4.7-4.1 4.7H1.2l5.4-6.2L1 1.5h4.7l3.3 4.3 3.6-4.3Zm-.8 12.2h1.3L4.6 2.8H3.2l8.6 10.9Z"/></svg></span>
+      <span><b>Discussion on X</b><span>Developers sharing what they saw — add yours.</span></span>
+    </a>
+<!-- LINK:tweet:end -->
+<!-- LINK:devto:start -->
+    <a class="report-link" href="https://dev.to/avioflagos/malware-that-runs-the-moment-you-open-the-project-1j5e">
+      <span class="ic"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 3h3.1c1.9 0 3.2 1.2 3.2 3v4c0 1.8-1.3 3-3.2 3H2V3Zm2.1 2v6h1c.8 0 1.2-.4 1.2-1.2V6.2C6.3 5.4 5.9 5 5.1 5h-1Zm5.6-2h2l1.1 5.2L14 3h2l-2.2 10h-1.9L9.7 3Z"/></svg></span>
+      <span><b>Write-up on dev.to</b><span>Full technical breakdown, with comments.</span></span>
+    </a>
+<!-- LINK:devto:end -->
+  </div>
+
+  <div class="callout">
+    <h3>If it reached your team, say so</h3>
+    <p>No need to name an employer; redact tokens and hostnames. Most people who lost work had never heard of this; those who caught it early had heard from someone else.</p>
+  </div>
+</section>
+
+</div>
+
+<a class="next-up" href="check.html"><span>Next</span><b>Check</b></a>
+</div>
+</div>
+</main>
+<footer class="foot">
+  <div class="foot-in">
+    <div class="fc fc-wide"><span class="brand"><span class="brand-mark" aria-hidden="true"></span>snare</span>
+      <p>Free and open source, MIT. Findings from a first-hand investigation, August 2026. Payload
+      excerpts are truncated and defanged.</p></div>
+    <div class="fc"><b>Read</b><a href="attack.html">The attack</a><a href="check.html">Check</a><a href="infected.html">If infected</a></div><div class="fc"><b>Use</b><a href="install.html">Install</a><a href="docs.html">Docs</a><a href="changelog.html">Changelog</a></div><div class="fc"><b>Talk</b><a href="community.html">Community</a><a href="security.html">Report a bug</a></div>
+  </div>
+  <div class="foot-bar"><span>snare 1.9.0</span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a></div>
+</footer>
+<script src="assets/site.js?v=d0607feb"></script>
+</body>
+</html>

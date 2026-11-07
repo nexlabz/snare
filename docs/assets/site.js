@@ -7,14 +7,13 @@
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   /* ---------------------------------------------------------------- theme
-     Honour the OS by default. A click pins an explicit choice, which the
-     inline <head> snippet re-applies on the next page load before paint. */
+     Dark by default. A click pins an explicit choice, which the inline
+     <head> snippet re-applies on the next page load before paint. */
   var themeBtn = document.querySelector(".theme-toggle");
   if (themeBtn) {
     themeBtn.addEventListener("click", function () {
       var root = document.documentElement;
-      var systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      var isDark = root.dataset.theme ? root.dataset.theme === "dark" : systemDark;
+      var isDark = (root.dataset.theme || "dark") === "dark";
       var next = isDark ? "light" : "dark";
       root.dataset.theme = next;
       themeBtn.setAttribute("aria-label", next === "dark" ? "Switch to light theme" : "Switch to dark theme");
@@ -30,8 +29,7 @@
      not load, the fallback keeps a working link to the same thread. */
   function currentTheme() {
     var pinned = document.documentElement.dataset.theme;
-    if (pinned) return pinned;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    return pinned || "dark";
   }
 
   function setGiscusTheme(theme) {
@@ -98,62 +96,41 @@
     }, 8000);
   }
 
-  /* ------------------------------------------------------------ mobile nav
-     The old site simply hid every link under 720px, leaving phones with no
-     navigation at all. This is a real drawer: Escape closes it, focus returns
-     to the button, and a resize past the breakpoint resets the state. */
-  var navToggle = document.querySelector(".nav-toggle"),
-      navLinks = document.getElementById("nav-links");
-
-  if (navToggle && navLinks) {
-    var setNav = function (open) {
-      navLinks.dataset.open = String(open);
-      navToggle.setAttribute("aria-expanded", String(open));
-      navToggle.setAttribute("aria-label", open ? "Close menu" : "Open menu");
-    };
-
-    setNav(false);
-
-    navToggle.addEventListener("click", function () {
-      setNav(navLinks.dataset.open !== "true");
-    });
-
-    navLinks.addEventListener("click", function (e) {
-      if (e.target.closest("a")) setNav(false);
-    });
-
-    document.addEventListener("keydown", function (e) {
-      if (e.key === "Escape" && navLinks.dataset.open === "true") {
-        setNav(false);
-        navToggle.focus();
-      }
-    });
-
-    document.addEventListener("click", function (e) {
-      if (navLinks.dataset.open !== "true") return;
-      if (!navLinks.contains(e.target) && !navToggle.contains(e.target)) setNav(false);
-    });
-
-    window.addEventListener("resize", function () {
-      if (window.innerWidth > 860 && navLinks.dataset.open === "true") setNav(false);
-    });
-  }
-
   /* --------------------------------------------------- legacy hash redirect
-     The site used to be one long page, so links like /snare/#infected are
-     already published in GitHub issues, an X thread and a dev.to article.
-     Those anchors now live on their own pages — forward them rather than
-     dropping people at the top of the home page with no idea why. */
+     The site has been one long page before, so links like /snare/#infected
+     are published in GitHub issues, threads and articles. Forward them. */
   var MOVED = {
-    "#detect": "check.html",
-    "#install": "install.html",
-    "#infected": "infected.html",
-    "#commands": "commands.html",
-    "#security": "security.html"
+    "#detect": "check.html", "#check": "check.html", "#install": "install.html",
+    "#infected": "infected.html", "#commands": "docs.html#reference",
+    "#security": "security.html", "#changelog": "changelog.html",
+    "#community": "community.html", "#docs": "docs.html",
+    "#attack": "attack.html", "#threat": "attack.html#threat",
+    "#mechanism": "attack.html#mechanism", "#reports": "attack.html#reports"
   };
   if (document.body.dataset.page === "index" && MOVED[location.hash]) {
     location.replace(MOVED[location.hash]);
-    return; // stop initialising a page we are leaving
+    return;
+  }
+
+  /* -------------------------------------------------------------- menu
+     Below the breakpoint the primary links become a drawer. Escape closes it
+     and returns focus to the button. */
+  var navBtn = document.querySelector(".nav-toggle"),
+      navEl = document.getElementById("bar-nav");
+  if (navBtn && navEl) {
+    var setMenu = function (open) {
+      navEl.dataset.open = String(open);
+      navBtn.setAttribute("aria-expanded", String(open));
+      navBtn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
+    };
+    setMenu(false);
+    navBtn.addEventListener("click", function () { setMenu(navEl.dataset.open !== "true"); });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && navEl.dataset.open === "true") { setMenu(false); navBtn.focus(); }
+    });
+    document.addEventListener("click", function (e) {
+      if (navEl.dataset.open === "true" && !navEl.contains(e.target) && !navBtn.contains(e.target)) setMenu(false);
+    });
   }
 
   /* ------------------------------------------------- hero whitespace reveal */
@@ -308,64 +285,134 @@
     }
   }
 
-  /* -------------------------------------------------------------- scroll spy
-     Highlights the sidebar entry for whatever section is currently in view. */
-  var tocLinks = Array.prototype.slice.call(
-    document.querySelectorAll(".toc a[href^='#'], .jump a[href^='#']")
-  );
-  if (tocLinks.length && "IntersectionObserver" in window) {
-    var byId = {};          // one section id can be pointed at by both the sidebar and the chips
-    var targets = [];
-    tocLinks.forEach(function (a) {
-      var el = document.getElementById(a.getAttribute("href").slice(1));
-      if (!el) return;
-      if (!byId[el.id]) { byId[el.id] = []; targets.push(el); }
-      byId[el.id].push(a);
+  /* ------------------------------------------------------------------ rail
+     Shows where you are on the one long page and how much is left: the
+     current chapter, a progress bar per chapter, and minutes remaining,
+     estimated from each chapter's reading time. Below the wide breakpoint
+     the rail collapses to a strip; tapping it opens the full list. */
+  var rail = document.getElementById("rail");
+  var chapters = Array.prototype.slice.call(document.querySelectorAll(".chapter"));
+  if (rail && chapters.length) {
+    var links = Array.prototype.slice.call(rail.querySelectorAll(".rail-list a"));
+    var nowBtn = rail.querySelector(".rail-now"),
+        nowN = document.getElementById("rail-n"),
+        nowT = document.getElementById("rail-t"),
+        nowLeft = document.getElementById("rail-left"),
+        nowBar = document.getElementById("rail-bar");
+    var minsOf = chapters.map(function (c) { return +c.dataset.min || 1; });
+    var current = -1, ticking = false;
+
+    var setOpen = function (open) {
+      rail.dataset.open = String(open);
+      nowBtn.setAttribute("aria-expanded", String(open));
+    };
+    if (nowBtn) {
+      setOpen(false);
+      nowBtn.addEventListener("click", function () { setOpen(rail.dataset.open !== "true"); });
+      rail.addEventListener("click", function (e) { if (e.target.closest(".rail-list a")) setOpen(false); });
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && rail.dataset.open === "true") { setOpen(false); nowBtn.focus(); }
+      });
+    }
+
+    var update = function () {
+      ticking = false;
+      var line = window.innerHeight * 0.35, idx = 0, left = 0;
+      chapters.forEach(function (c, i) {
+        var r = c.getBoundingClientRect();
+        if (r.top <= line) idx = i;
+        // fraction of this chapter scrolled past the reading line
+        var p = Math.min(1, Math.max(0, (line - r.top) / Math.max(1, r.height)));
+        links[i] && links[i].style.setProperty("--p", p.toFixed(3));
+        links[i] && links[i].classList.toggle("done", p >= 1);
+        left += minsOf[i] * (1 - p);
+      });
+      if (chapters[0].getBoundingClientRect().top > line) idx = -1;
+      var total = minsOf.reduce(function (a, b) { return a + b; }, 0);
+      if (nowBar) nowBar.style.setProperty("--p", (1 - left / total).toFixed(3));
+      if (nowLeft) nowLeft.textContent = Math.max(0, Math.round(left)) + " min left";
+      if (idx !== current) {
+        current = idx;
+        links.forEach(function (a, i) {
+          if (i === idx) a.setAttribute("aria-current", "true"); else a.removeAttribute("aria-current");
+        });
+        var shown = Math.max(0, idx);
+        if (nowN) nowN.textContent = links[shown].querySelector(".rl-n").textContent;
+        if (nowT) nowT.textContent = links[shown].querySelector(".rl-t").textContent;
+      }
+    };
+    var onScroll = function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    update();
+  }
+  /* ------------------------------------------------------- changelog filter
+     Each release groups its notes under headings that start with the kind of
+     change (Fixed, Added, Changed...). Buttons appear only for the
+     Keep a Changelog kinds that actually occur; free-form headings
+     ("Measured", "Known issues") show under All. Older
+     releases are folded; filtering opens them, since hiding matches inside a
+     closed fold would read as "nothing found". */
+  var filter = document.getElementById("rel-filter");
+  if (filter) {
+    var KINDS = ["Fixed", "Added", "Changed", "Removed", "Security"];
+    var groups = Array.prototype.slice.call(document.querySelectorAll(".rel-group"));
+    var kindOf = function (g) {
+      var h = g.querySelector("h3,h4");
+      var k = h ? h.textContent.trim().split(/[\s—–,:-]+/)[0] : "";
+      return KINDS.indexOf(k) >= 0 ? k : "Other";
+    };
+    var kinds = [];
+    groups.forEach(function (g) { var k = kindOf(g); if (k !== "Other" && kinds.indexOf(k) < 0) kinds.push(k); });
+    kinds.sort(function (a, b) { return KINDS.indexOf(a) - KINDS.indexOf(b); });
+    var buttons = [];
+    var apply = function (kind) {
+      buttons.forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.k === kind)); });
+      groups.forEach(function (g) { g.hidden = kind !== "All" && kindOf(g) !== kind; });
+      document.querySelectorAll(".rel").forEach(function (r) {
+        var any = Array.prototype.some.call(r.querySelectorAll(".rel-group"), function (g) { return !g.hidden; });
+        r.closest("section").hidden = !any;
+      });
+      var older = document.querySelector("details.older");
+      if (older && kind !== "All") older.open = true;
+    };
+    ["All"].concat(kinds).forEach(function (k) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "btn"; b.dataset.k = k; b.textContent = k;
+      b.addEventListener("click", function () { apply(k); });
+      filter.appendChild(b); buttons.push(b);
     });
-
-    var jumpBar = document.querySelector(".jump");
-    var visible = {};
-
-    var highlight = function (current) {
-      if (!current) return;
-      tocLinks.forEach(function (a) { a.classList.remove("on"); });
-      byId[current.id].forEach(function (a) {
-        a.classList.add("on");
-        // keep the active chip in view in the horizontally scrolling bar
-        if (jumpBar && jumpBar.contains(a)) {
-          var barBox = jumpBar.getBoundingClientRect(), chip = a.getBoundingClientRect();
-          if (chip.left < barBox.left || chip.right > barBox.right) {
-            jumpBar.scrollTo({
-              left: jumpBar.scrollLeft + (chip.left - barBox.left) - 16,
-              behavior: reduce ? "auto" : "smooth"
-            });
-          }
-        }
-      });
-    };
-
-    var sync = function () {
-      highlight(targets.filter(function (t) { return visible[t.id]; })[0]);
-    };
-
-    // the observer only reports on change, so nothing is marked until the first
-    // scroll — pick a starting section from geometry so the bar is never blank,
-    // and so a deep link like docs.html#state lands already highlighted
-    var pickByGeometry = function () {
-      var line = 96, best = null;
-      targets.forEach(function (t) {
-        var r = t.getBoundingClientRect();
-        if (r.top <= line && r.bottom > line) best = t;
-      });
-      return best || targets[0];
-    };
-    highlight(pickByGeometry());
-
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) { visible[e.target.id] = e.isIntersecting; });
-      sync();
-    }, { rootMargin: "-88px 0px -65% 0px", threshold: 0 });
-
-    targets.forEach(function (t) { io.observe(t); });
+    filter.hidden = false;
+    apply("All");
+  }
+  /* ------------------------------------------------------------ report form
+     Builds the issue text and hands it to GitHub's new-issue page. There is
+     no backend: nothing leaves the browser until the reader submits on
+     GitHub, where they can still edit or abandon it. */
+  var form = document.getElementById("report-form");
+  if (form) {
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var f = form.elements, msg = document.getElementById("rf-msg");
+      var what = f.what.value.trim();
+      if (!what) {
+        f.what.setAttribute("aria-invalid", "true");
+        msg.textContent = "Say what happened first. One sentence is enough.";
+        f.what.focus();
+        return;
+      }
+      f.what.removeAttribute("aria-invalid");
+      var first = what.split(/\n/)[0].slice(0, 70);
+      var body = "## What happened\n" + what +
+        "\n\n## Version\n" + (f.version.value.trim() || "(not given)") +
+        "\n\n## System\n" + f.os.value +
+        "\n\n## snare selftest\n" + (f.selftest.checked ? "passes" : "not run, or failing") + "\n";
+      var url = "https://github.com/nexlabz/snare/issues/new?title=" +
+        encodeURIComponent(f.kind.value + ": " + first) + "&body=" + encodeURIComponent(body);
+      window.open(url, "_blank", "noopener");
+      msg.textContent = "Opened GitHub in a new tab. Check the text, then press Submit there.";
+    });
   }
 })();
