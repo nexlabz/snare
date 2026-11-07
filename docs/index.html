@@ -3,414 +3,171 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>The supply-chain attack npm audit cannot see — snare</title>
-<meta name="description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
+<title>snare — the supply-chain attack npm audit cannot see</title>
+<meta name="description" content="A dropper committed straight into your repository, not into a dependency. It runs when you start the dev server or open the folder. snare finds it, kills it and cleans it up. Free and open source.">
+<meta name="keywords" content="npm supply chain attack, supply chain malware, npm malware, compromised repository, repository malware scanner, malicious postcss.config.js, vscode tasks.json malware, folderOpen exploit, EtherHiding, blockchain C2, fake woff2 payload, git history malware, npm audit missed, developer security, open source security tool">
 <meta name="author" content="AviOfLagos">
 <meta name="robots" content="index,follow">
 <link rel="canonical" href="https://nexlabz.github.io/snare/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="snare">
-<meta property="og:title" content="The supply-chain attack npm audit cannot see — snare">
-<meta property="og:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
+<meta property="og:title" content="snare — the supply-chain attack npm audit cannot see">
+<meta property="og:description" content="A dropper committed straight into your repository, not into a dependency. It runs when you start the dev server or open the folder. snare finds it, kills it and cleans it up. Free and open source.">
 <meta property="og:url" content="https://nexlabz.github.io/snare/">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="The supply-chain attack npm audit cannot see — snare">
-<meta name="twitter:description" content="A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.">
-<meta name="theme-color" content="#C2410C" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#101319" media="(prefers-color-scheme: dark)">
+<meta name="twitter:title" content="snare — the supply-chain attack npm audit cannot see">
+<meta name="twitter:description" content="A dropper committed straight into your repository, not into a dependency. It runs when you start the dev server or open the folder. snare finds it, kills it and cleans it up. Free and open source.">
+<meta name="theme-color" content="#121311">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🪤</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap">
-<link rel="stylesheet" href="assets/site.css">
-<link rel="expect" href="#main" blocking="render">
-<script>/* apply a pinned theme before first paint so the page never flashes */
-try{var t=localStorage.getItem("snare-theme");if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
-<meta name="keywords" content="npm supply chain attack, supply chain malware, supply chain attack detection, npm malware, malicious npm package, compromised repository, repository malware scanner, shai-hulud, malicious postcss.config.js, vscode tasks.json malware, folderOpen exploit, EtherHiding, blockchain C2, fake woff2 payload, clipboard stealer, git history malware, npm audit missed, dependency security, developer security, open source security tool">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=Doto:wght@700..900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="assets/site.css?v=2e004c8a">
+<script>/* dark unless the reader picked light; set before first paint so nothing flashes */
+var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}document.documentElement.dataset.theme=t;</script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@graph":[
- {"@type":"SoftwareApplication","name":"snare",
-  "applicationCategory":"SecurityApplication",
-  "operatingSystem":"macOS, Linux, Windows, WSL",
-  "softwareVersion":"1.9.0",
-  "description":"Command-line tool that detects and kills supply-chain malware loaders, scans every Git repository you can reach, removes the payload including from history, and notifies collaborators.",
-  "url":"https://nexlabz.github.io/snare/","codeRepository":"https://github.com/nexlabz/snare",
-  "license":"https://opensource.org/licenses/MIT",
-  "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}},
- {"@type":"TechArticle","headline":"Malware that runs the moment you open the project",
-  "description":"A dropper committed straight into the repository, not into a dependency. It runs when you start the dev server or when your editor opens the folder — no npm install needed. How it works, and a free open-source scanner.","url":"https://nexlabz.github.io/snare/",
-  "author":{"@type":"Person","name":"AviOfLagos"}}
-]}
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"snare",
+ "applicationCategory":"SecurityApplication","operatingSystem":"macOS, Linux, Windows, WSL",
+ "softwareVersion":"1.9.0","url":"https://nexlabz.github.io/snare/","codeRepository":"https://github.com/nexlabz/snare",
+ "license":"https://opensource.org/licenses/MIT",
+ "description":"Command-line tool that detects and kills supply-chain malware loaders, scans every Git repository you can reach, removes the payload including from history, and notifies collaborators.",
+ "offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
 </script>
 </head>
 <body data-page="index">
 <a class="skip" href="#main">Skip to content</a>
-<header class="site-header">
-<nav class="nav" aria-label="Primary">
-  <div class="nav-in">
-    <a class="brand" href="index.html"><span class="mark">sn</span>snare</a>
-    <a class="ver" href="changelog.html" title="What changed in v1.9.0">v1.9.0</a>
-    <div class="nav-links" id="nav-links">
-      <a href="index.html" aria-current="page">The threat</a>
+<a class="announce" href="changelog.html#v1-9-0"><span class="announce-tag">v1.9.0</span><span class="announce-text"><code>snare update</code> now restarts the guard and cleans up after itself.</span><span class="announce-go" aria-hidden="true">What changed →</span></a>
+<header class="bar">
+  <div class="bar-in">
+    <a class="brand" href="./"><span class="brand-mark" aria-hidden="true"></span>snare</a>
+    <a class="bar-ver" href="changelog.html">v1.9.0</a>
+    <nav class="bar-nav" id="bar-nav" aria-label="Primary">
+      <a href="attack.html">The attack</a>
       <a href="check.html">Check</a>
       <a href="infected.html">If infected</a>
-      <a href="install.html">Install</a>
       <a href="docs.html">Docs</a>
-      <a href="community.html">Community</a>
-      <a class="nav-cta" href="install.html">Install snare</a>
-    </div>
-    <div class="nav-tools">
-      <button class="icon-btn theme-toggle" type="button" aria-label="Switch theme">
-        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
-        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
-      </button>
-      <button class="icon-btn nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Open menu">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line class="bar-top" x1="3" y1="6" x2="21" y2="6"/><line class="bar-mid" x1="3" y1="12" x2="21" y2="12"/><line class="bar-bot" x1="3" y1="18" x2="21" y2="18"/></svg>
-      </button>
-    </div>
-  </div>
-</nav>
-</header>
-
-<main id="main">
-<div class="wrap hero stack">
-  <span class="kicker"><span class="dot" aria-hidden="true"></span>SUPPLY-CHAIN ATTACK · ACTIVE IN PRIVATE AND PUBLIC REPOS</span>
-  <h1>Malware that runs the moment you <em>open the project</em>.</h1>
-  <p class="lede">This is a supply-chain attack — but not the kind <code>npm audit</code> can see.
-  Instead of poisoning a package you depend on, the dropper is committed <em>directly into the
-  repository</em>, buried in ordinary config files and disguised as font assets. It executes when
-  you start the dev server, or the instant your editor opens the folder. <strong>No
-  <code>npm install</code> required.</strong></p>
-  <p class="lede"><strong>snare</strong> is a free, open-source command-line tool that watches your
-  machine for the loader and kills it, then scans every Git repository you can reach, cleans out
-  what it finds, and helps you warn your collaborators.</p>
-  <div class="cta-row">
-    <a class="btn-lg btn-primary" href="check.html">Check your machine</a>
-    <a class="btn-lg btn-ghost" href="install.html">Install snare</a>
-    <a class="btn-lg btn-ghost" href="https://github.com/nexlabz/snare">
-      <svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
-      Star on GitHub
-    </a>
-  </div>
-  <p class="lede" style="margin-top:10px;font-size:0.95em">216 developers cloned snare in the two weeks to 14 October 2026.
-  <a href="https://github.com/nexlabz/snare/stargazers">Star it</a> so the next one finds it first.</p>
-  <div class="next" style="margin-top:14px">
-    <a class="next-card urgent" href="infected.html">
-      <span class="step">Already found something</span>
-      <b>Do these four things, in this order</b>
-      <p>Rotate credentials first — not the repositories. Cleaning in the wrong order is wasted work.</p>
-    </a>
-    <a class="next-card" href="check.html">
-      <span class="step">Not sure yet</span>
-      <b>Four checks, about a minute</b>
-      <p>Run them against any clone on your machine. No tools required.</p>
-    </a>
-  </div>
-</div>
-
-<div class="wrap">
-
-<section class="stack" id="threat">
-  <span class="eyebrow">The threat</span>
-  <h2>Four routes in, none of which you'd think to check</h2>
-  <p class="lede">The same payload ships four ways. Every one of them fires from a completely
-  ordinary developer action — opening a folder, starting the dev server, or just beginning a
-  session with your coding assistant. That is exactly why this family works.</p>
-  <div class="routes">
-    <div class="route">
-      <h3>Opening the folder in your editor</h3>
-      <p class="filename">.vscode/tasks.json</p>
-      <p class="d">A task labelled <code>eslint-check</code>, marked <code>"hide": true</code> and
-      <code>"reveal": "never"</code> so it never appears in the terminal panel. It runs
-      <code>node ./public/fonts/fa-solid-400.woff2</code>.</p>
-      <p class="trigger">▸ fires on <code>"runOn": "folderOpen"</code></p>
-    </div>
-    <div class="route">
-      <h3>Starting the dev server</h3>
-      <p class="filename">postcss.config.js</p>
-      <p class="d">The payload is appended to the last line after thousands of spaces. The file
-      reads as four correct lines of config, because everything else is far off the right edge of
-      the viewport.</p>
-      <p class="trigger">▸ fires on <code>next dev</code> / <code>next build</code></p>
-    </div>
-    <div class="route">
-      <h3>Running any npm script</h3>
-      <p class="filename">package.json</p>
-      <p class="d">Every script you had is still there, each one now prefixed:
-      <code>"dev": "node api.js &amp;&amp; next dev"</code>. The obfuscated <code>api.js</code> sits
-      at the repository root. Nothing has to be installed for this to run, so
-      <code>--ignore-scripts</code> makes no difference — these are not install hooks.</p>
-      <p class="trigger">▸ fires on <code>npm run dev</code> / <code>build</code> / <code>start</code></p>
-    </div>
-    <div class="route">
-      <h3>Opening a session with your AI assistant</h3>
-      <p class="filename">.claude/settings.json</p>
-      <p class="d">A <code>SessionStart</code> hook runs <code>node .vscode/setup.mjs</code> every
-      time a session opens. It survives removing the package that delivered it, npm never sees it,
-      and the two copies in <code>.claude/</code> and <code>.vscode/</code> re-create each other —
-      so deleting one directory fixes nothing.</p>
-      <p class="trigger">▸ fires on every new agent session</p>
-    </div>
-  </div>
-  <div class="callout" id="is-this-npm">
-    <h3>“Is this the npm supply-chain thing?”</h3>
-    <p>Same category, different delivery — and the difference is why people miss it.</p>
-    <p>A classic npm supply-chain attack compromises a package you depend on. It arrives through
-    <code>npm install</code>, it shows up in your lockfile, and <code>npm audit</code> or a
-    dependency scanner has a chance of catching it.</p>
-    <p><strong>This one never touches the registry.</strong> The payload is committed into your own
-    repository, so there is no malicious dependency to find — <code>npm audit</code> is clean,
-    your lockfile is clean, and Dependabot has nothing to report. The malicious code is sitting in
-    a file your build already loads. Interestingly, the loader carries an internal vector tag
-    reading <code>NPM</code>, so the same operator appears to run registry-delivered variants as
-    well.</p>
-    <p>If you arrived here searching for the npm attack: run the
-    <a href="check.html">four checks</a> anyway. They take a minute and they cover the route a
-    dependency scanner cannot see.</p>
-  </div>
-
-  <div class="callout">
-    <h3>The font is not a font</h3>
-    <p>A genuine <code>.woff2</code> file begins with the magic bytes <code>wOF2</code>. This one
-    begins with 507 spaces, then JavaScript. Disguising a payload as a binary asset keeps it out of
-    code review entirely — nobody opens a font in a diff.</p>
-  </div>
-</section>
-
-<section class="stack lead-in">
-  <span class="eyebrow">Why nobody spotted it</span>
-  <h2>The file looks completely normal</h2>
-  <p class="lede">Here is the actual shape of an infected <code>postcss.config.js</code>. Four
-  ordinary lines, then a gap wide enough to push the payload past any screen. Reveal the whitespace
-  to see what your editor was not showing you.</p>
-</section>
-</div>
-
-<div class="bleed">
-  <div class="panel">
-    <div class="panel-bar">
-      <span class="label">postcss.config.js — as committed</span>
-      <div class="bar-actions">
-        <button class="btn" id="reveal" type="button" aria-pressed="false" aria-controls="code">reveal whitespace</button>
-      </div>
-    </div>
-    <div class="scroller" id="scroller"><pre id="code"></pre></div>
-  </div>
-  <p class="note" style="margin-top:9px" id="hint">Line 5 is 9,135 characters long. Scroll it
-  sideways — or reveal the whitespace.</p>
-</div>
-
-<div class="wrap">
-
-<section class="stack after-bleed" id="mechanism">
-  <span class="eyebrow">How it works</span>
-  <h2>The address it phones home to is not in the code</h2>
-  <p class="lede">This is why blocking an IP achieves nothing. The loader ships with no server
-  address at all — it derives a fresh one every run by reading the public Ethereum blockchain, a
-  documented technique known as <em>EtherHiding</em>. The operator moves their infrastructure by
-  sending a single transaction.</p>
-
-  <figure class="fig">
-    <svg viewBox="0 0 940 340" role="img" xmlns="http://www.w3.org/2000/svg"
-         aria-label="The loader asks the Ethereum blockchain for the attacker's latest transaction, decodes an IP address from it, then fetches stage two from that address. The attacker moves the server by sending a new transaction.">
-      <defs>
-        <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 z" class="ah"/>
-        </marker>
-        <marker id="ard" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-          <path d="M0 0 L10 5 L0 10 z" class="ah dim"/>
-        </marker>
-      </defs>
-
-      <!-- lookup row -->
-      <rect x="330" y="26" width="290" height="60" rx="9" class="bx hot"/>
-      <text x="475" y="50" class="t1 hot" text-anchor="middle">Ethereum · Blockscout API</text>
-      <text x="475" y="70" class="t2" text-anchor="middle">latest transaction from 0xa322…</text>
-
-      <rect x="682" y="26" width="228" height="60" rx="9" class="bx dash"/>
-      <text x="796" y="50" class="t1" text-anchor="middle">Attacker</text>
-      <text x="796" y="70" class="t2" text-anchor="middle">sends one tx to move the C2</text>
-      <line x1="676" y1="56" x2="628" y2="56" class="ln dash" marker-end="url(#ard)"/>
-
-      <!-- lookup arrows -->
-      <path d="M362 214 L362 150 Q362 132 380 132 L420 132 L420 92" class="ln hot" marker-end="url(#ar)"/>
-      <text x="376" y="126" class="t3 hot">① ask for the latest tx</text>
-
-      <path d="M556 92 L556 132 L596 132 Q614 132 614 150 L614 214" class="ln hot" marker-end="url(#ar)"/>
-      <text x="628" y="126" class="t3 hot">② decode bytes 0–3 → IPv4</text>
-
-      <!-- machine zone -->
-      <rect x="10" y="196" width="466" height="120" rx="11" class="zone"/>
-      <text x="26" y="308" class="t4">YOUR MACHINE</text>
-
-      <!-- main flow -->
-      <rect x="26" y="214" width="180" height="60" rx="9" class="bx"/>
-      <text x="116" y="238" class="t1" text-anchor="middle">postcss.config.js</text>
-      <text x="116" y="258" class="t2" text-anchor="middle">or .vscode/tasks.json</text>
-
-      <rect x="272" y="214" width="180" height="60" rx="9" class="bx"/>
-      <text x="362" y="238" class="t1" text-anchor="middle">node loader</text>
-      <text x="362" y="258" class="t2" text-anchor="middle">detached, reparented</text>
-
-      <rect x="524" y="214" width="180" height="60" rx="9" class="bx hot"/>
-      <text x="614" y="238" class="t1 hot" text-anchor="middle">C2 server</text>
-      <text x="614" y="258" class="t2" text-anchor="middle">address known only at runtime</text>
-
-      <rect x="754" y="214" width="170" height="60" rx="9" class="bx"/>
-      <text x="839" y="238" class="t1" text-anchor="middle">clipboard stealer</text>
-      <text x="839" y="258" class="t2" text-anchor="middle">polls every 200 ms</text>
-
-      <line x1="206" y1="244" x2="266" y2="244" class="ln" marker-end="url(#ar)"/>
-      <text x="236" y="234" class="t3" text-anchor="middle">runs</text>
-
-      <line x1="452" y1="244" x2="518" y2="244" class="ln" marker-end="url(#ar)"/>
-      <text x="485" y="234" class="t3" text-anchor="middle">③ GET</text>
-
-      <line x1="704" y1="244" x2="748" y2="244" class="ln" marker-end="url(#ar)"/>
-      <text x="726" y="234" class="t3" text-anchor="middle">④</text>
-      <text x="726" y="292" class="t3" text-anchor="middle">eval'd in memory</text>
-    </svg>
-    <figcaption>The loader carries no server address. It reads one off the blockchain at run time,
-    which is why an IP blocklist cannot keep up: the operator repoints every infected machine at
-    once by sending a single transaction.</figcaption>
-  </figure>
-
-  <div class="mech">
-    <div class="mech-steps">
-      <h3>Step by step</h3>
-      <ol class="chain">
-        <li><b>Query public Ethereum RPCs</b><span>Falls through 1rpc.io, drpc.org, publicnode and blastapi, so cutting off any one endpoint changes nothing.</span></li>
-        <li><b>Read the wallet's newest transaction</b><span>Through the Blockscout API, sorted newest first.</span></li>
-        <li><b>Decode an IP from the destination address</b><span>The first eight bytes are read as two IPv4 addresses — a primary and a fallback.</span></li>
-        <li><b>Fetch stage two over plain HTTP</b><span>From <code>/0x/clb</code>, <code>/0x/cls</code> or <code>/0x/ls</code>, on port 443 to look like TLS to a port-based filter.</span></li>
-        <li><b>Decode and spawn it detached</b><span>XOR-decoded and evaluated in memory — nothing is written to disk — then <code>spawn(…, {detached:true})</code> and <code>unref()</code>, so it outlives the editor that started it.</span></li>
-      </ol>
-    </div>
-    <div class="mech-bytes">
-      <h3>Address → endpoints</h3>
-      <div class="panel">
-        <div class="panel-bar"><span class="label">20-byte destination address</span></div>
-        <div class="scroller"><div class="bytepad">
-          <div class="bytes">
-            <span class="byte a">a3</span><span class="byte a">22</span><span class="byte a">e5</span><span class="byte a">f3</span>
-            <span class="byte b">d3</span><span class="byte b">11</span><span class="byte b">d3</span><span class="byte b">08</span>
-            <span class="byte">e6</span><span class="byte">f0</span><span class="byte">12</span><span class="byte">10</span>
-            <span class="byte">63</span><span class="byte">e9</span><span class="byte">aD</span><span class="byte">C2</span>
-            <span class="byte">49</span><span class="byte">0E</span><span class="byte">f1</span><span class="byte">a…</span>
-          </div>
-          <div class="legend">
-            <span><span class="swatch" style="background:var(--accent)"></span>bytes 0–3 → primary C2</span>
-            <span><span class="swatch" style="background:var(--safe)"></span>bytes 4–7 → fallback</span>
-            <span><span class="swatch" style="background:var(--hair)"></span>remainder unused</span>
-          </div>
-        </div></div>
-      </div>
-      <p class="note">The payload observed in the wild stole clipboard contents — passwords, access
-      tokens and wallet seed phrases — from the moment the editor opened.</p>
-    </div>
-  </div>
-</section>
-
-<section class="stack" id="reports">
-  <span class="eyebrow">Reports from the field</span>
-  <h2>This is not a one-off</h2>
-  <p class="lede">The accounts below are what developers have described first-hand — an internship
-  cohort of several thousand, engineers nearly dismissed over a compromise that was not their doing,
-  and disrupted operations at several companies. <strong>These are reports, not audited figures.</strong>
-  They are collected in the open precisely so you can read them and judge for yourself. One sample
-  sat in a repository for five months before anyone noticed.</p>
-
-  <div class="reports">
-    <a class="report-link" href="https://github.com/nexlabz/snare/issues/1">
-      <span class="ic"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></span>
-      <span><b>Add your account on GitHub</b><span>Open thread — what you saw, what it cost, any variant you found.</span></span>
-    </a>
-    <a class="report-link" href="https://github.com/nexlabz/snare/issues/new">
-      <span class="ic"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M8 3.5v9M3.5 8h9" stroke-linecap="round"/></svg></span>
-      <span><b>Report a variant</b><span>A different wallet, filename or trigger goes straight into the detection patterns.</span></span>
-    </a>
-<!-- LINK:tweet:start -->
-    <a class="report-link" href="https://x.com/Nexprove/status/2092146004250218783">
-      <span class="ic"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M12.6 1.5h2.3l-5 5.8 5.9 7.8h-4.6l-3.6-4.7-4.1 4.7H1.2l5.4-6.2L1 1.5h4.7l3.3 4.3 3.6-4.3Zm-.8 12.2h1.3L4.6 2.8H3.2l8.6 10.9Z"/></svg></span>
-      <span><b>Discussion on X</b><span>Developers sharing what they saw — add yours.</span></span>
-    </a>
-<!-- LINK:tweet:end -->
-<!-- LINK:devto:start -->
-    <a class="report-link" href="https://dev.to/avioflagos/malware-that-runs-the-moment-you-open-the-project-1j5e">
-      <span class="ic"><svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M2 3h3.1c1.9 0 3.2 1.2 3.2 3v4c0 1.8-1.3 3-3.2 3H2V3Zm2.1 2v6h1c.8 0 1.2-.4 1.2-1.2V6.2C6.3 5.4 5.9 5 5.1 5h-1Zm5.6-2h2l1.1 5.2L14 3h2l-2.2 10h-1.9L9.7 3Z"/></svg></span>
-      <span><b>Write-up on dev.to</b><span>Full technical breakdown, with comments.</span></span>
-    </a>
-<!-- LINK:devto:end -->
-  </div>
-
-  <div class="callout">
-    <h3>If it reached your team, say so</h3>
-    <p>You do not have to name an employer or client — "a fintech I contract for" is a perfectly
-    good data point. Redact tokens, keys and internal hostnames first. The reason to post is simple:
-    the developers who lost work to this mostly had never heard of the technique, and the ones who
-    caught it early had heard about it from someone else.</p>
-  </div>
-</section>
-
-<section class="stack">
-  <span class="eyebrow">What next</span>
-  <h2>Two minutes decides whether this is your problem</h2>
-  <div class="next">
-    <a class="next-card" href="check.html">
-      <span class="step">Step 1</span>
-      <b>Check your machine</b>
-      <p>Four commands against any clone. No install, no tools, about a minute.</p>
-    </a>
-    <a class="next-card" href="install.html">
-      <span class="step">Step 2</span>
-      <b>Install snare</b>
-      <p>Does all four checks continuously, across every repository you can reach.</p>
-    </a>
-    <a class="next-card" href="https://github.com/nexlabz/snare/stargazers">
-      <span class="step">Step 3</span>
-      <b>⭐ Star it on GitHub</b>
-      <p>If snare caught something, or just made you look, a star is how the next developer finds it.</p>
-    </a>
-  </div>
-</section>
-</div>
-<div class="wrap"><nav class="pager" aria-label="Page">
-  <a class="next-a" href="check.html"><span class="dir">Next →</span><b>Check your machine</b></a>
-</nav></div>
-</main>
-
-<div class="wrap">
-<footer>
-  <div class="foot-grid">
-    <div class="foot-col">
-      <b>snare</b>
-      <p class="foot-note">Free and open source under the MIT licence. Indicators and analysis are
-      published so other developers can detect this family in their own repositories. Payload
-      excerpts are truncated and defanged.</p>
-    </div>
-    <div class="foot-col">
-      <b>The threat</b>
-      <a href="index.html">How it works</a>
-      <a href="check.html">Check your machine</a>
-      <a href="infected.html">If you're infected</a>
-    </div>
-    <div class="foot-col">
-      <b>The tool</b>
-      <a href="install.html">Install</a>
-      <a href="docs.html">Documentation</a>
-      <a href="commands.html">Command reference</a>
       <a href="changelog.html">Changelog</a>
       <a href="community.html">Community</a>
       <a href="security.html">Report a bug</a>
+      <a class="bar-cta" href="install.html">Install</a>
+    </nav>
+    <div class="bar-tools">
+      <a class="icon-btn" href="https://github.com/nexlabz/snare" aria-label="snare on GitHub"><svg viewBox="0 0 16 16" width="15" height="15" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg></a>
+      <button class="icon-btn theme-toggle" type="button" aria-label="Switch theme"><svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button>
+      <button class="icon-btn nav-toggle" type="button" aria-expanded="false" aria-controls="bar-nav" aria-label="Open menu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="3" y1="7" x2="21" y2="7"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="17" x2="21" y2="17"/></svg></button>
     </div>
   </div>
-  <div class="foot-bar">
-    <span>Findings from a first-hand investigation, August 2026.</span>
-    <span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a> · <a href="changelog.html">v1.9.0</a> · MIT</span>
+</header>
+<main id="main">
+<div class="home">
+<section class="home-hero" aria-labelledby="hero-title">
+  <div class="hh-main">
+    <p class="wordmark" aria-hidden="true">SNARE</p>
+    <h1 id="hero-title">Malware that runs the moment you open the project.</h1>
+    <p class="hh-lede">It hides in your repository, not your dependencies, so <code>npm audit</code>
+    never sees it. snare finds it, kills it and cleans it up.</p>
+    <div class="cover-actions">
+      <a class="cta cta-hot" href="install.html">Install snare</a>
+      <a class="cta" href="check.html">Check your machine first</a>
+    </div>
   </div>
-</footer>
+  <dl class="spec" aria-label="snare at a glance">
+    <div><dt>Version</dt><dd><a href="changelog.html">1.9.0</a><span class="spec-dim"> / 7 Nov 2026</span></dd></div>
+    <div><dt>Threat</dt><dd class="spec-hot"><span class="pulse" aria-hidden="true"></span>Campaign active</dd></div>
+    <div><dt>Runs on</dt><dd>macOS, Linux, Windows, WSL</dd></div>
+    <div><dt>Needs</dt><dd>bash, git, python3, gh</dd></div>
+    <div><dt>Licence</dt><dd>MIT, free</dd></div>
+  </dl>
+</section>
+
+<a class="cover-urgent" href="infected.html">
+  <span class="cu-k">Already found something?</span>
+  <span class="cu-v">Rotate your credentials first, then clean the machine. Not the repositories.</span>
+</a>
+
+<section class="home-band" aria-labelledby="problem-title">
+  <div class="band-head">
+    <h2 id="problem-title">Four ordinary actions set it off</h2>
+    <a class="band-link" href="attack.html">How the attack works</a>
+  </div>
+  <ol class="routes-grid">
+    <li><span class="rg-n">01</span><b>Opening the folder</b><code>.vscode/tasks.json</code></li>
+    <li><span class="rg-n">02</span><b>Starting the dev server</b><code>postcss.config.js</code></li>
+    <li><span class="rg-n">03</span><b>Running any npm script</b><code>package.json</code></li>
+    <li><span class="rg-n">04</span><b>Starting your coding agent</b><code>.claude/settings.json</code></li>
+  </ol>
+</section>
+
+<section class="home-band" aria-labelledby="solve-title">
+  <div class="band-head">
+    <h2 id="solve-title">What snare does about it</h2>
+    <a class="band-link" href="docs.html">Read the docs</a>
+  </div>
+  <div class="solve">
+    <div><span class="sv-k">Guard</span><p>Watches your machine and kills the loader the moment it starts.</p></div>
+    <div><span class="sv-k">Scan</span><p>Checks every repository you can reach, history included.</p></div>
+    <div><span class="sv-k">Gate</span><p>Stops your coding agent pulling or running an infected repo.</p></div>
+    <div><span class="sv-k">Fix</span><p>Removes the payload, backs up first, and helps you warn collaborators.</p></div>
+  </div>
+</section>
+
+<section class="home-band" id="get" aria-labelledby="install-title">
+  <div class="band-head">
+    <h2 id="install-title">Install in about a minute</h2>
+    <a class="band-link" href="install.html">Every platform</a>
+  </div>
+  <div class="tabs" role="tablist" aria-label="Platform">
+    <button class="tab" role="tab" aria-selected="true" data-p="mac" id="tab-mac" aria-controls="p-mac">macOS</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="linux" id="tab-linux" aria-controls="p-linux">Linux</button>
+    <button class="tab" role="tab" aria-selected="false" data-p="win" id="tab-win" aria-controls="p-win">Windows</button>
+  </div>
+  <div class="pane" id="p-mac" role="tabpanel" aria-labelledby="tab-mac" tabindex="0">
+    <div class="panel"><div class="panel-bar"><span class="label">macOS</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>brew install git gh python3 git-filter-repo
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh && snare doctor</pre></div></div>
+  </div>
+  <div class="pane" id="p-linux" role="tabpanel" aria-labelledby="tab-linux" tabindex="0" hidden>
+    <div class="panel"><div class="panel-bar"><span class="label">Linux</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>sudo apt install -y git python3 gh
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh && snare doctor</pre></div></div>
+  </div>
+  <div class="pane" id="p-win" role="tabpanel" aria-labelledby="tab-win" tabindex="0" hidden>
+    <div class="panel"><div class="panel-bar"><span class="label">Git Bash on Windows</span><div class="bar-actions"></div></div>
+      <div class="scroller"><pre>winget install Git.Git GitHub.cli Python.Python.3.12
+git clone https://github.com/nexlabz/snare ~/snare
+cd ~/snare && ./install.sh && snare doctor</pre></div></div>
+  </div>
+</section>
+
+<section class="home-band" aria-labelledby="more-title">
+  <div class="band-head">
+    <h2 id="more-title">Go deeper</h2>
+  </div>
+  <div class="explore">
+  <a class="ex" href="attack.html"><span class="ex-k">4 min read</span><b>The attack</b><span class="ex-p">How it gets in, why the file looks clean, and where it phones home.</span></a>
+  <a class="ex" href="check.html"><span class="ex-k">3 min read</span><b>Check</b><span class="ex-p">Seven checks to paste into a terminal. Nothing to install.</span></a>
+  <a class="ex" href="infected.html"><span class="ex-k">3 min read</span><b>If infected</b><span class="ex-p">The four steps, in the order that matters.</span></a>
+  <a class="ex" href="docs.html"><span class="ex-k">8 min read</span><b>Docs</b><span class="ex-p">How snare works, and every command it has.</span></a>
+  <a class="ex" href="install.html"><span class="ex-k">Page</span><b>Install</b><span class="ex-p">macOS, Linux, Windows and WSL.</span></a>
+  <a class="ex" href="changelog.html"><span class="ex-k">Page</span><b>Changelog</b><span class="ex-p">Every release, and what was broken before it.</span></a>
+  <a class="ex" href="security.html"><span class="ex-k">Page</span><b>Report a bug</b><span class="ex-p">A false clean is the bug we most want to hear about.</span></a>
+  <a class="ex" href="community.html"><span class="ex-k">Page</span><b>Community</b><span class="ex-p">Field reports, credits and the open questions.</span></a>
 </div>
 
-<script src="assets/site.js"></script>
+</section>
+</div>
+</main>
+<footer class="foot">
+  <div class="foot-in">
+    <div class="fc fc-wide"><span class="brand"><span class="brand-mark" aria-hidden="true"></span>snare</span>
+      <p>Free and open source, MIT. Findings from a first-hand investigation, August 2026. Payload
+      excerpts are truncated and defanged.</p></div>
+    <div class="fc"><b>Read</b><a href="attack.html">The attack</a><a href="check.html">Check</a><a href="infected.html">If infected</a></div><div class="fc"><b>Use</b><a href="install.html">Install</a><a href="docs.html">Docs</a><a href="changelog.html">Changelog</a></div><div class="fc"><b>Talk</b><a href="community.html">Community</a><a href="security.html">Report a bug</a></div>
+  </div>
+  <div class="foot-bar"><span>snare 1.9.0</span><a href="https://github.com/nexlabz/snare">github.com/nexlabz/snare</a></div>
+</footer>
+<script src="assets/site.js?v=d0607feb"></script>
 </body>
 </html>

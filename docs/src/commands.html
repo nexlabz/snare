@@ -41,8 +41,8 @@
     <a href="#limits">Limits</a>
   </div>
 
-  <section class="stack" id="start">
-    <span class="eyebrow">Start here</span>
+  <section class="stack" id="cmd-start">
+    <span class="eyebrow">Guided clean-up</span>
     <h2>The guided one</h2>
     <p>If you do not want to choose between the commands below, this runs the whole sequence and
     asks you at each step. It is the same work, in the order that actually helps.</p>
@@ -50,11 +50,7 @@
       <div class="scroller"><pre>snare respond                   walk through everything, one question at a time
 snare respond --status          where you got to
 snare respond --reset           start the walkthrough again</pre></div></div>
-    <p class="note">Six steps: check the machine, rotate credentials, clean the machine, find what
-    is infected, fix it, tell your collaborators — then a verification pass that re-reads rather
-    than trusting what just happened. Anything that writes to a repository defaults to
-    <strong>no</strong>, and the choice to purge history is asked once rather than per repository.
-    Progress is saved, so stopping and resuming is fine.</p>
+    <p class="note">Six steps, then a verification pass that re-reads rather than trusts. Writes default to <strong>no</strong>, purging history is asked once, and progress is saved.</p>
     <p class="note">It refuses to run unattended. With no terminal, or <code>CI</code> set, it
     exits rather than prompting where nobody can answer — use the individual commands there.</p>
   </section>
@@ -76,26 +72,11 @@ snare scan github --all-branches
 snare doctor                    this machine, persistence spots, and your GitHub account
 snare selftest                  prove detection still works against known samples</pre></div></div>
 
-    <p class="note"><strong>Scanning everything is often the wrong first move.</strong>
-    A real account reaches further than people expect — one we tested sees 22
-    organisations and roughly 950 repositories, which is several thousand API calls.
-    <code>scan orgs</code> lists what is reachable and how big each owner is, so you can
-    start with the ones that matter; <code>scan github --pick</code> shows the same list
-    and lets you choose from it. The repo counts are the number
-    <code>--owner</code> will actually scan, not an estimate.</p>
+    <p class="note"><strong>Don't scan everything first.</strong> One real account reached 22 organisations and ~950 repositories. <code>scan orgs</code> lists what's reachable and how big each owner is; <code>scan github --pick</code> lets you choose.</p>
 
-    <p class="note"><strong>Read this before trusting a clean result.</strong>
-    <code>scan github</code> reads <em>branch tips through the API</em>. It cannot see
-    history, and it fetches a bounded set of files. A payload that was committed and
-    later removed, or one hidden somewhere it does not look, will not appear.
-    <code>scan repo</code> against a real clone is the thorough check — it walks every
-    branch and every commit. The infection that started all of this survived a clean
-    127-repository API sweep and was only caught by <code>scan repo</code>.</p>
+    <p class="note"><strong>Read before trusting a clean result.</strong> <code>scan github</code> reads <em>branch tips through the API</em>: no history, a bounded set of files. <code>scan repo</code> on a real clone walks every branch and commit. The original infection survived a clean 127-repo API sweep and was caught only by <code>scan repo</code>.</p>
 
-    <p class="note"><code>selftest</code> exists because four defects once made snare
-    report <em>clean</em> on infected repositories. It builds a scratch repo of known-bad
-    and known-good samples, runs the real scanner, and exits non-zero on any mismatch.
-    If it fails, do not trust any clean result until it passes.</p>
+    <p class="note"><code>selftest</code> runs the real scanner on known-bad and known-good samples and fails on any mismatch. If it fails, trust no clean result.</p>
   </section>
 
   <section class="stack" id="gate">
@@ -111,30 +92,11 @@ snare gate allow [dir [branch]|url]  you looked and it is yours: allow what was 
 snare gate allowed | forget     review or withdraw what you allowed
 snare gate report               the last block, word for word, to paste into an agent</pre></div></div>
 
-    <p class="note"><strong>A block is what snare suspects, not a verdict.</strong> It lists each
-    finding as the file, the line and what is suspected, so you can look — it can be a false
-    alarm. Then you decide: <code>snare gate allow</code> if it is yours, or
-    <code>snare respond</code> to let snare take charge. Approvals live in
-    <code>~/.snare</code>, never in the repository, and lapse if the file changes. A coding agent
-    cannot approve its own block: it is told to stop and show you, and an agent that tries is
-    refused.</p>
+    <p class="note"><strong>A block is a suspicion, not a verdict.</strong> It lists file, line and why. Look, then decide: <code>snare gate allow</code> if it's yours, <code>snare respond</code> if not. Approvals live in <code>~/.snare</code> and lapse if the file changes. A coding agent can't approve its own block.</p>
 
-    <p class="note">The <strong>gate</strong> answers one question before a command runs: does it
-    bring code in or execute it, and is that code clean? <code>git clone</code> is cloned to a
-    quarantine directory and scanned first. <code>git pull</code>, <code>merge</code>,
-    <code>rebase</code> and <code>checkout</code> fetch — which runs nothing — and scan the incoming
-    tree in a throwaway worktree before a file lands. Installs and <code>npm run</code> scan the
-    directory they would run in. It fails closed: if the scan cannot finish, the command does not
-    run.</p>
+    <p class="note">The <strong>gate</strong> scans code before a command brings it in or runs it. <code>git clone</code> goes to quarantine first; <code>pull</code>, <code>merge</code>, <code>rebase</code> and <code>checkout</code> are scanned in a throwaway worktree before a file lands; installs and <code>npm run</code> scan their directory. If the scan can't finish, the command doesn't run.</p>
 
-    <p class="note"><strong>For coding agents</strong>, <code>snare agents install</code> adds a
-    Claude Code <code>PreToolUse</code> hook — enforced, so the agent cannot skip it — and a short
-    instruction block in <code>CLAUDE.md</code>, <code>AGENTS.md</code> and <code>GEMINI.md</code>
-    for agents without hooks. A block reads <em>"FIRE ON THE MOUNTAIN"</em>, tells the agent to stop
-    and tell you, and raises a desktop notification. Ordinary commands like <code>git status</code>
-    cost about 30ms. <code>install.sh</code> and <code>snare update</code> show what it would change
-    and <strong>ask first</strong>; after a yes, <code>snare update</code> keeps it current, and
-    <code>snare agents uninstall</code> removes it and keeps it removed.</p>
+    <p class="note"><strong>For coding agents</strong>, <code>snare agents install</code> adds an enforced Claude Code <code>PreToolUse</code> hook, plus instructions in <code>CLAUDE.md</code>, <code>AGENTS.md</code> and <code>GEMINI.md</code>. A block says <em>"FIRE ON THE MOUNTAIN"</em> and raises a notification. Ordinary commands cost ~30ms. It asks before installing; <code>snare agents uninstall</code> removes it for good.</p>
   </section>
 
   <section class="stack" id="deps">
@@ -146,23 +108,9 @@ snare deps --system              also your global Python, pipx, npm and cargo in
 snare deps fix [dir]             remove each one, or replace it with a version not listed
 snare deps update | status       refresh / show the known-malware list</pre></div></div>
 
-    <p class="note">The list is <a href="https://github.com/ossf/malicious-packages">OpenSSF's
-    malicious-packages</a> database — about 117,000 packages across npm, PyPI, crates.io, Go,
-    RubyGems, Packagist, NuGet and Maven — condensed every six hours into one small file.
-    <strong>Every snare downloads the same file and matches it on its own machine</strong>, so
-    nothing about your packages is ever sent. Lockfiles read: npm, pnpm, yarn, bun,
-    <code>requirements*.txt</code>, poetry, uv, pdm, <code>pylock.toml</code>, Pipfile,
-    <code>Cargo.lock</code>, <code>go.sum</code>, <code>Gemfile.lock</code>,
-    <code>composer.lock</code> and NuGet's <code>packages.lock.json</code>.</p>
+    <p class="note">The list is <a href="https://github.com/ossf/malicious-packages">OpenSSF's malicious-packages</a> (~117,000 packages across npm, PyPI, crates.io, Go, RubyGems, Packagist, NuGet, Maven), refreshed every six hours. <strong>Matching happens on your machine</strong>; nothing about your packages is sent. It reads the lockfiles of all of those ecosystems.</p>
 
-    <p class="note">The <strong>gate</strong> uses the same list: <code>npm i x@1.2.3</code>,
-    <code>npx</code>, <code>pip install x==1.0</code>, <code>uv add</code>, <code>cargo add</code>,
-    <code>go get</code>, <code>gem install</code> and <code>composer require</code> are stopped
-    when the version is listed, and a repository's lockfiles are checked before
-    <code>npm install</code> or <code>pip install -r</code>. It also treats the files other
-    languages run on their own as routes: <code>setup.py</code>, <code>conftest.py</code>,
-    <code>build.rs</code>, <code>sitecustomize.py</code>, <code>.pth</code> files (Python runs them at
-    every start — the LiteLLM 1.107.0 payload was one) and <code>//go:generate</code> lines.</p>
+    <p class="note">The <strong>gate</strong> uses the same list to stop <code>npm i</code>, <code>npx</code>, <code>pip install</code>, <code>uv add</code>, <code>cargo add</code>, <code>go get</code>, <code>gem install</code> and <code>composer require</code> on a listed version, and checks lockfiles before an install. It also watches files other languages run on their own: <code>setup.py</code>, <code>conftest.py</code>, <code>build.rs</code>, <code>sitecustomize.py</code>, <code>.pth</code> and <code>//go:generate</code>.</p>
   </section>
 
   <section class="stack" id="stop">
@@ -177,16 +125,9 @@ snare shield install            scan before npm/pnpm/yarn/bun/npx and git clone 
 snare shield status | uninstall
 snare shield check [path]       the fast check on its own (~22ms)</pre></div></div>
 
-    <p class="note">The <strong>guard</strong> is a background process (launchd on macOS,
-    a systemd user unit on Linux, a logon Scheduled Task on Windows). It polls once per
-    second, so a payload can still act before it is caught, and it cannot see code already
-    running inside another process.</p>
+    <p class="note">The <strong>guard</strong> runs in the background (launchd, systemd user unit, or a logon task on Windows). It polls every second, so a payload can act first, and it can't see code inside another process.</p>
 
-    <p class="note">The <strong>shield</strong> wraps package managers in your shell so a
-    scan happens before they can execute anything. Honest limits: it is shell-only, so it
-    cannot see VS Code's own <code>folderOpen</code> task — that is the guard's job — and
-    anyone can bypass it with <code>command npm</code> or <code>SNARE_SKIP_SHIELD=1</code>.
-    It is a seatbelt, not a sandbox.</p>
+    <p class="note">The <strong>shield</strong> wraps package managers in your shell so they're scanned before running. Shell only: it can't see VS Code's <code>folderOpen</code> task, and <code>command npm</code> bypasses it. A seatbelt, not a sandbox.</p>
   </section>
 
   <section class="stack" id="spread">
@@ -201,18 +142,9 @@ snare ci install                write a GitHub Actions workflow into this repo
 snare ci status                 is the workflow installed, and is the check required?
 snare ci print                  print the workflow without writing it</pre></div></div>
 
-    <p class="note">This family injects into commits <em>from an already-infected machine</em>,
-    so the payload leaves before anyone scans a repository. The <strong>hook</strong> is the
-    only feature that prevents that rather than detecting it afterwards. It also refuses the
-    push when the machine itself has a live detection, because a clean repo pushed from an
-    infected machine can still carry the payload out.</p>
+    <p class="note">This family injects into commits <em>as they leave an infected machine</em>. The <strong>hook</strong> is the only feature that prevents that rather than detecting it later, and it refuses a push while the machine has a live detection.</p>
 
-    <p class="note"><strong>GitHub.com cannot reject a push outright</strong> — server-side
-    pre-receive hooks are an Enterprise feature. A required status check is the practical
-    equivalent: the merge button stays disabled until the scan passes. <code>ci install</code>
-    writes the workflow, but <em>you</em> must tick it as required under
-    Settings → Branches. Until you do, it reports and blocks nothing —
-    <code>snare ci status</code> will tell you when that is the case.</p>
+    <p class="note"><strong>GitHub.com can't reject a push outright</strong>, so a required status check does the job: the merge button stays disabled until the scan passes. <code>ci install</code> writes the workflow; <em>you</em> must mark it required under Settings → Branches. <code>snare ci status</code> tells you if you haven't.</p>
   </section>
 
   <section class="stack" id="clean">
@@ -231,28 +163,11 @@ snare rotate                    what to revoke, in order, plus a GitHub audit
 snare notify &lt;owner/repo&gt;       list collaborators and preview the notice
 snare notify &lt;owner/repo&gt; --issue | --mail</pre></div></div>
 
-    <p class="note"><strong>Rotate before you clean.</strong> Stealing credentials is what
-    this family is <em>for</em>; the file in your repository is delivery, not payload.
-    Removing it does not un-steal a token. <code>snare rotate</code> lists what to revoke
-    in order — npm write tokens first, because a stolen one lets the worm publish
-    trojanised versions of your other packages under your name — and audits your GitHub
-    account for the repositories and secret-exporting workflows this family leaves behind.
-    The full sequence is on the <a href="infected.html">response page</a>.</p>
+    <p class="note"><strong>Rotate before you clean.</strong> Credentials are the target; the file is only delivery. <code>snare rotate</code> lists what to revoke, npm write tokens first, and audits your GitHub account for what this family leaves behind. Full order on the <a href="infected.html">response page</a>.</p>
 
-    <p class="note"><strong><code>fix --pick</code> is the whole clean-up in one pass:</strong>
-    choose organisations from the same list <code>scan orgs</code> prints, scan them, then
-    remediate what was found. It is a dry run unless you add <code>--push</code>, and the
-    destructive flags stay on the command line rather than hiding inside a friendlier verb —
-    force-pushing rewritten history across an organisation should be legible in your shell
-    history. <code>--owner a,b</code> is the same thing without the prompt, for a script or a
-    timer. With <code>--purge-history</code> it checks for <code>git-filter-repo</code>
-    <em>before</em> scanning, rather than after asking you to choose and then failing on the
-    first repository.</p>
+    <p class="note"><strong><code>fix --pick</code> is the whole clean-up in one pass:</strong> choose organisations, scan, remediate. It's a dry run unless you add <code>--push</code>, and destructive flags stay visible on the command line. <code>--owner a,b</code> does the same without the prompt. <code>--purge-history</code> checks for <code>git-filter-repo</code> before scanning.</p>
 
-    <p class="note"><code>--purge-history</code> rewrites every commit, so every SHA changes.
-    Collaborators must <em>re-clone</em>, not pull, and forks and pull-request refs still
-    hold the old objects. <code>fix --all</code> is a dry run by default and requires you to
-    type the repository count to confirm, because it can force-push.</p>
+    <p class="note"><code>--purge-history</code> changes every SHA: collaborators re-clone, and forks and PR refs keep old objects. <code>fix --all</code> is a dry run and makes you type the repository count.</p>
   </section>
 
   <section class="stack" id="watch">
@@ -273,19 +188,12 @@ snare update --mode auto        install new versions itself (default: notify, or
 snare update --relink           point ~/.local/bin/snare at this checkout
 snare version                   version and commit</pre></div></div>
 
-    <p class="note">Reports write to <code>$SNARE_HOME/reports</code> and exit non-zero when
-    something is found, so a timer or a CI job can act on the result. There is deliberately
-    <strong>no email</strong>: SMTP credentials in a security tool are a liability, and a
-    report file plus a native notification does the same job with nothing worth stealing.</p>
+    <p class="note">Reports go to <code>$SNARE_HOME/reports</code> and exit non-zero on a finding, so timers and CI can act. No email, on purpose: SMTP credentials are a liability.</p>
 
     <p class="note"><strong>Accepting a finding into a baseline silences it — it does not
     make it safe.</strong> Only baseline what you have actually read.</p>
 
-    <p class="note"><code>snare update</code> matters more than it looks. Every clone made
-    before 27 August 2026 contains defects that made the working-tree scan report
-    <em>clean</em> on infected repositories. If you installed snare before then, update
-    before you trust it, and run <code>snare selftest</code> afterwards. The
-    <a href="changelog.html">changelog</a> lists every one of them.</p>
+    <p class="note">Installed before 27 August 2026? Those versions could report <em>clean</em> on infected repos. Run <code>snare update</code>, then <code>snare selftest</code>. The <a href="changelog.html">changelog</a> lists each defect.</p>
   </section>
 
   <section class="stack" id="limits">
@@ -293,10 +201,7 @@ snare version                   version and commit</pre></div></div>
     <h2>What snare does not do</h2>
     <p class="lede">A security tool that oversells itself is worse than no tool at all.</p>
     <div class="stack-s">
-      <p>The guard polls once per second, so a payload can still act before it is caught. It cannot
-      see code already running inside another process, and it will miss variants built on different
-      infrastructure. <strong>Removing the malware from the repository is the actual fix</strong> — a
-      running guard is never permission to open a repo you do not trust.</p>
+      <p>The guard polls every second, so a payload can act first; it can't see inside other processes and will miss variants on new infrastructure. <strong>Removing the malware is the fix</strong>; a running guard is never permission to open a repo you don't trust.</p>
       <p>Scanning through the GitHub API sees <strong>branch tips only</strong>. A payload that was
       committed and later deleted survives in history; use <code>snare scan repo</code> on a clone to
       catch that.</p>
