@@ -204,9 +204,14 @@ def head(out, title, desc):
 <meta property="og:title" content="%(t)s">
 <meta property="og:description" content="%(d)s">
 <meta property="og:url" content="%(u)s">
+<meta property="og:image" content="%(og)s">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="snare: malware that runs the moment you open the project.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="%(t)s">
 <meta name="twitter:description" content="%(d)s">
+<meta name="twitter:image" content="%(og)s">
 <meta name="theme-color" content="#121311">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%%22http://www.w3.org/2000/svg%%22 viewBox=%%220 0 100 100%%22><text y=%%22.9em%%22 font-size=%%2290%%22>🪤</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -216,7 +221,7 @@ def head(out, title, desc):
 <script>/* dark unless the reader picked light; set before first paint so nothing flashes */
 var t="dark";try{t=localStorage.getItem("snare-theme")||"dark";}catch(e){}document.documentElement.dataset.theme=t;</script>
 %(ld)s%(crumbs)s</head>
-""" % {"t": e(title), "d": e(desc), "u": url, "f": FONTS, "css": CSS,
+""" % {"t": e(title), "d": e(desc), "u": url, "og": SITE + "assets/og.png", "f": FONTS, "css": CSS,
        "kw": ('<meta name="keywords" content="%s">\n' % KEYWORDS) if out == "index.html" else "",
        "ld": ('<script type="application/ld+json">\n%s\n</script>\n'
               % (ld % {"v": VERSION, "s": SITE, "r": REPO})) if ld else "",
