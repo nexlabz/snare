@@ -177,7 +177,7 @@ I ended up building a tool for this, because doing it by hand across every repo 
 does not scale. It is free, MIT, and works on macOS, Linux, Windows (Git Bash) and WSL.
 
 ```bash
-git clone https://github.com/AviOfLagos/snare ~/snare
+git clone https://github.com/nexlabz/snare ~/snare
 cd ~/snare && ./install.sh
 gh auth login          # your own credentials — snare ships no token
 snare doctor
@@ -210,7 +210,7 @@ The developers who lost work to this had mostly never heard of the technique. Th
 caught it early heard about it from someone else. That is the whole reason to write it up.
 
 If it hit you or your team, add what you saw:
-**https://github.com/AviOfLagos/snare/issues/1**
+**https://github.com/nexlabz/snare/issues/1**
 
 You do not have to name an employer or client — "a fintech I contract for" is a perfectly good
 data point. Redact tokens, keys and internal hostnames first.
@@ -221,4 +221,4 @@ here — that is the most useful thing you can post. It goes straight into the d
 ---
 
 **Field guide:** https://avioflagos.github.io/snare/
-**Source:** https://github.com/AviOfLagos/snare
+**Source:** https://github.com/nexlabz/snare
