@@ -54,13 +54,13 @@ That last one must print wOF2. Spaces mean it's a script.""",
 Free, MIT, macOS / Linux / Windows.
 
 Field guide → https://avioflagos.github.io/snare/
-Code → https://github.com/AviOfLagos/snare""",
+Code → https://github.com/nexlabz/snare""",
 
 """If this hit you or your team, please add what you saw.
 
 Not to pile on anyone. The people who lost work to this had mostly never heard of the technique — and the ones who caught it early heard about it from someone else.
 
-https://github.com/AviOfLagos/snare/issues/1""",
+https://github.com/nexlabz/snare/issues/1""",
 ]
 
 if __name__ == "__main__":
